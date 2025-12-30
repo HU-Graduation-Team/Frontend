@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Manager - Approvals</title>
+    <link rel="stylesheet" href="../styles.css" />
+    <link rel="stylesheet" href="./manager.css" />
+  </head>
+  <body>
+    <div class="app-container">
+      <!-- App Header -->
+      <header class="app-header">
+        <div class="header-content">
+          <div class="header-brand">
+            <div class="header-logo"></div>
+            <div>
+              <h1>بوابة المدير / العميد</h1>
+              <div class="subtitle">Approvals Management System</div>
+            </div>
+          </div>
+          <div class="header-actions">
+            <button class="btn" id="refreshBtn">
+              <svg
+                width="18"
+                height="18"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                style="margin-left: 6px"
+              >
+                <path d="M1 4v6h6M23 20v-6h-6" />
+                <path
+                  d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"
+                />
+              </svg>
+              تحديث البيانات
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Navigation -->
+      <nav class="main-nav">
+        <div class="nav-tabs">
+          <button class="nav-tab active" data-tab="dashboard">
+            <svg
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <rect x="3" y="3" width="7" height="7" rx="1" />
+              <rect x="14" y="3" width="7" height="7" rx="1" />
+              <rect x="3" y="14" width="7" height="7" rx="1" />
+              <rect x="14" y="14" width="7" height="7" rx="1" />
+            </svg>
+            لوحة التحكم
+          </button>
+
+          <button class="nav-tab" data-tab="pending">
+            <svg
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path d="M12 8v4l3 3" />
+              <circle cx="12" cy="12" r="9" />
+            </svg>
+            قيد الانتظار
+            <span class="badge urgent" id="pendingCount">0</span>
+          </button>
+          <button class="nav-tab" data-tab="team-leave">
+            <svg
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+              />
+            </svg>
+            في إجازة
+            <span class="badge" id="teamLeaveCount">0</span>
+          </button>
+          <button class="nav-tab" data-tab="reports">
+            <svg
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+            التقارير
+          </button>
+          <button class="nav-tab" data-tab="settings">
+            <svg
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <circle cx="12" cy="12" r="3" />
+              <path
+                d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"
+              />
+            </svg>
+            الإعدادات
+          </button>
+        </div>
+      </nav>
+
+      <!-- Page Content -->
+      <div class="page-content">
+        <!-- Dashboard View -->
+        <div class="section-view active" id="view-dashboard">
+          <div class="section-header">
+            <div class="section-icon dashboard">
+              <svg
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <rect x="3" y="3" width="7" height="7" rx="1" />
+                <rect x="14" y="3" width="7" height="7" rx="1" />
+                <rect x="3" y="14" width="7" height="7" rx="1" />
+                <rect x="14" y="14" width="7" height="7" rx="1" />
+              </svg>
+            </div>
+            <div class="section-title">
+              <h2>لوحة التحكم</h2>
+              <div class="desc">نظرة عامة على الطلبات المعلقة</div>
+            </div>
+          </div>
+
+          <!-- Stats -->
+          <div class="stats-row">
+            <div class="stat-box highlight">
+              <div class="label">قيد الانتظار</div>
+              <div class="value" id="statPending">—</div>
+              <div class="bar">
+                <span
+                  id="statPendingBar"
+                  style="
+                    width: 100%;
+                    background: linear-gradient(90deg, #7c3aed, #a855f7);
+                  "
+                ></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Overview Table -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">ملخص سريع - آخر الطلبات المعلقة</h3>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Step ID</th>
+                    <th>رقم الطلب</th>
+                    <th>الموظف</th>
+                    <th>نوع الإجازة</th>
+                    <th>تاريخ البداية</th>
+                    <th>تاريخ النهاية</th>
+                    <th>الحالة</th>
+                    <th>إجراء</th>
+                  </tr>
+                </thead>
+                <tbody id="dashboardPendingBody">
+                  <tr>
+                    <td colspan="8" class="muted">—</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pending View -->
+        <div class="section-view" id="view-pending">
+          <div class="section-header">
+            <div class="section-icon pending">
+              <svg
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path d="M12 8v4l3 3" />
+                <circle cx="12" cy="12" r="9" />
+              </svg>
+            </div>
+            <div class="section-title">
+              <h2>الطلبات قيد الانتظار</h2>
+              <div class="desc">طلبات تنتظر موافقتك أو رفضك</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">جميع الطلبات المعلقة</h3>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Step ID</th>
+                    <th>رقم الطلب</th>
+                    <th>الموظف</th>
+                    <th>نوع الإجازة</th>
+                    <th>تاريخ البداية</th>
+                    <th>تاريخ النهاية</th>
+                    <th>الحالة</th>
+                    <th>إجراء</th>
+                  </tr>
+                </thead>
+                <tbody id="pendingBody">
+                  <tr>
+                    <td colspan="8" class="muted">—</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Team On Leave View -->
+        <div class="section-view" id="view-team-leave">
+          <div class="section-header">
+            <div class="section-icon team-leave">
+              <svg
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                />
+              </svg>
+            </div>
+            <div class="section-title">
+              <h2>الموظفين في إجازة</h2>
+              <div class="desc">
+                قائمة بأعضاء الفريق المتواجدين في إجازة حالياً
+              </div>
+            </div>
+          </div>
+
+          <div class="stats-row">
+            <div class="stat-box highlight">
+              <div class="label">عدد الموظفين في إجازة</div>
+              <div class="value" id="teamLeaveTotal">—</div>
+              <div class="bar">
+                <span
+                  style="
+                    width: 100%;
+                    background: linear-gradient(90deg, #f59e0b, #fbbf24);
+                  "
+                ></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">الموظفين المتواجدين في إجازة</h3>
+              <button class="btn" id="loadTeamLeaveBtn">تحديث القائمة</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>الموظف</th>
+                    <th>القسم</th>
+                    <th>نوع الإجازة</th>
+                    <th>تاريخ البداية</th>
+                    <th>تاريخ النهاية</th>
+                    <th>المدة</th>
+                  </tr>
+                </thead>
+                <tbody id="teamLeaveBody">
+                  <tr>
+                    <td colspan="6" class="muted">—</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div id="teamLeaveEmpty" class="empty-state" style="display: none">
+              <div class="empty-icon">☕</div>
+              <div class="empty-text">لا يوجد موظفين في إجازة حالياً</div>
+              <div class="empty-subtext">جميع أعضاء الفريق متواجدين 🎉</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reports View -->
+        <div class="section-view" id="view-reports">
+          <div class="section-header">
+            <div class="section-icon reports">
+              <svg
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+            </div>
+            <div class="section-title">
+              <h2>التقارير</h2>
+              <div class="desc">تقارير وإحصائيات الإجازات</div>
+            </div>
+          </div>
+
+          <!-- Reports Stats -->
+          <div class="stats-row" id="reportsStats">
+            <div class="stat-box">
+              <div class="label">إجمالي الطلبات</div>
+              <div class="value" id="reportTotal">—</div>
+              <div class="bar">
+                <span
+                  style="
+                    width: 100%;
+                    background: linear-gradient(90deg, #7c3aed, #a855f7);
+                  "
+                ></span>
+              </div>
+            </div>
+            <div class="stat-box">
+              <div class="label">الموافق عليها</div>
+              <div class="value" id="reportApproved">—</div>
+              <div class="bar">
+                <span
+                  id="reportApprovedBar"
+                  style="width: 0%; background: var(--chip-1)"
+                ></span>
+              </div>
+            </div>
+            <div class="stat-box">
+              <div class="label">قيد الانتظار</div>
+              <div class="value" id="reportPending">—</div>
+              <div class="bar">
+                <span
+                  id="reportPendingBar"
+                  style="width: 0%; background: var(--chip-3)"
+                ></span>
+              </div>
+            </div>
+            <div class="stat-box">
+              <div class="label">المرفوضة</div>
+              <div class="value" id="reportRejected">—</div>
+              <div class="bar">
+                <span
+                  id="reportRejectedBar"
+                  style="width: 0%; background: var(--bad)"
+                ></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">تقرير الإجازات</h3>
+              <button class="btn" id="loadReportsBtn">تحديث التقرير</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>الموظف</th>
+                    <th>القسم</th>
+                    <th>نوع الإجازة</th>
+                    <th>تاريخ البداية</th>
+                    <th>تاريخ النهاية</th>
+                    <th>المدة</th>
+                    <th>الحالة</th>
+                    <th>تاريخ الإنشاء</th>
+                  </tr>
+                </thead>
+                <tbody id="reportsBody">
+                  <tr>
+                    <td colspan="8" class="muted">—</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Settings View -->
+        <div class="section-view" id="view-settings">
+          <div class="section-header">
+            <div class="section-icon settings">
+              <svg
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <circle cx="12" cy="12" r="3" />
+                <path
+                  d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"
+                />
+              </svg>
+            </div>
+            <div class="section-title">
+              <h2>إعدادات الاتصال</h2>
+              <div class="desc">قم بتكوين إعدادات API والمصادقة</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">إعدادات API</h3>
+            </div>
+
+            <div class="config-grid">
+              <div class="form-group">
+                <label>API Base URL</label>
+                <input id="apiBase" placeholder="http://localhost:3000" />
+              </div>
+              <div class="form-group">
+                <label>JWT Token</label>
+                <input
+                  id="token"
+                  placeholder="الصق التوكن هنا (Bearer Token)"
+                />
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button class="btn primary" id="saveBtn">
+                <svg
+                  width="18"
+                  height="18"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  style="margin-left: 6px"
+                >
+                  <path
+                    d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"
+                  />
+                  <polyline points="17 21 17 13 7 13 7 21" />
+                  <polyline points="7 3 7 8 15 8" />
+                </svg>
+                حفظ الإعدادات
+              </button>
+              <button class="btn danger" id="clearBtn">
+                <svg
+                  width="18"
+                  height="18"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  style="margin-left: 6px"
+                >
+                  <polyline points="3 6 5 6 21 6" />
+                  <path
+                    d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"
+                  />
+                </svg>
+                مسح التوكن
+              </button>
+            </div>
+
+            <div
+              style="
+                margin-top: 24px;
+                padding: 20px;
+                background: rgba(124, 58, 237, 0.05);
+                border-radius: 12px;
+                border: 1px dashed rgba(124, 58, 237, 0.3);
+              "
+            >
+              <div style="font-weight: 700; margin-bottom: 8px">ملاحظة</div>
+              <div class="muted">
+                كل العمليات عبر <b>/api/manager</b> (Dashboard / Approval Tasks
+                / Approve / Reject). ثبّت الـ API Base والتوكن قبل تحميل
+                البيانات.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">
+      <div class="title">—</div>
+      <div class="msg">—</div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" id="modal">
+      <div class="box">
+        <hr class="sep" />
+        <div id="modalBody"></div>
+      </div>
+    </div>
+
+    <script src="../common.js"></script>
+    <script src="./manager.js"></script>
+  </body>
+</html>

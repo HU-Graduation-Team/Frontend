@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Employee - Leave Management</title>
+    <link rel="stylesheet" href="../styles.css" />
+    <link rel="stylesheet" href="./employee.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  </head>
+  <body>
+    <div class="app-container">
+      <!-- App Header -->
+      <header class="app-header">
+        <div class="header-content">
+          <div class="header-brand">
+            <div class="header-logo">
+              <img src="../../Assets/شعار_جامعة_الغردقة.png" alt="شعار الجامعة">
+            </div>
+            <div>
+              <h1>بوابة الموظف</h1>
+              <div class="subtitle">Leave Management System</div>
+            </div>
+          </div>
+          <!-- Employee Info -->
+          <div class="user-info" id="userInfo">
+            <div class="user-avatar" id="userAvatar">؟</div>
+            <div class="user-details">
+              <div class="user-name" id="userName">جاري التحميل...</div>
+              <div class="user-meta">
+                <span class="user-department" id="userDepartment">—</span>
+                <span class="user-email" id="userEmail">—</span>
+              </div>
+            </div>
+          </div>
+          <div class="header-actions">
+            <button class="btn" id="refreshBtn">
+              <svg
+                width="18"
+                height="18"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                style="margin-left: 6px"
+              >
+                <path d="M1 4v6h6M23 20v-6h-6" />
+                <path
+                  d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"
+                />
+              </svg>
+              تحديث البيانات
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Navigation -->
+      <nav class="main-nav">
+        <div class="nav-tabs">
+          <button class="nav-tab active" data-tab="dashboard">
+            <svg
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <rect x="3" y="3" width="7" height="7" rx="1" />
+              <rect x="14" y="3" width="7" height="7" rx="1" />
+              <rect x="3" y="14" width="7" height="7" rx="1" />
+              <rect x="14" y="14" width="7" height="7" rx="1" />
+            </svg>
+            لوحة التحكم
+          </button>
+          <button class="nav-tab" data-tab="create">
+            <svg
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 8v8M8 12h8" />
+            </svg>
+            طلب جديد
+          </button>
+          <button class="nav-tab" data-tab="history">
+            <svg
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path d="M12 8v4l3 3" />
+              <circle cx="12" cy="12" r="9" />
+            </svg>
+            طلباتي
+            <span class="badge" id="requestsCount">0</span>
+          </button>
+          <button class="nav-tab" data-tab="types">
+            <svg
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path d="M4 6h16M4 12h16M4 18h10" />
+            </svg>
+            أنواع الإجازات
+          </button>
+          <button class="nav-tab" data-tab="settings">
+            <svg
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <circle cx="12" cy="12" r="3" />
+              <path
+                d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"
+              />
+            </svg>
+            الإعدادات
+          </button>
+        </div>
+      </nav>
+
+      <!-- Page Content -->
+      <div class="page-content">
+        <!-- Dashboard View -->
+        <div class="section-view active" id="view-dashboard">
+          <div class="section-header">
+            <div class="section-icon dashboard">
+              <svg
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <rect x="3" y="3" width="7" height="7" rx="1" />
+                <rect x="14" y="3" width="7" height="7" rx="1" />
+                <rect x="3" y="14" width="7" height="7" rx="1" />
+                <rect x="14" y="14" width="7" height="7" rx="1" />
+              </svg>
+            </div>
+            <div class="section-title">
+              <h2>لوحة التحكم</h2>
+              <div class="desc">نظرة عامة على إجازاتك وطلباتك الأخيرة</div>
+            </div>
+          </div>
+
+          <!-- Balances -->
+          <div class="balances-row" id="balancesPills"></div>
+
+          <!-- Stats -->
+          <div class="stats-row">
+            <div class="stat-box">
+              <div class="label">إجمالي الطلبات (30 يوم)</div>
+              <div class="value" id="statTotal">—</div>
+              <div class="bar">
+                <span
+                  id="statTotalBar"
+                  style="
+                    width: 0%;
+                    background: linear-gradient(
+                      90deg,
+                      var(--chip-3),
+                      var(--chip-5)
+                    );
+                  "
+                ></span>
+              </div>
+            </div>
+            <div class="stat-box">
+              <div class="label">المعتمدة</div>
+              <div class="value" id="statApproved">—</div>
+              <div class="bar">
+                <span
+                  id="statApprovedBar"
+                  style="width: 0%; background: var(--chip-1)"
+                ></span>
+              </div>
+            </div>
+            <div class="stat-box">
+              <div class="label">قيد الموافقة</div>
+              <div class="value" id="statPending">—</div>
+              <div class="bar">
+                <span
+                  id="statPendingBar"
+                  style="width: 0%; background: var(--chip-3)"
+                ></span>
+              </div>
+            </div>
+            <div class="stat-box">
+              <div class="label">المرفوضة</div>
+              <div class="value" id="statRejected">—</div>
+              <div class="bar">
+                <span
+                  id="statRejectedBar"
+                  style="width: 0%; background: var(--bad)"
+                ></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Chart -->
+          <div class="chart-container">
+            <div class="chart-header">
+              <div class="chart-title">ملخص الإجازات حسب الشهر</div>
+              <div class="muted">طلبات آخر 12 شهرًا</div>
+            </div>
+            <div id="chartBars" class="bar-chart"></div>
+          </div>
+
+          <!-- Recent Requests -->
+          <div class="card" style="margin-top: 24px">
+            <div class="card-header">
+              <h3 class="card-title">آخر الطلبات</h3>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>رقم الطلب</th>
+                    <th>نوع الإجازة</th>
+                    <th>تاريخ البداية</th>
+                    <th>الحالة</th>
+                  </tr>
+                </thead>
+                <tbody id="recentBody">
+                  <tr>
+                    <td colspan="4" class="muted">—</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <!-- Create Request View -->
+        <div class="section-view" id="view-create">
+          <div class="section-header">
+            <div class="section-icon create">
+              <svg
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <circle cx="12" cy="12" r="9" />
+                <path d="M12 8v8M8 12h8" />
+              </svg>
+            </div>
+            <div class="section-title">
+              <h2>طلب إجازة جديد</h2>
+              <div class="desc">قم بتعبئة النموذج لإنشاء طلب إجازة جديد</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">بيانات الطلب</h3>
+              <div class="pill note">
+                <b>ملاحظة:</b> لو النوع يتطلب مستند، ارفع ملف (PDF/PNG/JPG)
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label>نوع الإجازة</label>
+                <select id="typeSelect"></select>
+                <div
+                  id="typeHint"
+                  class="muted"
+                  style="margin-top: 8px; font-size: 14px"
+                ></div>
+              </div>
+              <div class="form-group">
+                <label>تاريخ البداية</label>
+                <input id="startDate" type="date" />
+              </div>
+              <div class="form-group">
+                <label>تاريخ النهاية</label>
+                <input id="endDate" type="date" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>السبب</label>
+              <textarea
+                id="reason"
+                placeholder="اكتب سبب الإجازة هنا..."
+                style="min-height: 120px"
+              ></textarea>
+            </div>
+
+            <div class="form-group" id="docWrap" style="display: none">
+              <label>مستند داعم</label>
+              <input id="document" type="file" accept=".pdf,.png,.jpg,.jpeg" />
+              <div class="muted" style="margin-top: 8px">
+                مطلوب فقط إذا كان نوع الإجازة يحتاج مستند
+              </div>
+            </div>
+
+            <div
+              id="dateWarn"
+              class="doc-hint"
+              style="
+                display: none;
+                color: var(--warn);
+                border-color: rgba(255, 209, 102, 0.45);
+                margin-bottom: 20px;
+              "
+            >
+              ⚠️ تنبيه: لو الفترة بتعدّي 1 يوليو (بداية السنة المالية في
+              النظام)، السيرفر ممكن يرفض الطلب.
+            </div>
+
+            <div class="form-actions">
+              <button
+                class="btn primary"
+                id="submitBtn"
+                style="font-size: 16px; padding: 14px 28px"
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  style="margin-left: 8px"
+                >
+                  <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
+                </svg>
+                إرسال الطلب
+              </button>
+              <button class="btn" id="resetBtn">تفريغ الحقول</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- History View -->
+        <div class="section-view" id="view-history">
+          <div class="section-header">
+            <div class="section-icon history">
+              <svg
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path d="M12 8v4l3 3" />
+                <circle cx="12" cy="12" r="9" />
+              </svg>
+            </div>
+            <div class="section-title">
+              <h2>طلباتي</h2>
+              <div class="desc">سجل جميع طلبات الإجازة الخاصة بك</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">جميع الطلبات</h3>
+              <div class="row" style="gap: 12px">
+                <input
+                  id="search"
+                  placeholder="بحث: ID / نوع / حالة"
+                  style="width: 260px"
+                />
+                <button class="btn" id="loadRequestsBtn">تحديث القائمة</button>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>رقم الطلب</th>
+                    <th>نوع الإجازة</th>
+                    <th>الحالة</th>
+                    <th>تفاصيل</th>
+                  </tr>
+                </thead>
+                <tbody id="requestsBody">
+                  <tr>
+                    <td colspan="4" class="muted">—</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Types View -->
+        <div class="section-view" id="view-types">
+          <div class="section-header">
+            <div class="section-icon types">
+              <svg
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path d="M4 6h16M4 12h16M4 18h10" />
+              </svg>
+            </div>
+            <div class="section-title">
+              <h2>أنواع الإجازات المتاحة</h2>
+              <div class="desc">جميع أنواع الإجازات التي يمكنك طلبها</div>
+            </div>
+          </div>
+
+          <div class="types-grid" id="typesList">
+            <div class="muted">جاري التحميل...</div>
+          </div>
+        </div>
+
+        <!-- Settings View -->
+        <div class="section-view" id="view-settings">
+          <div class="section-header">
+            <div class="section-icon settings">
+              <svg
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <circle cx="12" cy="12" r="3" />
+                <path
+                  d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"
+                />
+              </svg>
+            </div>
+            <div class="section-title">
+              <h2>إعدادات الاتصال</h2>
+              <div class="desc">قم بتكوين إعدادات API والمصادقة</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">إعدادات API</h3>
+            </div>
+
+            <div class="config-grid">
+              <div class="form-group">
+                <label>API Base URL</label>
+                <input id="apiBase" placeholder="http://localhost:3000" />
+              </div>
+              <div class="form-group">
+                <label>JWT Token</label>
+                <input
+                  id="token"
+                  placeholder="الصق التوكن هنا (Bearer Token)"
+                />
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button class="btn primary" id="saveBtn">
+                <svg
+                  width="18"
+                  height="18"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  style="margin-left: 6px"
+                >
+                  <path
+                    d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"
+                  />
+                  <polyline points="17 21 17 13 7 13 7 21" />
+                  <polyline points="7 3 7 8 15 8" />
+                </svg>
+                حفظ الإعدادات
+              </button>
+              <button class="btn danger" id="clearBtn">
+                <svg
+                  width="18"
+                  height="18"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  style="margin-left: 6px"
+                >
+                  <polyline points="3 6 5 6 21 6" />
+                  <path
+                    d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"
+                  />
+                </svg>
+                مسح التوكن
+              </button>
+            </div>
+
+            <div
+              style="
+                margin-top: 24px;
+                padding: 20px;
+                background: rgba(59, 130, 246, 0.05);
+                border-radius: 12px;
+                border: 1px dashed rgba(59, 130, 246, 0.3);
+              "
+            >
+              <div style="font-weight: 700; margin-bottom: 8px">ملاحظة</div>
+              <div class="muted">
+                كل العمليات عبر <b>/api/me</b> (Dashboard / Eligible Types /
+                Requests / Cancel). احفظ الرابط والتوكن قبل أي طلب.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">
+      <div class="title">—</div>
+      <div class="msg">—</div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" id="modal">
+      <div class="box">
+        <!-- <div class="row" style="justify-content: space-between">
+          <div style="font-weight: 900; font-size: 20px">تفاصيل الطلب</div>
+          <button class="btn" onclick="closeModal()">إغلاق</button>
+        </div> -->
+        <hr class="sep" />
+        <div id="modalBody"></div>
+      </div>
+    </div>
+
+    <script src="../common.js"></script>
+    <script src="./employee.js"></script>
+  </body>
+</html>
