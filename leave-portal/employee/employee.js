@@ -577,6 +577,73 @@ qs("#submitBtn").addEventListener("click", async () => {
     toast("خطأ", e.message);
   }
 });
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // Select elements
+    const notifBtn = document.querySelector('button[title="الاشعارات"]');
+    const badge = notifBtn.querySelector('.badge-count');
+    const dropdown = document.getElementById('notificationDropdown');
+    const notifList = document.getElementById('notifList');
+    const emptyState = document.getElementById('emptyState');
+    const markAllBtn = document.getElementById('markAllBtn');
 
+    // 1. Open/Close Menu
+    notifBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dropdown.classList.toggle('active');
+    });
+
+    // Close when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!dropdown.contains(e.target) && !notifBtn.contains(e.target)) {
+            dropdown.classList.remove('active');
+        }
+    });
+
+    // 2. Count Logic
+    function updateBadge() {
+        const count = notifList.children.length;
+        if (count > 0) {
+            badge.style.display = 'flex';
+            badge.innerText = count;
+            emptyState.style.display = 'none';
+        } else {
+            badge.style.display = 'none'; // Hide red dot if 0
+            emptyState.style.display = 'block'; // Show empty state
+        }
+    }
+
+    // 3. Remove Single Item (Click X)
+    notifList.addEventListener('click', function(e) {
+        const btn = e.target.closest('.mark-read-btn');
+        if (!btn) return;
+
+        const item = btn.closest('.notif-item');
+        item.style.animation = 'slideOut 0.3s forwards';
+        
+        setTimeout(() => {
+            item.remove();
+            updateBadge();
+        }, 300);
+    });
+
+    // 4. Remove All Items
+    markAllBtn.addEventListener('click', function() {
+        const items = notifList.querySelectorAll('.notif-item');
+        items.forEach((item, index) => {
+            setTimeout(() => {
+                item.style.animation = 'slideOut 0.3s forwards';
+            }, index * 50);
+        });
+
+        setTimeout(() => {
+            notifList.innerHTML = '';
+            updateBadge();
+        }, 300 + (items.length * 50));
+    });
+
+    // Initial check
+    updateBadge();
+});
 // auto-load
 loadAll();

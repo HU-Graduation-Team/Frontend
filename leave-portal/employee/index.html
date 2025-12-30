@@ -47,7 +47,48 @@
           </div>
         </div>
       </header>
+      <!-- notification body  -->
+        <div class="notification-dropdown" id="notificationDropdown">
+    <div class="dropdown-header">
+        <span>الاشعارات</span>
+        <button class="btn-mark-all" id="markAllBtn">تحديد الكل كمقروء</button>
+    </div>
 
+    <div class="notifications-list" id="notifList">
+        
+        <div class="notif-item unread">
+            <div class="notif-icon success-bg">
+                <i class="fa-solid fa-check"></i>
+            </div>
+            <div class="notif-content">
+                <h4>تم قبول طلب الإجازة</h4>
+                <p>تمت الموافقة على طلب الإجازة السنوية الخاص بك.</p>
+                <span class="date-range">10/6/2025 → 15/6/2025</span>
+                <span class="time">منذ 2 ساعة</span>
+            </div>
+            <button class="mark-read-btn" title="حذف"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <div class="notif-item unread">
+            <div class="notif-icon warning-bg">
+                <i class="fa-solid fa-hourglass-half"></i>
+            </div>
+            <div class="notif-content">
+                <h4>طلب قيد المراجعة</h4>
+                <p>طلب الإجازة المرضية ما زال قيد المراجعة.</p>
+                <span class="date-range">8/6/2025</span>
+                <span class="time">أمس</span>
+            </div>
+            <button class="mark-read-btn" title="حذف"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+    </div>
+
+    <div class="empty-state" id="emptyState">
+        <i class="fa-regular fa-bell-slash"></i>
+        <p>لا توجد إشعارات جديدة</p>
+    </div>
+</div>
       <!-- Main Navigation -->
       <nav class="main-nav">
         <div class="nav-tabs">

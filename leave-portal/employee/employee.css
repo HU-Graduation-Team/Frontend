@@ -150,6 +150,177 @@ td {
     justify-content: center;
     padding: 0 4px; /* Padding for double digits (e.g. 12) */
 }
+/* --- Notification Dropdown Container --- */
+/* --- Notification Dropdown Wrapper --- */
+.notification-dropdown {
+    position: absolute;
+    top: 70px;
+    left: 20px;
+    width: 380px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+    z-index: 1000;
+    overflow: hidden;
+    
+    /* Animation to show/hide */
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+}
+
+.notification-dropdown.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* Header inside dropdown */
+.dropdown-header {
+    background: #1e3c72; /* Header Blue */
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+}
+
+.dropdown-header span {
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+/* The "Mark All Read" Button */
+.btn-mark-all {
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 20px;
+    padding: 5px 15px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    background: transparent;
+    color: white;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.btn-mark-all:hover {
+    background-color: white;
+    color: #1e3c72; /* Blue text on white */
+    border-color: white;
+}
+
+/* Notification List Wrapper */
+.notifications-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+/* Notification List Item */
+.notif-item {
+    display: flex;
+    gap: 15px;
+    padding: 15px;
+    border-bottom: 1px solid #f1f1f1;
+    position: relative;
+    background-color: #fff;
+    transition: all 0.3s ease;
+    direction: rtl;
+    text-align: right;
+}
+
+.notif-item:last-child { border-bottom: none; }
+.notif-item.unread { background-color: #f8fbff; }
+.notif-item:hover { background-color: #fcfcfc; }
+
+/* Icons */
+.notif-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: white;
+    font-size: 1.1rem;
+}
+
+.success-bg { background-color: #28a745; }
+.warning-bg { background-color: #ffc107; color: #333; }
+.danger-bg  { background-color: #dc3545; }
+
+/* Content */
+.notif-content { flex-grow: 1; }
+
+.notif-content h4 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin: 0 0 4px 0;
+    color: #333; /* Dark Grey Text */
+}
+
+.notif-content p {
+    font-size: 0.85rem;
+    color: #555;
+    margin: 0 0 5px 0;
+    line-height: 1.4;
+}
+
+.notif-content .time {
+    display: block;
+    margin-top: 5px;
+    font-size: 0.75rem;
+    color: #999;
+    font-weight: 400;
+}
+
+.notif-content .date-range {
+    display: inline-block;
+    font-size: 0.75rem;
+    color: #1e3c72; /* Blue Text */
+    background: #eef2f5;
+    padding: 2px 8px;
+    border-radius: 4px;
+    width: fit-content;
+    margin-top: 5px;
+}
+
+/* Close Button (X) */
+.mark-read-btn {
+    background: none;
+    border: none;
+    color: #bbb;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0 5px;
+    height: fit-content;
+    transition: color 0.2s;
+    align-self: flex-start;
+}
+
+.mark-read-btn:hover { color: #ff4757; /* Red on hover */ }
+
+/* Empty State */
+.empty-state {
+    padding: 40px;
+    text-align: center;
+    color: #ccc;
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+.empty-state i { font-size: 2.5rem; display: block; margin-bottom: 10px;}
+
+/* Animations */
+@keyframes slideOut {
+    to { opacity: 0; transform: translateX(-20px); }
+}
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+.empty-state i { font-size: 2rem; margin-bottom: 10px; display: block; }
 /* ===== User Info in Header ===== */
 .user-info {
   display: flex;
