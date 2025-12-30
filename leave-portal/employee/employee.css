@@ -100,13 +100,62 @@ td {
   height: 100%;
   object-fit: cover;
 }
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px; /* Space between the two icons */
+}
 
+/* Make the buttons circular and transparent */
+.icon-btn {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1); /* Subtle glass effect */
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+/* Hover effect: Turn white with blue icon */
+.icon-btn:hover {
+  background: white;
+  color: #1e3a5f; /* Matches your header background color */
+  transform: translateY(-2px);
+}
+
+/* The Red Notification Dot */
+/* notification badge with number */
+.badge-count {
+    position: absolute;
+    top: -2px;   /* Move it up slightly */
+    right: -2px; /* Move it right slightly */
+    min-width: 18px; /* Minimum width so it stays circular */
+    height: 18px;
+    background-color: #ff4757; /* Red background */
+    color: white;
+    font-size: 0.7rem; /* Small text size */
+    font-weight: bold;
+    border-radius: 50%; /* Circle shape */
+    border: 2px solid #1e3a5f; /* Border matches header color */
+    
+    /* Center the number perfectly */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px; /* Padding for double digits (e.g. 12) */
+}
 /* ===== User Info in Header ===== */
 .user-info {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(65, 68, 80, 0.1);
   padding: 10px 16px;
   border-radius: 12px;
   backdrop-filter: blur(10px);
