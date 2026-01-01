@@ -648,73 +648,192 @@ qs("#submitBtn").addEventListener("click", async () => {
   }
 });
 
-document.addEventListener('DOMContentLoaded', function() {
-    
-    // Select elements
-    const notifBtn = document.querySelector('button[title="الاشعارات"]');
-    const badge = notifBtn.querySelector('.badge-count');
-    const dropdown = document.getElementById('notificationDropdown');
+// ==========================================
+// 🔔 NOTIFICATION SYSTEM LOGIC (CONNECTED)
+// ==========================================
+
+// Global variable to hold data
+let myNotifications = [];
+
+// 1. Master Load Function (Loads List & Count in parallel)
+async function loadNotifications() {
+    await Promise.all([
+        fetchNotificationList(),
+        fetchUnreadCount()
+    ]);
+}
+
+// 2. Fetch The List (The 20 most recent)
+async function fetchNotificationList() {
     const notifList = document.getElementById('notifList');
     const emptyState = document.getElementById('emptyState');
-    const markAllBtn = document.getElementById('markAllBtn');
-
-    // 1. Open/Close Menu
-    notifBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        dropdown.classList.toggle('active');
-    });
-
-    // Close when clicking outside
-    document.addEventListener('click', (e) => {
-        if (!dropdown.contains(e.target) && !notifBtn.contains(e.target)) {
-            dropdown.classList.remove('active');
-        }
-    });
-
-    // 2. Count Logic
-    function updateBadge() {
-        const count = notifList.children.length;
-        if (count > 0) {
-            badge.style.display = 'flex';
-            badge.innerText = count;
-            emptyState.style.display = 'none';
-        } else {
-            badge.style.display = 'none'; // Hide red dot if 0
-            emptyState.style.display = 'block'; // Show empty state
-        }
-    }
-
-    // 3. Remove Single Item (Click X)
-    notifList.addEventListener('click', function(e) {
-        const btn = e.target.closest('.mark-read-btn');
-        if (!btn) return;
-
-        const item = btn.closest('.notif-item');
-        item.style.animation = 'slideOut 0.3s forwards';
+    
+    try {
+        // Calls: GET /api/notifications
+        const res = await apiFetch('/api/notifications'); 
         
-        setTimeout(() => {
-            item.remove();
-            updateBadge();
-        }, 300);
-    });
+        // Based on your controller: res.data is the array (data.rows)
+        const data = res.data || [];
+        myNotifications = data;
 
-    // 4. Remove All Items
-    markAllBtn.addEventListener('click', function() {
-        const items = notifList.querySelectorAll('.notif-item');
-        items.forEach((item, index) => {
-            setTimeout(() => {
-                item.style.animation = 'slideOut 0.3s forwards';
-            }, index * 50);
+        // Clear current HTML list
+        notifList.innerHTML = '';
+
+        // Handle Empty State
+        if (myNotifications.length === 0) {
+            emptyState.style.display = 'block';
+            return;
+        }
+
+        emptyState.style.display = 'none';
+
+        // Render Items
+        myNotifications.forEach(notif => {
+            // Check if read or unread
+            const isUnread = !notif.is_read; 
+            const itemClass = isUnread ? 'notif-item unread' : 'notif-item';
+            
+            // Icon & Color Logic based on Title/Type
+            let icon = '<i class="fa-solid fa-circle-info"></i>';
+            let bgClass = 'primary-bg'; 
+
+            const title = (notif.title || "").toLowerCase();
+            const type = (notif.type || "").toUpperCase();
+
+            // Customize icons
+            if (type === 'SUCCESS' || title.includes('قبول') || title.includes('approved')) {
+                icon = '<i class="fa-solid fa-check"></i>';
+                bgClass = 'success-bg'; 
+            } else if (type === 'WARNING' || title.includes('مراجعة') || title.includes('pending')) {
+                icon = '<i class="fa-solid fa-hourglass-half"></i>';
+                bgClass = 'warning-bg'; 
+            } else if (type === 'ERROR' || title.includes('رفض') || title.includes('rejected')) {
+                icon = '<i class="fa-solid fa-xmark"></i>';
+                bgClass = 'danger-bg'; 
+            }
+
+            // Create HTML Element
+            const li = document.createElement('div');
+            li.className = itemClass;
+            
+            // Use correct ID field
+            const nId = notif.notification_id || notif.id; 
+
+            li.innerHTML = `
+                <div class="notif-icon ${bgClass}">
+                    ${icon}
+                </div>
+                <div class="notif-content">
+                    <h4>${escapeHtml(notif.title)}</h4>
+                    <p>${escapeHtml(notif.message)}</p>
+                    <span class="time">${fmtDate(notif.created_at)}</span>
+                </div>
+                ${isUnread ? `
+                <button class="mark-read-btn" onclick="markAsRead(${nId}, event)" title="تحديد كمقروء">
+                    <i class="fa-solid fa-check-double"></i>
+                </button>` : ''}
+            `;
+            notifList.appendChild(li);
         });
 
-        setTimeout(() => {
-            notifList.innerHTML = '';
-            updateBadge();
-        }, 300 + (items.length * 50));
-    });
+    } catch (e) {
+        console.error("Failed to load notifications list", e);
+        notifList.innerHTML = `<div class="muted" style="padding:10px; text-align:center;">فشل تحميل الإشعارات</div>`;
+    }
+}
 
-    // Initial check
-    updateBadge();
+// 3. Fetch Unread Count (For the Red Badge)
+async function fetchUnreadCount() {
+    // 1. هل العنصر موجود؟
+    const badge = document.querySelector('.badge-count');
+    console.log("🔍 Badge Element Found?", badge); // يجب أن يطبع العنصر، ليس null
+
+    if (!badge) return;
+
+    try {
+        // 2. ماذا يرجع السيرفر؟
+        const res = await apiFetch('/api/notifications/unread-count');
+        console.log("📩 API Response:", res); 
+
+        // 3. تحويل القيمة لرقم
+        const count = Number(res.data) || 0;
+        console.log("🔢 Parsed Count:", count);
+
+        if (count > 0) {
+            badge.style.display = 'flex';
+            badge.innerText = count > 99 ? '99+' : count;
+            console.log("✅ Showing Badge");
+        } else {
+            badge.style.display = 'none';
+            console.log("🙈 Hiding Badge (Count is 0)");
+        }
+    } catch (e) {
+        console.error("❌ Failed to load unread count", e);
+    }
+}
+
+// 4. Mark Single Item Read
+async function markAsRead(id, event) {
+    if(event) event.stopPropagation(); // Prevent clicking the item container
+
+    try {
+        // Calls: PATCH /api/notifications/:id/read
+        await apiFetch(`/api/notifications/${id}/read`, { method: 'PATCH' });
+        
+        // Reload list and count to sync UI
+        loadNotifications();
+        
+    } catch (e) {
+        toast("خطأ", "تعذر تحديث حالة الإشعار");
+    }
+}
+
+// 5. Mark All Read
+const markAllBtn = document.getElementById('markAllBtn');
+if(markAllBtn) {
+    markAllBtn.addEventListener('click', async () => {
+        try {
+            // Calls: PATCH /api/notifications/mark-all-read
+            await apiFetch(`/api/notifications/mark-all-read`, { method: 'PATCH' });
+            
+            toast("تم", "تم تحديد الكل كمقروء");
+            loadNotifications(); // Refresh UI
+        } catch (e) {
+            toast("خطأ", "حدث خطأ أثناء التحديث");
+        }
+    });
+}
+
+// 6. Initialization (DOMContentLoaded)
+document.addEventListener('DOMContentLoaded', function() {
+    const notifBtn = document.querySelector('button[title="الاشعارات"]');
+    const dropdown = document.getElementById('notificationDropdown');
+
+    if(notifBtn && dropdown) {
+        // Toggle Menu
+        notifBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dropdown.classList.toggle('active');
+            
+            // Reload data when opening to ensure freshness
+            if (dropdown.classList.contains('active')) {
+                loadNotifications();
+            }
+        });
+
+        // Close on click outside
+        document.addEventListener('click', (e) => {
+            if (!dropdown.contains(e.target) && !notifBtn.contains(e.target)) {
+                dropdown.classList.remove('active');
+            }
+        });
+    }
+
+    // Initial Load when page starts
+    loadNotifications();
+
+    // Optional: Auto-refresh every 60 seconds to check for new messages
+    setInterval(loadNotifications, 60000);
 });
 
 // ✅ NEW: Function to handle "Return to Work"
