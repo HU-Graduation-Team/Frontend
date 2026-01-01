@@ -148,7 +148,9 @@ function onTypeChange() {
 function renderDashboard(data) {
   const balances = data?.leaveBalances || [];
   const recent = data?.recentRequests || [];
+  const today = new Date(); // لتحديد تاريخ اليوم
 
+  // 1. عرض الأرصدة (كما هي)
   const pills = qs("#balancesPills");
   pills.innerHTML =
     balances
@@ -167,41 +169,73 @@ function renderDashboard(data) {
       )
       .join("") || `<div class="muted">لا يوجد أرصدة متاحة.</div>`;
 
+  // 2. عرض جدول "آخر الطلبات" (مع زر العودة الجديد)
   const body = qs("#recentBody");
+  
+  // ضبط تاريخ اليوم (بدون ساعات) للمقارنة الصحيحة
+  const todayDateOnly = new Date();
+  todayDateOnly.setHours(0,0,0,0);
+
   body.innerHTML = recent.length
     ? recent
-        .map(
-          (r) => `
-    <tr>
-      <td>${r.request_id}</td>
-      <td>${escapeHtml(r.leaveType?.type_name || "-")}</td>
-      <td>${fmtDate(r.start_date)}</td>
-      <td>${statusBadge(r.status)}</td>
-    </tr>
-  `
-        )
+        .map((r) => {
+            // --- منطق زر العودة ---
+            const endDate = new Date(r.end_date);
+            
+            // هل الحالة Approved + التاريخ انتهى + لم يسجل عودة بعد؟
+            const isApproved = r.status === 'Approved';
+            const isFinished = todayDateOnly > endDate;
+            const notReturned = !r.returned_at;
+
+            let actionOrStatus = statusBadge(r.status); // الافتراضي: عرض الحالة فقط
+
+            // لو الشروط تحققت، اعرض الزر بجانب الحالة أو بدلاً منها
+            if (isApproved && isFinished && notReturned) {
+                actionOrStatus = `
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        ${statusBadge(r.status)}
+                        <button class="btn" 
+                                style="background-color: #014964; color: white; border:none; padding: 4px 10px; font-size: 12px;" 
+                                onclick="submitReturnDeclaration(${r.request_id})">
+                            تسجيل عودة ↩
+                        </button>
+                    </div>
+                `;
+            } else if (r.returned_at) {
+                 actionOrStatus = `
+                    <div style="display:flex; flex-direction:column; gap:2px;">
+                        ${statusBadge(r.status)}
+                        <span style="font-size:11px; color:green; font-weight:bold;">تمت العودة ✅</span>
+                    </div>
+                 `;
+            }
+
+          return `
+            <tr>
+              <td>${r.request_id}</td>
+              <td>${escapeHtml(r.leaveType?.type_name || "-")}</td>
+              <td>${fmtDate(r.start_date)}</td>
+              <td>${actionOrStatus}</td>
+            </tr>
+          `;
+        })
         .join("")
     : `<tr><td colspan="4" class="muted">لا يوجد طلبات حديثة.</td></tr>`;
 
-  // Stats (approved/pending/rejected)
+  // 3. تحديث الإحصائيات (كما هي)
   const norm = (s) => String(s || "").toLowerCase();
-  const approved = recent.filter((r) =>
-    norm(r.status).includes("approved")
-  ).length;
-  const pending = recent.filter((r) =>
-    norm(r.status).includes("pending")
-  ).length;
-  const rejected = recent.filter((r) =>
-    norm(r.status).includes("rejected")
-  ).length;
+  const approved = recent.filter((r) => norm(r.status).includes("approved")).length;
+  const pending = recent.filter((r) => norm(r.status).includes("pending")).length;
+  const rejected = recent.filter((r) => norm(r.status).includes("rejected")).length;
   const total = recent.length;
-  const pct = (n) => (total ? Math.round((n / total) * 100) : 0);
+  
   const setStat = (id, valId, value) => {
     const el = qs(id);
     const bar = qs(valId);
     if (el) el.textContent = value.toLocaleString("ar-EG");
-    if (bar) bar.style.width = Math.min(100, pct(value)) + "%";
+    if (bar) bar.style.width = Math.min(100, (total ? (value / total) * 100 : 0)) + "%";
   };
+  
   setStat("#statTotal", "#statTotalBar", total);
   setStat("#statApproved", "#statApprovedBar", approved);
   setStat("#statPending", "#statPendingBar", pending);
@@ -259,6 +293,7 @@ function renderBarChart(recent) {
 function renderRequestsTable() {
   const body = qs("#requestsBody");
   const q = (qs("#search").value || "").trim().toLowerCase();
+  const today = new Date(); // Get current date for comparison
 
   const filtered = !q
     ? allRequests
@@ -271,18 +306,38 @@ function renderRequestsTable() {
 
   body.innerHTML = filtered.length
     ? filtered
-        .map(
-          (r) => `
-    <tr>
-      <td>${r.request_id}</td>
-      <td>${escapeHtml(r.leaveType?.type_name || "-")}</td>
-      <td>${statusBadge(r.status)}</td>
-      <td><button class="btn" data-view="${
-        r.request_id
-      }">عرض التفاصيل</button></td>
-    </tr>
-  `
-        )
+        .map((r) => {
+            // Logic for Return Button
+            const endDate = new Date(r.end_date);
+            const isApproved = r.status === 'Approved';
+            const isFinished = today > endDate; // Leave date has passed
+            const notReturned = r.returned_at === null; // Hasn't clicked button yet
+
+            // Determine what to show in the 4th column
+            let actionHtml = `<button class="btn" data-view="${r.request_id}">عرض التفاصيل</button>`;
+
+            // If ready to return, show "Return to Work" button instead
+            if (isApproved && isFinished && notReturned) {
+                actionHtml = `
+                    <button class="btn" style="background-color: #014964; color: white;" 
+                            onclick="submitReturnDeclaration(${r.request_id})">
+                        تسجيل عودة
+                    </button>
+                    <button class="btn" data-view="${r.request_id}" style="margin-right:5px; font-size:12px;">تفاصيل</button>
+                `;
+            } else if (r.returned_at) {
+                actionHtml += ` <span style="font-size:12px; color:green; display:block">تمت العودة ✅</span>`;
+            }
+
+            return `
+            <tr>
+              <td>${r.request_id}</td>
+              <td>${escapeHtml(r.leaveType?.type_name || "-")}</td>
+              <td>${statusBadge(r.status)}</td>
+              <td>${actionHtml}</td>
+            </tr>
+          `;
+        })
         .join("")
     : `<tr><td colspan="4" class="muted">لا توجد نتائج.</td></tr>`;
 
@@ -529,16 +584,30 @@ async function loadAll() {
 
 qs("#submitBtn").addEventListener("click", async () => {
   try {
+    // 1. جمع البيانات
     const type_id = Number(qs("#typeSelect").value);
     const start_date = qs("#startDate").value;
     const end_date = qs("#endDate").value;
     const reason = qs("#reason").value.trim();
     const file = qs("#document").files?.[0] || null;
+    
+    // تعريف الـ Checkbox
+    const ackCheckbox = qs("#acknowledgementCheckbox");
 
+    // 2. التحقق من البيانات الأساسية
     if (!type_id || !start_date || !end_date || !reason) {
       toast("ناقص بيانات", "من فضلك املأ النوع + التواريخ + السبب");
       return;
     }
+
+    // 🛑 3. التحقق من الإقرار (Check Validation)
+    // هذا هو الكود المسؤول عن منع الإرسال
+    if (!ackCheckbox || !ackCheckbox.checked) {
+      toast("تنبيه", "⚠️ يجب وضع علامة صح على إقرار القيام بالإجازة.");
+      return; // 👈 هذا الأمر يوقف الدالة تماماً ويمنع الوصول لكود الإرسال
+    }
+
+    // 4. التحقق من التواريخ
     const sd = new Date(start_date + "T00:00:00");
     const ed = new Date(end_date + "T00:00:00");
     if (ed < sd) {
@@ -546,20 +615,18 @@ qs("#submitBtn").addEventListener("click", async () => {
       return;
     }
 
-    const t = eligibleTypes.find((x) => Number(x.type_id) === type_id);
-    if (t?.requires_document && !file) {
-      toast("مستند مطلوب", "النوع المختار يتطلب رفع ملف");
-      return;
-    }
-
-    // Always send as form-data (API expects form-data)
+    // ... باقي الكود (FormData و apiFetch) ...
     const fd = new FormData();
     fd.append("type_id", String(type_id));
     fd.append("start_date", start_date);
     fd.append("end_date", end_date);
     fd.append("reason", reason);
+    // نرسل القيمة true للسيرفر
+    fd.append("pre_leave_acknowledgement", "true"); 
+
     if (file) fd.append("document", file);
 
+    // الإرسال الفعلي
     await apiFetch(`/api/me/leave-requests`, {
       method: "POST",
       body: fd,
@@ -567,17 +634,19 @@ qs("#submitBtn").addEventListener("click", async () => {
     });
 
     toast("تم الإرسال", "تم إنشاء الطلب بنجاح");
+    
+    // تنظيف الحقول
     qs("#reason").value = "";
     qs("#document").value = "";
+    ackCheckbox.checked = false; // 👈 إزالة العلامة بعد النجاح
+    
     await loadAll();
-
-    // Switch to history tab after successful submission
     switchTab("history");
+
   } catch (e) {
     toast("خطأ", e.message);
   }
 });
-
 
 document.addEventListener('DOMContentLoaded', function() {
     
@@ -647,5 +716,74 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initial check
     updateBadge();
 });
+
+// ✅ NEW: Function to handle "Return to Work"
+// دالة عرض نافذة تأكيد العودة للعمل (بشكل احترافي)
+function submitReturnDeclaration(requestId) {
+  // 1. فتح المودال بتصميم الإقرار
+  openModal(`
+    <div class="modal-header" style="background: linear-gradient(135deg, #014964 0%, #026082 100%);">
+      <div class="modal-title">
+        <span class="modal-icon">↩️</span>
+        <div>
+          <h2>إقرار عودة للعمل</h2>
+          <span class="modal-subtitle">تأكيد استئناف العمل بعد الإجازة</span>
+        </div>
+      </div>
+      <button class="modal-close-btn" onclick="closeModal()">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <div class="modal-body" style="padding: 24px; text-align: center;">
+      <div style="background: #f0f9ff; border: 1px solid #bae6fd; padding: 20px; border-radius: 12px; margin-bottom: 24px;">
+        <p style="font-size: 16px; line-height: 1.6; color: #014964; font-weight: 600; margin: 0;">
+          "أقر بأنني استأنفت أعمالي المصلحية في الكلية/الجامعة عقب انتهاء الإجازة المرخص لي بها، وذلك اعتباراً من تاريخ اليوم."
+        </p>
+      </div>
+
+      <div class="actions" style="justify-content: center; gap: 16px;">
+        <button id="confirmReturnBtn" class="btn primary" style="background-color: #014964; font-size: 16px; padding: 12px 32px;">
+          تأكيد العودة
+        </button>
+        <button class="btn" onclick="closeModal()" style="font-size: 16px;">إلغاء</button>
+      </div>
+    </div>
+  `);
+
+  // 2. إضافة الأكشن لزر التأكيد بعد رسم المودال
+  // ننتظر قليلاً لضمان وجود الزر في الصفحة
+  setTimeout(() => {
+    const confirmBtn = document.getElementById("confirmReturnBtn");
+    if (confirmBtn) {
+      confirmBtn.addEventListener("click", async () => {
+        try {
+          // تغيير نص الزر أثناء التحميل
+          confirmBtn.textContent = "جاري التسجيل...";
+          confirmBtn.disabled = true;
+
+          // استدعاء الـ API
+          await apiFetch(`/api/me/requests/${requestId}/return`, {
+            method: "POST"
+          });
+
+          toast("تم بنجاح", "تم تسجيل إقرار العودة للعمل.");
+          closeModal();
+          await loadRequests(); // تحديث الجدول لإخفاء الزر
+          
+          // تحديث لوحة التحكم أيضاً إذا كنا فيها
+          if (document.getElementById("view-dashboard").classList.contains("active")) {
+             loadDashboard();
+          }
+
+        } catch (e) {
+          toast("خطأ", e.message);
+          confirmBtn.textContent = "تأكيد العودة";
+          confirmBtn.disabled = false;
+        }
+      });
+    }
+  }, 50);
+}
 // auto-load
 loadAll();
