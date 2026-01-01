@@ -6,6 +6,7 @@
     <title>Manager - Approvals</title>
     <link rel="stylesheet" href="../styles.css" />
     <link rel="stylesheet" href="./manager.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   </head>
   <body>
     <div class="app-container">
@@ -13,33 +14,67 @@
       <header class="app-header">
         <div class="header-content">
           <div class="header-brand">
-            <div class="header-logo"></div>
+            <div class="header-logo">
+              <img src="../../Assets/شعار_جامعة_الغردقة.png" alt="شعار الجامعة">
+            </div>
             <div>
               <h1>بوابة المدير / العميد</h1>
               <div class="subtitle">Approvals Management System</div>
             </div>
           </div>
           <div class="header-actions">
-            <button class="btn" id="refreshBtn">
-              <svg
-                width="18"
-                height="18"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                viewBox="0 0 24 24"
-                style="margin-left: 6px"
-              >
-                <path d="M1 4v6h6M23 20v-6h-6" />
-                <path
-                  d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"
-                />
-              </svg>
-              تحديث البيانات
-            </button>
+           <button class="icon-btn" title="الاشعارات" style="position: relative;">
+              <i class="fa-regular fa-bell"></i>
+              <span class="badge-count">3</span>
+           </button>
+           <button class="icon-btn" id="refreshBtn" title="تحديث البيانات">
+            <i class="fa-solid fa-arrows-rotate"></i>
+           </button>
           </div>
         </div>
       </header>
+      <!-- notification body  -->
+        <div class="notification-dropdown" id="notificationDropdown">
+          <div class="dropdown-header">
+            <span>الاشعارات</span>
+            <button class="btn-mark-all" id="markAllBtn">تحديد الكل كمقروء</button>
+          </div>
+          <div class="notifications-list" id="notifList">
+        
+        <div class="notif-item unread">
+            <div class="notif-icon success-bg">
+                <i class="fa-solid fa-check"></i>
+            </div>
+            <div class="notif-content">
+                <h4>تم قبول طلب الإجازة</h4>
+                <p>تمت الموافقة على طلب الإجازة السنوية الخاص بك.</p>
+                <span class="date-range">10/6/2025 → 15/6/2025</span>
+                <span class="time">منذ 2 ساعة</span>
+            </div>
+            <button class="mark-read-btn" title="حذف"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+        <div class="notif-item unread">
+            <div class="notif-icon warning-bg">
+                <i class="fa-solid fa-hourglass-half"></i>
+            </div>
+            <div class="notif-content">
+                <h4>طلب قيد المراجعة</h4>
+                <p>طلب الإجازة المرضية ما زال قيد المراجعة.</p>
+                <span class="date-range">8/6/2025</span>
+                <span class="time">أمس</span>
+            </div>
+            <button class="mark-read-btn" title="حذف"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+    </div>
+
+    <div class="empty-state" id="emptyState">
+        <i class="fa-regular fa-bell-slash"></i>
+        <p>لا توجد إشعارات جديدة</p>
+    </div>
+</div>
+
 
       <!-- Main Navigation -->
       <nav class="main-nav">

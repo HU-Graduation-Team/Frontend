@@ -577,6 +577,8 @@ qs("#submitBtn").addEventListener("click", async () => {
     toast("خطأ", e.message);
   }
 });
+
+
 document.addEventListener('DOMContentLoaded', function() {
     
     // Select elements
