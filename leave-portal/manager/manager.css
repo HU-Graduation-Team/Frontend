@@ -333,6 +333,103 @@ td {
 }
 .empty-state i { font-size: 2rem; margin-bottom: 10px; display: block; }
 
+/* ===== User Info in Header ===== */
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(65, 68, 80, 0.1);
+  padding: 10px 16px;
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  transition: all 0.2s ease;
+}
+
+.user-info:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.user-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #8cc4ff, #6ee3b0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 700;
+  color: #1e3a5f;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.user-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.user-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.user-department {
+  background: rgba(255, 255, 255, 0.15);
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.user-email {
+  opacity: 0.8;
+}
+
+@media (max-width: 768px) {
+  .user-info {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+.header-brand h1 {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 800;
+}
+
+.header-brand .subtitle {
+  font-size: 14px;
+  opacity: 0.8;
+  margin-top: 2px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.header-actions .btn {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #fff;
+}
+
+.header-actions .btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
 /* ===== Main Navigation Tabs ===== */
 .main-nav {
   background: var(--panel-strong);
@@ -1250,4 +1347,248 @@ td {
   .action-btn {
     padding: 16px;
   }
+}
+/* =========================================
+   🚀 NEW STYLES: Profile Dropdown & Switch
+   ========================================= */
+
+/* Make User Info Clickable */
+.user-info {
+    position: relative !important; /* Critical for dropdown positioning */
+    cursor: pointer;
+    user-select: none;
+}
+
+.user-info:active {
+    transform: scale(0.98);
+}
+
+/* The Dropdown Container */
+.profile-dropdown {
+    position: absolute;
+    top: 120%; /* Pushes it below the header */
+    left: 0;
+    width: 260px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+    z-index: 9999;
+    border: 1px solid #e5e7eb;
+    
+    /* Animation States */
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    
+    /* Text Reset */
+    color: #1f2937;
+    text-align: right;
+    direction: rtl;
+}
+
+/* Show State */
+.profile-dropdown.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* Dropdown Header Section */
+.dropdown-user-info {
+    padding: 16px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    border-radius: 12px 12px 0 0;
+}
+
+.dropdown-user-info strong {
+    display: block;
+    color: #0f172a;
+    font-size: 15px;
+    margin-bottom: 2px;
+}
+
+.dropdown-user-info small {
+    color: #64748b;
+    font-size: 13px;
+}
+
+/* Dropdown Links */
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    color: #475569;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.dropdown-item i {
+    font-size: 16px;
+    width: 20px;
+    text-align: center;
+    color: #94a3b8;
+}
+
+.dropdown-item:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+}
+
+.dropdown-item:hover i {
+    color: #3b82f6;
+}
+
+/* Switch Role Button Specifics */
+.dropdown-item.switch-role {
+    background: #eff6ff;
+    color: #1d4ed8;
+    margin: 8px;
+    border-radius: 8px;
+    border: 1px dashed #bfdbfe;
+}
+
+.dropdown-item.switch-role:hover {
+    background: #dbeafe;
+    border-color: #3b82f6;
+}
+
+.dropdown-item.switch-role i {
+    color: #1d4ed8;
+}
+
+/* Logout Button */
+.dropdown-item.danger {
+    color: #dc2626;
+    border-top: 1px solid #f1f5f9;
+    margin-top: 4px;
+}
+
+.dropdown-item.danger:hover {
+    background: #fef2f2;
+}
+
+.dropdown-item.danger i {
+    color: #ef4444;
+}
+
+/* =========================================
+   🛠️ FIXED PROFILE MODAL STYLES (Blue Theme)
+   ========================================= */
+
+/* 1. Fix the Modal Header Color (Match App Header) */
+.modal-header {
+    background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%) !important;
+    padding: 20px 24px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.modal-title h2 {
+    color: white;
+    font-size: 20px;
+}
+
+.modal-subtitle {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 14px;
+}
+
+/* 2. Profile Header (Avatar & Name Section) */
+.profile-header {
+    text-align: center;
+    padding: 24px 0;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.profile-avatar {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 12px auto;
+    background: linear-gradient(135deg, #1e3a5f, #3b82f6); /* Blue Gradient */
+    color: white;
+    font-size: 32px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    box-shadow: 0 4px 15px rgba(30, 58, 95, 0.2);
+    border: 3px solid white;
+}
+
+.profile-name {
+    font-size: 22px;
+    font-weight: 800;
+    color: #1e293b;
+    margin-bottom: 4px;
+}
+
+.profile-role {
+    display: inline-block;
+    background-color: #e0f2fe; /* Light Blue Bg */
+    color: #0284c7; /* Blue Text */
+    font-size: 13px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 20px;
+}
+
+/* 3. The Grid Layout (Fixes Alignment) */
+.profile-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* Two columns */
+    gap: 16px;
+    padding: 0 10px;
+}
+
+/* Mobile: Switch to 1 column */
+@media (max-width: 600px) {
+    .profile-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* 4. Individual Info Items */
+.profile-item {
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 14px;
+    transition: all 0.2s ease;
+}
+
+.profile-item:hover {
+    border-color: #cbd5e1;
+    background-color: white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.profile-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #64748b; /* Muted Text */
+    margin-bottom: 6px;
+}
+
+.profile-value {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a; /* Dark Text */
+    direction: ltr; /* Keeps numbers/emails aligned correctly */
+    text-align: right; /* Aligns Arabic text right */
+}
+
+/* 5. Fix Status Badge inside Profile */
+.profile-value span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 14px;
 }

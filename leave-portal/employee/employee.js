@@ -437,34 +437,90 @@ async function loadDashboard() {
   renderDashboard(res?.data);
 }
 
+// ===== UPDATED LOAD PROFILE (With Role Check) =====
 async function loadProfile() {
   try {
     const res = await apiFetch(`/api/profile`);
     const user = res?.data?.user;
+    
     if (user) {
       currentUser = user;
+      
+      // 1. Fill Header Info
       const nameEl = qs("#userName");
       const avatarEl = qs("#userAvatar");
       const deptEl = qs("#userDepartment");
-      const emailEl = qs("#userEmail");
+      const emailEl = qs("#userEmail"); // Optional if you want to keep using it somewhere
 
       if (nameEl) nameEl.textContent = user.name || "موظف";
       if (avatarEl) avatarEl.textContent = (user.name || "؟")[0];
-      if (deptEl)
-        deptEl.textContent =
-          user.department || user.Department?.name || user.role || "—";
-      if (emailEl) emailEl.textContent = user.email || "—";
+      if (deptEl) deptEl.textContent = translateRole(user.role);
 
-      // Add click handler for user info
+      // 2. Fill Dropdown Info
+      const dropName = qs("#dropName");
+      const dropRole = qs("#dropRole");
+      if(dropName) dropName.textContent = user.name;
+      if(dropRole) dropRole.textContent = translateRole(user.role);
+
+      // 3. 🚀 CHECK ROLE FOR SWITCH BUTTON
+      const switchBtn = qs("#switchRoleBtn");
+      // Roles allowed to see the Manager Portal
+      const managerRoles = ['Manager', 'Dean', 'Head_of_Department', 'HR_Admin'];
+      
+      if (switchBtn) {
+          if (managerRoles.includes(user.role)) {
+              switchBtn.style.display = 'flex'; // Show button
+              // You can customize the link based on role if needed, e.g.:
+              // if (user.role === 'HR_Admin') switchBtn.href = '../admin/admin.html';
+          } else {
+              switchBtn.style.display = 'none'; // Hide for normal employees
+          }
+      }
+
+      // 4. Setup Dropdown Toggle
       const userInfoEl = qs("#userInfo");
-      if (userInfoEl) {
-        userInfoEl.style.cursor = "pointer";
-        userInfoEl.onclick = showUserProfile;
+      const dropdown = qs("#profileDropdown");
+
+      if (userInfoEl && dropdown) {
+          userInfoEl.onclick = (e) => {
+              if(!e.target.closest('.dropdown-item')) {
+                  e.stopPropagation();
+                  dropdown.classList.toggle('active');
+              }
+          };
+
+          document.addEventListener('click', (e) => {
+              if (!dropdown.contains(e.target) && !userInfoEl.contains(e.target)) {
+                  dropdown.classList.remove('active');
+              }
+          });
+      }
+
+      // 5. Logout Logic
+      const logoutBtn = qs("#logoutBtn");
+      if (logoutBtn) {
+          logoutBtn.onclick = (e) => {
+              e.preventDefault();
+              clearToken();
+              window.location.href = "../index.html"; 
+          };
       }
     }
   } catch (e) {
     console.log("Could not load profile:", e.message);
   }
+}
+
+// Add this helper if not already in employee.js
+function translateRole(role) {
+    const map = {
+        'Manager': 'مدير',
+        'Dean': 'عميد الكلية',
+        'Head_of_Department': 'رئيس القسم',
+        'HR_Admin': 'الموارد البشرية',
+        'Employee': 'موظف'
+    };
+    return map[role] || role;
 }
 
 function showUserProfile() {

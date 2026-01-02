@@ -1,3 +1,23 @@
+// // ===== PROTECTION LOGIC (Add at the top) =====
+// (function protectManagerPage() {
+//     const user = JSON.parse(localStorage.getItem('user'));
+    
+//     // 1. Check Login
+//     if (!user || !localStorage.getItem('token')) {
+//         window.location.href = '../index.html'; // Or login.html
+//         return;
+//     }
+
+//     // 2. Check Role Authorization
+//     const allowedRoles = ['Manager', 'Dean', 'Head_of_Department', 'HR_Admin'];
+    
+//     // If role is NOT in the allowed list, redirect to employee dashboard
+//     if (!allowedRoles.includes(user.role)) {
+//         alert("عفواً، ليس لديك صلاحية للوصول لبوابة المدير.");
+//         window.location.href = '../employee/employee.html';
+//     }
+// })();
+
 // ===== Page: Manager =====
 wireModalClose();
 
@@ -58,7 +78,182 @@ function renderStats(data) {
   // Update badge
   qs("#pendingCount").textContent = pending;
 }
+async function loadDashboard() {
+  const res = await apiFetch(`/api/me/dashboard`);
+  renderDashboard(res?.data);
+}
 
+// ===== UPDATE THIS FUNCTION =====
+// ===== UPDATED LOAD PROFILE FUNCTION =====
+// ===== UPDATED LOAD PROFILE FUNCTION (Fixed Link) =====
+// ===== UPDATED LOAD PROFILE FUNCTION (For Manager.js) =====
+async function loadProfile() {
+  try {
+    const res = await apiFetch(`/api/profile`);
+    const user = res?.data?.user;
+    
+    if (user) {
+      currentUser = user;
+      
+      // 1. Fill Header Info
+      const nameEl = qs("#userName");
+      const avatarEl = qs("#userAvatar");
+      const deptEl = qs("#userDepartment");
+      
+      if (nameEl) nameEl.textContent = user.name || "المدير";
+      if (avatarEl) avatarEl.textContent = (user.name || "م")[0];
+      if (deptEl) deptEl.textContent = translateRole(user.role);
+
+      // 2. Fill Dropdown Info
+      const dropName = qs("#dropName");
+      const dropRole = qs("#dropRole");
+      if(dropName) dropName.textContent = user.name;
+      if(dropRole) dropRole.textContent = translateRole(user.role);
+
+      // 3. Setup Dropdown Toggle
+      const userInfoEl = qs("#userInfo");
+      const dropdown = qs("#profileDropdown");
+
+      if (userInfoEl && dropdown) {
+          userInfoEl.onclick = (e) => {
+              // Only toggle if we didn't click a link inside
+              if(!e.target.closest('.dropdown-item')) {
+                  e.stopPropagation();
+                  dropdown.classList.toggle('active');
+              }
+          };
+
+          // Close when clicking outside
+          document.addEventListener('click', (e) => {
+              if (!dropdown.contains(e.target) && !userInfoEl.contains(e.target)) {
+                  dropdown.classList.remove('active');
+              }
+          });
+      }
+
+      // 4. ✅ FIX: Set Link to Go TO Employee Portal
+      const switchBtn = qs("#switchRoleBtn");
+      if (switchBtn) {
+          // This sets the correct path relative to the manager folder
+          switchBtn.href = "../employee/employee.html"; 
+      }
+
+      // 5. Setup Logout Logic
+      const logoutBtn = qs("#logoutBtn");
+      if (logoutBtn) {
+          logoutBtn.onclick = (e) => {
+              e.preventDefault();
+              clearToken();
+              window.location.href = "../index.html"; 
+          };
+      }
+    }
+  } catch (e) {
+    console.log("Could not load profile:", e.message);
+  }
+}
+
+// Helper to Translate Roles
+function translateRole(role) {
+    const map = {
+        'Manager': 'مدير',
+        'Dean': 'عميد الكلية',
+        'Head_of_Department': 'رئيس القسم',
+        'HR_Admin': 'الموارد البشرية'
+    };
+    return map[role] || role;
+}
+function showUserProfile() {
+  if (!currentUser) return;
+  const u = currentUser;
+
+  const genderText =
+    u.gender === "Male"
+      ? "ذكر"
+      : u.gender === "Female"
+      ? "أنثى"
+      : u.gender || "—";
+  const userTypeText =
+    u.user_type === "Academic"
+      ? "أكاديمي"
+      : u.user_type === "Administrative"
+      ? "إداري"
+      : u.user_type || "—";
+
+  openModal(`
+    <div class="modal-header">
+      <div class="modal-title">
+        <span class="modal-icon">👤</span>
+        <div>
+          <h2>الملف الشخصي</h2>
+          <span class="modal-subtitle">تفاصيل الموظف</span>
+        </div>
+      </div>
+      <button class="modal-close-btn" onclick="closeModal()">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="profile-header">
+        <div class="profile-avatar">${escapeHtml((u.name || "؟")[0])}</div>
+        <div class="profile-name">${escapeHtml(u.name || "—")}</div>
+        <div class="profile-role">${escapeHtml(u.role || "—")}</div>
+      </div>
+      
+      <div class="profile-grid">
+        <div class="profile-item">
+          <div class="profile-label">📧 البريد الإلكتروني</div>
+          <div class="profile-value">${escapeHtml(u.email || "—")}</div>
+        </div>
+        <div class="profile-item">
+          <div class="profile-label">📞 رقم الهاتف</div>
+          <div class="profile-value">${escapeHtml(u.phone || "—")}</div>
+        </div>
+        <div class="profile-item">
+          <div class="profile-label">🏢 نوع الموظف</div>
+          <div class="profile-value">${escapeHtml(userTypeText)}</div>
+        </div>
+        <div class="profile-item">
+          <div class="profile-label">👥 الجنس</div>
+          <div class="profile-value">${escapeHtml(genderText)}</div>
+        </div>
+        <div class="profile-item">
+          <div class="profile-label">📅 تاريخ التعيين</div>
+          <div class="profile-value">${fmtDate(u.hire_date)}</div>
+        </div>
+        <div class="profile-item">
+          <div class="profile-label">🎂 تاريخ الميلاد</div>
+          <div class="profile-value">${fmtDate(u.date_of_birth)}</div>
+        </div>
+        <div class="profile-item">
+          <div class="profile-label">🆔 رقم الموظف</div>
+          <div class="profile-value">${escapeHtml(u.user_id || "—")}</div>
+        </div>
+        <div class="profile-item">
+          <div class="profile-label">📍 الحالة</div>
+          <div class="profile-value">${
+            u.is_active
+              ? '<span style="color: var(--chip-1)">✔ نشط</span>'
+              : '<span style="color: var(--bad)">✖ غير نشط</span>'
+          }</div>
+        </div>
+      </div>
+    </div>
+  `);
+}
+async function loadRequests() {
+  const res = await apiFetch(`/api/me/leave-requests`);
+  allRequests = Array.isArray(res?.data) ? res.data : [];
+  renderRequestsTable();
+  // Update requests count badge
+  const countBadge = qs("#requestsCount");
+  if (countBadge) {
+    countBadge.textContent = allRequests.length;
+  }
+}
 function getLeaveType(x) {
   return (
     x.request?.leaveType?.type_name ||
@@ -546,13 +741,18 @@ qs("#loadTeamLeaveBtn")?.addEventListener("click", () => loadTeamOnLeave());
 async function loadAll() {
   try {
     toast("تحميل", "جاري جلب بيانات المدير...");
-    await Promise.all([loadDashboard(), loadReports(), loadTeamOnLeave()]);
-    toast("تمام", "اتحدثت البيانات بنجاح");
+    // ✅ يجب إضافة loadProfile() هنا ليعمل الهيدر
+    await Promise.all([
+        loadProfile(), 
+        loadDashboard(), 
+        loadReports(), 
+        loadTeamOnLeave()
+    ]);
+    toast("تمام", "تم تحديث البيانات بنجاح");
   } catch (e) {
     toast("خطأ", e.message);
   }
 }
-
 
 // ==========================================
 // 🔔 NOTIFICATION SYSTEM LOGIC (CONNECTED)
