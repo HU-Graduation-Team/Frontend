@@ -660,24 +660,71 @@ function renderReports(data) {
 
   // Render table
   const body = qs("#reportsBody");
-  body.innerHTML = report.length
-    ? report
-        .map(
-          (r) => `
-    <tr>
-      <td>${escapeHtml(r.employeeName || "-")}</td>
-      <td>${escapeHtml(r.department || "-")}</td>
-      <td>${escapeHtml(r.leaveType || "-")}</td>
-      <td>${fmtDate(r.startDate)}</td>
-      <td>${fmtDate(r.endDate)}</td>
-      <td>${r.duration || "-"} يوم</td>
-      <td>${statusBadge(r.status)}</td>
-      <td>${fmtDate(r.createdAt)}</td>
-    </tr>
-  `
-        )
-        .join("")
-    : `<tr><td colspan="8" class="muted">لا يوجد بيانات.</td></tr>`;
+
+body.innerHTML = report.length
+  ? report.map((r) => {
+      
+      // 🟢 START OF NEW CODE: Handling Comments nicely
+      let commentsHtml = "-";
+
+if (Array.isArray(r.comments) && r.comments.length > 0) {
+  commentsHtml = r.comments.map(c => `
+    <div style="
+        background-color: #fff; 
+        border: 1px solid #e2e8f0; 
+        border-radius: 8px; 
+        padding: 8px 12px; 
+        margin-bottom: 6px; 
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        font-family: 'Tajawal', sans-serif;
+    ">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+          <span style="font-weight: 700; color: #1e293b; font-size: 13px;">
+              ${escapeHtml(c.approver || "Unknown")}
+          </span>
+          <span style="
+              background-color: #f1f5f9; 
+              color: #475569; 
+              padding: 2px 6px; 
+              border-radius: 4px; 
+              font-size: 10px; 
+              font-weight: 600;
+          ">
+              ${escapeHtml(c.role || "Approver")}
+          </span>
+      </div>
+      
+      <div style="
+          color: #334155; 
+          font-size: 13px; 
+          line-height: 1.5; 
+          font-weight: 500;
+      ">
+          ${escapeHtml(c.comment || "")}
+      </div>
+    </div>
+  `).join("");
+}
+      // 🔴 END OF NEW CODE
+
+      return `
+        <tr>
+          <td>${escapeHtml(r.employeeName || "-")}</td>
+          <td>${escapeHtml(r.department || "-")}</td>
+          <td>${escapeHtml(r.leaveType || "-")}</td>
+          <td>${fmtDate(r.startDate)}</td>
+          <td>${fmtDate(r.endDate)}</td>
+          <td>${r.duration || "-"} يوم</td>
+          <td>${statusBadge(r.status)}</td>
+          <td>${fmtDate(r.createdAt)}</td>
+          
+          <td style="max-width: 250px; text-align: right; vertical-align: top;">
+             ${commentsHtml}
+          </td>
+        </tr>
+      `;
+    }).join("")
+  : `<tr><td colspan="9" class="muted">لا يوجد بيانات.</td></tr>`;
 }
 
 // Wire reports button
@@ -941,6 +988,74 @@ document.addEventListener('DOMContentLoaded', function() {
     // Optional: Auto-refresh every 60 seconds to check for new messages
     setInterval(loadNotifications, 60000);
 });
+
+// ==========================================
+// 📊 EXPORT TO EXCEL LOGIC
+// ==========================================
+
+function exportReportsToExcel() {
+    // 1. Check if data exists
+    if (!reportsData || !reportsData.report || reportsData.report.length === 0) {
+        toast("تنبيه", "لا يوجد بيانات لتصديرها");
+        return;
+    }
+
+    // 2. Define Arabic Headers
+    const headers = [
+        "اسم الموظف",
+        "القسم",
+        "نوع الإجازة",
+        "تاريخ البداية",
+        "تاريخ النهاية",
+        "المدة (أيام)",
+        "الحالة",
+        "تاريخ الطلب"
+    ];
+
+    // 3. Map Data Rows
+    const rows = reportsData.report.map(r => {
+        return [
+            `"${r.employeeName || "-"}"`,  // Wrap in quotes to handle commas in names
+            `"${r.department || "-"}"`,
+            `"${r.leaveType || "-"}"`,
+            fmtDate(r.startDate),
+            fmtDate(r.endDate),
+            r.duration || 0,
+            `"${translateStatusForExcel(r.status)}"`, // Translate status to Arabic
+            fmtDate(r.createdAt)
+        ].join(","); // Join columns with comma
+    });
+
+    // 4. Combine Headers and Rows
+    const csvContent = [headers.join(","), ...rows].join("\n");
+
+    // 5. Create Blob with BOM (Byte Order Mark) for Arabic Support
+    // \uFEFF is crucial for Excel to recognize Arabic characters correctly
+    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+    
+    // 6. Trigger Download
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `تقرير_الاجازات_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// Helper to translate status for the Excel file (Plain text, no HTML)
+function translateStatusForExcel(status) {
+    const s = String(status).toLowerCase();
+    if (s.includes('approve')) return 'مقبول';
+    if (s.includes('reject')) return 'مرفوض';
+    if (s.includes('pend')) return 'قيد الانتظار';
+    return status;
+}
+// Wire Export Button
+const exportBtn = document.getElementById("exportReportBtn");
+if (exportBtn) {
+    exportBtn.addEventListener("click", exportReportsToExcel);
+}
 
 
 loadAll();

@@ -130,19 +130,74 @@ function renderTypeSelect() {
 function onTypeChange() {
   const id = Number(qs("#typeSelect").value);
   const t = eligibleTypes.find((x) => Number(x.type_id) === id);
-  const hint = qs("#typeHint");
-  const docWrap = qs("#docWrap");
 
-  if (!t) {
-    hint.textContent = "";
-    docWrap.style.display = "none";
-    return;
+  const hint = qs("#typeHint");
+  const delegateWrap = qs("#delegateWrapper");
+  const docsContainer = qs("#dynamicDocsContainer");
+
+  // 1. Reset UI
+  docsContainer.innerHTML = "";
+  if (delegateWrap) delegateWrap.style.display = "none";
+  if (hint) hint.textContent = "";
+
+  if (!t) return;
+
+  // 🔍 Debug: See exactly what the API sent in the console
+  console.log("Selected Type Data:", t);
+
+  // 2. Update Hint
+  if (hint)
+    hint.textContent = `الحد الأقصى: ${t.max_days_per_request ?? "-"} يوم`;
+
+  // 3. Handle Delegate (ROBUST CHECK FIXED 🛠️)
+  // We explicitly convert to boolean using Boolean() to handle 1 or true
+  const rawDelegateVal = t.requires_delegate ?? t.requiresDelegate;
+  const needsDelegate = Boolean(rawDelegateVal) === true;
+
+  if (needsDelegate && delegateWrap) {
+    delegateWrap.style.display = "block";
+    loadDelegates();
   }
 
-  hint.textContent = `الحد الأقصى للطلب: ${
-    t.max_days_per_request ?? "-"
-  } يوم | المستند: ${t.requires_document ? "مطلوب" : "غير مطلوب"}`;
-  docWrap.style.display = t.requires_document ? "block" : "none";
+  // 4. Handle Dynamic Documents
+  const requirements = t.requiredDocuments || t.document_requirements || [];
+
+  if (requirements.length > 0) {
+    requirements.forEach((doc) => {
+      // Create Wrapper
+      const div = document.createElement("div");
+      div.className = "form-group";
+
+      // Label
+      const label = document.createElement("label");
+      label.textContent =
+        (doc.document_name || doc.name) +
+        (doc.is_mandatory ? " *" : " (اختياري)");
+      label.style.display = "block";
+      label.style.marginBottom = "8px";
+      label.style.fontWeight = "600";
+      if (doc.is_mandatory) label.style.color = "#dc2626";
+
+      // Input
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = ".pdf,.png,.jpg,.jpeg";
+      input.className = "dynamic-doc-input";
+      input.style.width = "100%";
+      input.style.padding = "10px";
+      input.style.border = "1px solid #e2e8f0";
+      input.style.borderRadius = "8px";
+
+      // Store ID
+      const reqId = doc.document_requirement_id || doc.id;
+      input.setAttribute("data-req-id", reqId);
+      input.setAttribute("data-mandatory", doc.is_mandatory);
+
+      div.appendChild(label);
+      div.appendChild(input);
+      docsContainer.appendChild(div);
+    });
+  }
 }
 
 function renderDashboard(data) {
@@ -171,44 +226,46 @@ function renderDashboard(data) {
 
   // 2. عرض جدول "آخر الطلبات" (مع زر العودة الجديد)
   const body = qs("#recentBody");
-  
+
   // ضبط تاريخ اليوم (بدون ساعات) للمقارنة الصحيحة
   const todayDateOnly = new Date();
-  todayDateOnly.setHours(0,0,0,0);
+  todayDateOnly.setHours(0, 0, 0, 0);
 
   body.innerHTML = recent.length
     ? recent
         .map((r) => {
-            // --- منطق زر العودة ---
-            const endDate = new Date(r.end_date);
-            
-            // هل الحالة Approved + التاريخ انتهى + لم يسجل عودة بعد؟
-            const isApproved = r.status === 'Approved';
-            const isFinished = todayDateOnly > endDate;
-            const notReturned = !r.returned_at;
+          // --- منطق زر العودة ---
+          const endDate = new Date(r.end_date);
 
-            let actionOrStatus = statusBadge(r.status); // الافتراضي: عرض الحالة فقط
+          // هل الحالة Approved + التاريخ انتهى + لم يسجل عودة بعد؟
+          const isApproved = r.status === "Approved";
+          const isFinished = todayDateOnly > endDate;
+          const notReturned = !r.returned_at;
 
-            // لو الشروط تحققت، اعرض الزر بجانب الحالة أو بدلاً منها
-            if (isApproved && isFinished && notReturned) {
-                actionOrStatus = `
+          let actionOrStatus = statusBadge(r.status); // الافتراضي: عرض الحالة فقط
+
+          // لو الشروط تحققت، اعرض الزر بجانب الحالة أو بدلاً منها
+          if (isApproved && isFinished && notReturned) {
+            actionOrStatus = `
                     <div style="display:flex; align-items:center; gap:8px;">
                         ${statusBadge(r.status)}
                         <button class="btn" 
                                 style="background-color: #014964; color: white; border:none; padding: 4px 10px; font-size: 12px;" 
-                                onclick="submitReturnDeclaration(${r.request_id})">
+                                onclick="submitReturnDeclaration(${
+                                  r.request_id
+                                })">
                             تسجيل عودة ↩
                         </button>
                     </div>
                 `;
-            } else if (r.returned_at) {
-                 actionOrStatus = `
+          } else if (r.returned_at) {
+            actionOrStatus = `
                     <div style="display:flex; flex-direction:column; gap:2px;">
                         ${statusBadge(r.status)}
                         <span style="font-size:11px; color:green; font-weight:bold;">تمت العودة ✅</span>
                     </div>
                  `;
-            }
+          }
 
           return `
             <tr>
@@ -224,18 +281,25 @@ function renderDashboard(data) {
 
   // 3. تحديث الإحصائيات (كما هي)
   const norm = (s) => String(s || "").toLowerCase();
-  const approved = recent.filter((r) => norm(r.status).includes("approved")).length;
-  const pending = recent.filter((r) => norm(r.status).includes("pending")).length;
-  const rejected = recent.filter((r) => norm(r.status).includes("rejected")).length;
+  const approved = recent.filter((r) =>
+    norm(r.status).includes("approved")
+  ).length;
+  const pending = recent.filter((r) =>
+    norm(r.status).includes("pending")
+  ).length;
+  const rejected = recent.filter((r) =>
+    norm(r.status).includes("rejected")
+  ).length;
   const total = recent.length;
-  
+
   const setStat = (id, valId, value) => {
     const el = qs(id);
     const bar = qs(valId);
     if (el) el.textContent = value.toLocaleString("ar-EG");
-    if (bar) bar.style.width = Math.min(100, (total ? (value / total) * 100 : 0)) + "%";
+    if (bar)
+      bar.style.width = Math.min(100, total ? (value / total) * 100 : 0) + "%";
   };
-  
+
   setStat("#statTotal", "#statTotalBar", total);
   setStat("#statApproved", "#statApprovedBar", approved);
   setStat("#statPending", "#statPendingBar", pending);
@@ -307,29 +371,29 @@ function renderRequestsTable() {
   body.innerHTML = filtered.length
     ? filtered
         .map((r) => {
-            // Logic for Return Button
-            const endDate = new Date(r.end_date);
-            const isApproved = r.status === 'Approved';
-            const isFinished = today > endDate; // Leave date has passed
-            const notReturned = r.returned_at === null; // Hasn't clicked button yet
+          // Logic for Return Button
+          const endDate = new Date(r.end_date);
+          const isApproved = r.status === "Approved";
+          const isFinished = today > endDate; // Leave date has passed
+          const notReturned = r.returned_at === null; // Hasn't clicked button yet
 
-            // Determine what to show in the 4th column
-            let actionHtml = `<button class="btn" data-view="${r.request_id}">عرض التفاصيل</button>`;
+          // Determine what to show in the 4th column
+          let actionHtml = `<button class="btn" data-view="${r.request_id}">عرض التفاصيل</button>`;
 
-            // If ready to return, show "Return to Work" button instead
-            if (isApproved && isFinished && notReturned) {
-                actionHtml = `
+          // If ready to return, show "Return to Work" button instead
+          if (isApproved && isFinished && notReturned) {
+            actionHtml = `
                     <button class="btn" style="background-color: #014964; color: white;" 
                             onclick="submitReturnDeclaration(${r.request_id})">
                         تسجيل عودة
                     </button>
                     <button class="btn" data-view="${r.request_id}" style="margin-right:5px; font-size:12px;">تفاصيل</button>
                 `;
-            } else if (r.returned_at) {
-                actionHtml += ` <span style="font-size:12px; color:green; display:block">تمت العودة ✅</span>`;
-            }
+          } else if (r.returned_at) {
+            actionHtml += ` <span style="font-size:12px; color:green; display:block">تمت العودة ✅</span>`;
+          }
 
-            return `
+          return `
             <tr>
               <td>${r.request_id}</td>
               <td>${escapeHtml(r.leaveType?.type_name || "-")}</td>
@@ -442,10 +506,10 @@ async function loadProfile() {
   try {
     const res = await apiFetch(`/api/profile`);
     const user = res?.data?.user;
-    
+
     if (user) {
       currentUser = user;
-      
+
       // 1. Fill Header Info
       const nameEl = qs("#userName");
       const avatarEl = qs("#userAvatar");
@@ -459,22 +523,27 @@ async function loadProfile() {
       // 2. Fill Dropdown Info
       const dropName = qs("#dropName");
       const dropRole = qs("#dropRole");
-      if(dropName) dropName.textContent = user.name;
-      if(dropRole) dropRole.textContent = translateRole(user.role);
+      if (dropName) dropName.textContent = user.name;
+      if (dropRole) dropRole.textContent = translateRole(user.role);
 
       // 3. 🚀 CHECK ROLE FOR SWITCH BUTTON
       const switchBtn = qs("#switchRoleBtn");
       // Roles allowed to see the Manager Portal
-      const managerRoles = ['Manager', 'Dean', 'Head_of_Department', 'HR_Admin'];
-      
+      const managerRoles = [
+        "Manager",
+        "Dean",
+        "Head_of_Department",
+        "HR_Admin",
+      ];
+
       if (switchBtn) {
-          if (managerRoles.includes(user.role)) {
-              switchBtn.style.display = 'flex'; // Show button
-              // You can customize the link based on role if needed, e.g.:
-              // if (user.role === 'HR_Admin') switchBtn.href = '../admin/admin.html';
-          } else {
-              switchBtn.style.display = 'none'; // Hide for normal employees
-          }
+        if (managerRoles.includes(user.role)) {
+          switchBtn.style.display = "flex"; // Show button
+          // You can customize the link based on role if needed, e.g.:
+          // if (user.role === 'HR_Admin') switchBtn.href = '../admin/admin.html';
+        } else {
+          switchBtn.style.display = "none"; // Hide for normal employees
+        }
       }
 
       // 4. Setup Dropdown Toggle
@@ -482,28 +551,28 @@ async function loadProfile() {
       const dropdown = qs("#profileDropdown");
 
       if (userInfoEl && dropdown) {
-          userInfoEl.onclick = (e) => {
-              if(!e.target.closest('.dropdown-item')) {
-                  e.stopPropagation();
-                  dropdown.classList.toggle('active');
-              }
-          };
+        userInfoEl.onclick = (e) => {
+          if (!e.target.closest(".dropdown-item")) {
+            e.stopPropagation();
+            dropdown.classList.toggle("active");
+          }
+        };
 
-          document.addEventListener('click', (e) => {
-              if (!dropdown.contains(e.target) && !userInfoEl.contains(e.target)) {
-                  dropdown.classList.remove('active');
-              }
-          });
+        document.addEventListener("click", (e) => {
+          if (!dropdown.contains(e.target) && !userInfoEl.contains(e.target)) {
+            dropdown.classList.remove("active");
+          }
+        });
       }
 
       // 5. Logout Logic
       const logoutBtn = qs("#logoutBtn");
       if (logoutBtn) {
-          logoutBtn.onclick = (e) => {
-              e.preventDefault();
-              clearToken();
-              window.location.href = "../index.html"; 
-          };
+        logoutBtn.onclick = (e) => {
+          e.preventDefault();
+          clearToken();
+          window.location.href = "../index.html";
+        };
       }
     }
   } catch (e) {
@@ -511,16 +580,82 @@ async function loadProfile() {
   }
 }
 
+// Variable to cache delegates
+let delegatesList = [];
+
+async function loadDelegates() {
+  console.log("🚀 loadDelegates function started...");
+
+  // Remove this line temporarily so we can retry fetching if it failed before
+  // if (delegatesList.length > 0) return;
+
+  const sel = document.getElementById("delegateSelect");
+  if (!sel) {
+    console.error(
+      "❌ Error: Could not find <select id='delegateSelect'> in the HTML."
+    );
+    return;
+  }
+
+  // Show loading state
+  sel.innerHTML = '<option value="">⏳ جاري التحميل...</option>';
+
+  try {
+    console.log("📡 Sending request to: /api/employee/users");
+
+    // Make the API Call
+    const res = await apiFetch("/api/me/users");
+
+    console.log("📥 API Response received:", res);
+
+    // Extract Data
+    delegatesList = res.data || [];
+    console.log("🔢 Number of delegates found:", delegatesList.length);
+
+    // Check if list is empty
+    if (delegatesList.length === 0) {
+      console.warn(
+        "⚠️ The backend returned 0 users. Check if you have other active users in the SAME department."
+      );
+      sel.innerHTML =
+        '<option value="">🚫 لا يوجد زملاء متاحين في القسم</option>';
+      return;
+    }
+
+    // Render Options
+    const optionsHtml = delegatesList
+      .map((u) => {
+        // Ensure we use the correct ID field
+        const id = u.user_id || u.id;
+        const label = u.job_title ? `${u.name} (${u.job_title})` : u.name;
+        return `<option value="${id}">${label}</option>`;
+      })
+      .join("");
+
+    sel.innerHTML = '<option value="">-- اختر زميل --</option>' + optionsHtml;
+    console.log("✅ Dropdown successfully populated.");
+  } catch (e) {
+    console.error("❌ Failed to load delegates. Error details:", e);
+    sel.innerHTML = '<option value="">⚠️ خطأ في تحميل القائمة</option>';
+
+    // Optional: Alert specifically for 404
+    if (e.message && e.message.includes("404")) {
+      console.error(
+        "👉 CAUSE: The route '/api/employee/users' does not exist on the server."
+      );
+    }
+  }
+}
 // Add this helper if not already in employee.js
 function translateRole(role) {
-    const map = {
-        'Manager': 'مدير',
-        'Dean': 'عميد الكلية',
-        'Head_of_Department': 'رئيس القسم',
-        'HR_Admin': 'الموارد البشرية',
-        'Employee': 'موظف'
-    };
-    return map[role] || role;
+  const map = {
+    Manager: "مدير",
+    Dean: "عميد الكلية",
+    Head_of_Department: "رئيس القسم",
+    HR_Admin: "الموارد البشرية",
+    Employee: "موظف",
+  };
+  return map[role] || role;
 }
 
 function showUserProfile() {
@@ -640,49 +775,76 @@ async function loadAll() {
 
 qs("#submitBtn").addEventListener("click", async () => {
   try {
-    // 1. جمع البيانات
+    const submitBtn = qs("#submitBtn");
+
+    // 1. Basic Data
     const type_id = Number(qs("#typeSelect").value);
     const start_date = qs("#startDate").value;
     const end_date = qs("#endDate").value;
     const reason = qs("#reason").value.trim();
-    const file = qs("#document").files?.[0] || null;
-    
-    // تعريف الـ Checkbox
     const ackCheckbox = qs("#acknowledgementCheckbox");
 
-    // 2. التحقق من البيانات الأساسية
+    // 2. Basic Validation
     if (!type_id || !start_date || !end_date || !reason) {
       toast("ناقص بيانات", "من فضلك املأ النوع + التواريخ + السبب");
       return;
     }
 
-    // 🛑 3. التحقق من الإقرار (Check Validation)
-    // هذا هو الكود المسؤول عن منع الإرسال
     if (!ackCheckbox || !ackCheckbox.checked) {
-      toast("تنبيه", "⚠️ يجب وضع علامة صح على إقرار القيام بالإجازة.");
-      return; // 👈 هذا الأمر يوقف الدالة تماماً ويمنع الوصول لكود الإرسال
-    }
-
-    // 4. التحقق من التواريخ
-    const sd = new Date(start_date + "T00:00:00");
-    const ed = new Date(end_date + "T00:00:00");
-    if (ed < sd) {
-      toast("تواريخ غير صحيحة", "End Date لازم يكون بعد Start Date");
+      toast("تنبيه", "⚠️ يجب الموافقة على الإقرار.");
       return;
     }
 
-    // ... باقي الكود (FormData و apiFetch) ...
+    // 3. Delegate Validation
+    const delegateWrap = qs("#delegateWrapper");
+    const delegateSelect = qs("#delegateSelect");
+    let delegateId = null;
+
+    // If delegate wrapper is visible, validation is required
+    if (delegateWrap && delegateWrap.style.display !== "none") {
+      if (!delegateSelect.value) {
+        toast("تنبيه", "هذا النوع من الإجازة يتطلب تحديد موظف مفوض.");
+        return;
+      }
+      delegateId = delegateSelect.value;
+    }
+
+    // 4. Collect & Validate Dynamic Documents
     const fd = new FormData();
+    const docInputs = document.querySelectorAll(".dynamic-doc-input");
+
+    for (const input of docInputs) {
+      const reqId = input.getAttribute("data-req-id");
+      const isMandatory = input.getAttribute("data-mandatory") === "true";
+      const file = input.files[0];
+
+      if (isMandatory && !file) {
+        toast("مستند ناقص", "يرجى إرفاق جميع المستندات المطلوبة.");
+        return;
+      }
+
+      if (file) {
+        // ✅ Map to backend format: doc_{id}
+        fd.append(`doc_${reqId}`, file);
+      }
+    }
+
+    // 5. Append Standard Fields
     fd.append("type_id", String(type_id));
     fd.append("start_date", start_date);
     fd.append("end_date", end_date);
     fd.append("reason", reason);
-    // نرسل القيمة true للسيرفر
-    fd.append("pre_leave_acknowledgement", "true"); 
+    fd.append("pre_leave_acknowledgement", "true");
 
-    if (file) fd.append("document", file);
+    if (delegateId) {
+      fd.append("delegate_user_id", delegateId);
+    }
 
-    // الإرسال الفعلي
+    // 6. Submit
+    submitBtn.disabled = true;
+    const originalText = submitBtn.innerHTML;
+    submitBtn.textContent = "جاري الإرسال...";
+
     await apiFetch(`/api/me/leave-requests`, {
       method: "POST",
       body: fd,
@@ -690,92 +852,96 @@ qs("#submitBtn").addEventListener("click", async () => {
     });
 
     toast("تم الإرسال", "تم إنشاء الطلب بنجاح");
-    
-    // تنظيف الحقول
+
+    // Reset Form
     qs("#reason").value = "";
-    qs("#document").value = "";
-    ackCheckbox.checked = false; // 👈 إزالة العلامة بعد النجاح
-    
+    qs("#dynamicDocsContainer").innerHTML = "";
+    ackCheckbox.checked = false;
+    qs("#typeSelect").dispatchEvent(new Event("change")); // Reset dynamic UI
+
     await loadAll();
     switchTab("history");
-
   } catch (e) {
     toast("خطأ", e.message);
+  } finally {
+    const submitBtn = qs("#submitBtn");
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = `
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-left: 8px">
+          <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
+        </svg> إرسال الطلب`;
   }
 });
 
-// ==========================================
-// 🔔 NOTIFICATION SYSTEM LOGIC (CONNECTED)
-// ==========================================
-
-// Global variable to hold data
-let myNotifications = [];
-
-// 1. Master Load Function (Loads List & Count in parallel)
-async function loadNotifications() {
-    await Promise.all([
-        fetchNotificationList(),
-        fetchUnreadCount()
-    ]);
-}
-
 // 2. Fetch The List (The 20 most recent)
 async function fetchNotificationList() {
-    const notifList = document.getElementById('notifList');
-    const emptyState = document.getElementById('emptyState');
-    
-    try {
-        // Calls: GET /api/notifications
-        const res = await apiFetch('/api/notifications'); 
-        
-        // Based on your controller: res.data is the array (data.rows)
-        const data = res.data || [];
-        myNotifications = data;
+  const notifList = document.getElementById("notifList");
+  const emptyState = document.getElementById("emptyState");
 
-        // Clear current HTML list
-        notifList.innerHTML = '';
+  try {
+    // Calls: GET /api/notifications
+    const res = await apiFetch("/api/notifications");
 
-        // Handle Empty State
-        if (myNotifications.length === 0) {
-            emptyState.style.display = 'block';
-            return;
-        }
+    // Based on your controller: res.data is the array (data.rows)
+    const data = res.data || [];
+    myNotifications = data;
 
-        emptyState.style.display = 'none';
+    // Clear current HTML list
+    notifList.innerHTML = "";
 
-        // Render Items
-        myNotifications.forEach(notif => {
-            // Check if read or unread
-            const isUnread = !notif.is_read; 
-            const itemClass = isUnread ? 'notif-item unread' : 'notif-item';
-            
-            // Icon & Color Logic based on Title/Type
-            let icon = '<i class="fa-solid fa-circle-info"></i>';
-            let bgClass = 'primary-bg'; 
+    // Handle Empty State
+    if (myNotifications.length === 0) {
+      emptyState.style.display = "block";
+      return;
+    }
 
-            const title = (notif.title || "").toLowerCase();
-            const type = (notif.type || "").toUpperCase();
+    emptyState.style.display = "none";
 
-            // Customize icons
-            if (type === 'SUCCESS' || title.includes('قبول') || title.includes('approved')) {
-                icon = '<i class="fa-solid fa-check"></i>';
-                bgClass = 'success-bg'; 
-            } else if (type === 'WARNING' || title.includes('مراجعة') || title.includes('pending')) {
-                icon = '<i class="fa-solid fa-hourglass-half"></i>';
-                bgClass = 'warning-bg'; 
-            } else if (type === 'ERROR' || title.includes('رفض') || title.includes('rejected')) {
-                icon = '<i class="fa-solid fa-xmark"></i>';
-                bgClass = 'danger-bg'; 
-            }
+    // Render Items
+    myNotifications.forEach((notif) => {
+      // Check if read or unread
+      const isUnread = !notif.is_read;
+      const itemClass = isUnread ? "notif-item unread" : "notif-item";
 
-            // Create HTML Element
-            const li = document.createElement('div');
-            li.className = itemClass;
-            
-            // Use correct ID field
-            const nId = notif.notification_id || notif.id; 
+      // Icon & Color Logic based on Title/Type
+      let icon = '<i class="fa-solid fa-circle-info"></i>';
+      let bgClass = "primary-bg";
 
-            li.innerHTML = `
+      const title = (notif.title || "").toLowerCase();
+      const type = (notif.type || "").toUpperCase();
+
+      // Customize icons
+      if (
+        type === "SUCCESS" ||
+        title.includes("قبول") ||
+        title.includes("approved")
+      ) {
+        icon = '<i class="fa-solid fa-check"></i>';
+        bgClass = "success-bg";
+      } else if (
+        type === "WARNING" ||
+        title.includes("مراجعة") ||
+        title.includes("pending")
+      ) {
+        icon = '<i class="fa-solid fa-hourglass-half"></i>';
+        bgClass = "warning-bg";
+      } else if (
+        type === "ERROR" ||
+        title.includes("رفض") ||
+        title.includes("rejected")
+      ) {
+        icon = '<i class="fa-solid fa-xmark"></i>';
+        bgClass = "danger-bg";
+      }
+
+      // Create HTML Element
+      const li = document.createElement("div");
+      li.className = itemClass;
+
+      // Use correct ID field
+      const nId = notif.notification_id || notif.id;
+
+      li.innerHTML = `
                 <div class="notif-icon ${bgClass}">
                     ${icon}
                 </div>
@@ -784,112 +950,114 @@ async function fetchNotificationList() {
                     <p>${escapeHtml(notif.message)}</p>
                     <span class="time">${fmtDate(notif.created_at)}</span>
                 </div>
-                ${isUnread ? `
+                ${
+                  isUnread
+                    ? `
                 <button class="mark-read-btn" onclick="markAsRead(${nId}, event)" title="تحديد كمقروء">
                     <i class="fa-solid fa-check-double"></i>
-                </button>` : ''}
+                </button>`
+                    : ""
+                }
             `;
-            notifList.appendChild(li);
-        });
-
-    } catch (e) {
-        console.error("Failed to load notifications list", e);
-        notifList.innerHTML = `<div class="muted" style="padding:10px; text-align:center;">فشل تحميل الإشعارات</div>`;
-    }
+      notifList.appendChild(li);
+    });
+  } catch (e) {
+    console.error("Failed to load notifications list", e);
+    notifList.innerHTML = `<div class="muted" style="padding:10px; text-align:center;">فشل تحميل الإشعارات</div>`;
+  }
 }
 
 // 3. Fetch Unread Count (For the Red Badge)
 async function fetchUnreadCount() {
-    // 1. هل العنصر موجود؟
-    const badge = document.querySelector('.badge-count');
-    console.log("🔍 Badge Element Found?", badge); // يجب أن يطبع العنصر، ليس null
+  // 1. هل العنصر موجود؟
+  const badge = document.querySelector(".badge-count");
+  console.log("🔍 Badge Element Found?", badge); // يجب أن يطبع العنصر، ليس null
 
-    if (!badge) return;
+  if (!badge) return;
 
-    try {
-        // 2. ماذا يرجع السيرفر؟
-        const res = await apiFetch('/api/notifications/unread-count');
-        console.log("📩 API Response:", res); 
+  try {
+    // 2. ماذا يرجع السيرفر؟
+    const res = await apiFetch("/api/notifications/unread-count");
+    console.log("📩 API Response:", res);
 
-        // 3. تحويل القيمة لرقم
-        const count = Number(res.data) || 0;
-        console.log("🔢 Parsed Count:", count);
+    // 3. تحويل القيمة لرقم
+    const count = Number(res.data) || 0;
+    console.log("🔢 Parsed Count:", count);
 
-        if (count > 0) {
-            badge.style.display = 'flex';
-            badge.innerText = count > 99 ? '99+' : count;
-            console.log("✅ Showing Badge");
-        } else {
-            badge.style.display = 'none';
-            console.log("🙈 Hiding Badge (Count is 0)");
-        }
-    } catch (e) {
-        console.error("❌ Failed to load unread count", e);
+    if (count > 0) {
+      badge.style.display = "flex";
+      badge.innerText = count > 99 ? "99+" : count;
+      console.log("✅ Showing Badge");
+    } else {
+      badge.style.display = "none";
+      console.log("🙈 Hiding Badge (Count is 0)");
     }
+  } catch (e) {
+    console.error("❌ Failed to load unread count", e);
+  }
 }
 
 // 4. Mark Single Item Read
 async function markAsRead(id, event) {
-    if(event) event.stopPropagation(); // Prevent clicking the item container
+  if (event) event.stopPropagation(); // Prevent clicking the item container
 
-    try {
-        // Calls: PATCH /api/notifications/:id/read
-        await apiFetch(`/api/notifications/${id}/read`, { method: 'PATCH' });
-        
-        // Reload list and count to sync UI
-        loadNotifications();
-        
-    } catch (e) {
-        toast("خطأ", "تعذر تحديث حالة الإشعار");
-    }
+  try {
+    // Calls: PATCH /api/notifications/:id/read
+    await apiFetch(`/api/notifications/${id}/read`, { method: "PATCH" });
+
+    // Reload list and count to sync UI
+    loadNotifications();
+  } catch (e) {
+    toast("خطأ", "تعذر تحديث حالة الإشعار");
+  }
 }
 
 // 5. Mark All Read
-const markAllBtn = document.getElementById('markAllBtn');
-if(markAllBtn) {
-    markAllBtn.addEventListener('click', async () => {
-        try {
-            // Calls: PATCH /api/notifications/mark-all-read
-            await apiFetch(`/api/notifications/mark-all-read`, { method: 'PATCH' });
-            
-            toast("تم", "تم تحديد الكل كمقروء");
-            loadNotifications(); // Refresh UI
-        } catch (e) {
-            toast("خطأ", "حدث خطأ أثناء التحديث");
-        }
-    });
+const markAllBtn = document.getElementById("markAllBtn");
+if (markAllBtn) {
+  markAllBtn.addEventListener("click", async () => {
+    try {
+      // Calls: PATCH /api/notifications/mark-all-read
+      await apiFetch(`/api/notifications/mark-all-read`, { method: "PATCH" });
+
+      toast("تم", "تم تحديد الكل كمقروء");
+      loadNotifications(); // Refresh UI
+    } catch (e) {
+      toast("خطأ", "حدث خطأ أثناء التحديث");
+    }
+  });
 }
 
 // 6. Initialization (DOMContentLoaded)
-document.addEventListener('DOMContentLoaded', function() {
-    const notifBtn = document.querySelector('button[title="الاشعارات"]');
-    const dropdown = document.getElementById('notificationDropdown');
+document.addEventListener("DOMContentLoaded", function () {
+  const notifBtn = document.querySelector('button[title="الاشعارات"]');
+  const dropdown = document.getElementById("notificationDropdown");
 
-    if(notifBtn && dropdown) {
-        // Toggle Menu
-        notifBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            dropdown.classList.toggle('active');
-            
-            // Reload data when opening to ensure freshness
-            if (dropdown.classList.contains('active')) {
-                loadNotifications();
-            }
-        });
+  if (notifBtn && dropdown) {
+    // Toggle Menu
+    notifBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      dropdown.classList.toggle("active");
 
-        // Close on click outside
-        document.addEventListener('click', (e) => {
-            if (!dropdown.contains(e.target) && !notifBtn.contains(e.target)) {
-                dropdown.classList.remove('active');
-            }
-        });
-    }
+      // Reload data when opening to ensure freshness
+      if (dropdown.classList.contains("active")) {
+        loadNotifications();
+      }
+    });
 
-    // Initial Load when page starts
-    loadNotifications();
+    // Close on click outside
+    document.addEventListener("click", (e) => {
+      if (!dropdown.contains(e.target) && !notifBtn.contains(e.target)) {
+        dropdown.classList.remove("active");
+      }
+    });
+  }
 
-    // Optional: Auto-refresh every 60 seconds to check for new messages
-    setInterval(loadNotifications, 60000);
+  // Initial Load when page starts
+  loadNotifications();
+
+  // Optional: Auto-refresh every 60 seconds to check for new messages
+  setInterval(loadNotifications, 60000);
 });
 
 // ✅ NEW: Function to handle "Return to Work"
@@ -939,18 +1107,21 @@ function submitReturnDeclaration(requestId) {
 
           // استدعاء الـ API
           await apiFetch(`/api/me/requests/${requestId}/return`, {
-            method: "POST"
+            method: "POST",
           });
 
           toast("تم بنجاح", "تم تسجيل إقرار العودة للعمل.");
           closeModal();
           await loadRequests(); // تحديث الجدول لإخفاء الزر
-          
-          // تحديث لوحة التحكم أيضاً إذا كنا فيها
-          if (document.getElementById("view-dashboard").classList.contains("active")) {
-             loadDashboard();
-          }
 
+          // تحديث لوحة التحكم أيضاً إذا كنا فيها
+          if (
+            document
+              .getElementById("view-dashboard")
+              .classList.contains("active")
+          ) {
+            loadDashboard();
+          }
         } catch (e) {
           toast("خطأ", e.message);
           confirmBtn.textContent = "تأكيد العودة";

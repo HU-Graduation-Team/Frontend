@@ -417,7 +417,13 @@
           <div class="card">
             <div class="card-header">
               <h3 class="card-title">تقرير الإجازات</h3>
-              <button class="btn" id="loadReportsBtn">تحديث التقرير</button>
+              <div style="display: flex; gap: 10px;">
+                <button class="btn" id="exportReportBtn" style="background: #10b981; color: white; border-color: #10b981;">
+                  <i class="fa-solid fa-file-excel"></i> تصدير Excel
+                </button>
+        
+                <button class="btn" id="loadReportsBtn">تحديث التقرير</button>
+              </div>
             </div>
             <div class="table-wrap">
               <table>
@@ -431,6 +437,7 @@
                     <th>المدة</th>
                     <th>الحالة</th>
                     <th>تاريخ الإنشاء</th>
+                    <th>الملاحظات / المعتمد</th> </tr>
                   </tr>
                 </thead>
                 <tbody id="reportsBody">

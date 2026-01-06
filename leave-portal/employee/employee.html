@@ -6,7 +6,10 @@
     <title>Employee - Leave Management</title>
     <link rel="stylesheet" href="../styles.css" />
     <link rel="stylesheet" href="./employee.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
   </head>
   <body>
     <div class="app-container">
@@ -15,7 +18,10 @@
         <div class="header-content">
           <div class="header-brand">
             <div class="header-logo">
-              <img src="../../Assets/شعار_جامعة_الغردقة.png" alt="شعار الجامعة">
+              <img
+                src="../../Assets/شعار_جامعة_الغردقة.png"
+                alt="شعار الجامعة"
+              />
             </div>
             <div>
               <h1>بوابة الموظف</h1>
@@ -23,67 +29,86 @@
             </div>
           </div>
           <!-- Employee Info -->
-         <div class="user-info" id="userInfo" style="position: relative; cursor: pointer;">
-    <div class="user-avatar" id="userAvatar">؟</div>
-    <div class="user-details">
-        <div class="user-name" id="userName">جاري التحميل...</div>
-        <div class="user-meta">
-            <span class="user-department" id="userDepartment">—</span>
-        </div>
-    </div>
-    <i class="fa-solid fa-chevron-down" style="margin-right: 10px; opacity: 0.7; font-size: 14px;"></i>
+          <div
+            class="user-info"
+            id="userInfo"
+            style="position: relative; cursor: pointer"
+          >
+            <div class="user-avatar" id="userAvatar">؟</div>
+            <div class="user-details">
+              <div class="user-name" id="userName">جاري التحميل...</div>
+              <div class="user-meta">
+                <span class="user-department" id="userDepartment">—</span>
+              </div>
+            </div>
+            <i
+              class="fa-solid fa-chevron-down"
+              style="margin-right: 10px; opacity: 0.7; font-size: 14px"
+            ></i>
 
-    <div class="profile-dropdown" id="profileDropdown">
-        <div class="dropdown-user-info">
-            <strong id="dropName">الاسم</strong>
-            <small id="dropRole">الوظيفة</small>
-        </div>
-        
-        <a href="../manager/manager.html" class="dropdown-item switch-role" id="switchRoleBtn" style="display: none;">
-            <i class="fa-solid fa-shuffle"></i>
-            <span>التبديل إلى بوابة المدير</span>
-        </a>
+            <div class="profile-dropdown" id="profileDropdown">
+              <div class="dropdown-user-info">
+                <strong id="dropName">الاسم</strong>
+                <small id="dropRole">الوظيفة</small>
+              </div>
 
-        <a href="#" onclick="showUserProfile(); return false;" class="dropdown-item">
-            <i class="fa-regular fa-user"></i>
-            <span>ملفي الشخصي</span>
-        </a>
+              <a
+                href="../manager/manager.html"
+                class="dropdown-item switch-role"
+                id="switchRoleBtn"
+                style="display: none"
+              >
+                <i class="fa-solid fa-shuffle"></i>
+                <span>التبديل إلى بوابة المدير</span>
+              </a>
 
-        <a href="#" id="logoutBtn" class="dropdown-item danger">
-            <i class="fa-solid fa-arrow-right-from-bracket"></i>
-            <span>تسجيل خروج</span>
-        </a>
-    </div>
-</div>
+              <a
+                href="#"
+                onclick="showUserProfile(); return false;"
+                class="dropdown-item"
+              >
+                <i class="fa-regular fa-user"></i>
+                <span>ملفي الشخصي</span>
+              </a>
+
+              <a href="#" id="logoutBtn" class="dropdown-item danger">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                <span>تسجيل خروج</span>
+              </a>
+            </div>
+          </div>
           <div class="header-actions">
-            
-            <button class="icon-btn" title="الاشعارات" style="position: relative;">
-                <i class="fa-regular fa-bell"></i>
-                <span class="badge-count" style="display: none;">0</span>
+            <button
+              class="icon-btn"
+              title="الاشعارات"
+              style="position: relative"
+            >
+              <i class="fa-regular fa-bell"></i>
+              <span class="badge-count" style="display: none">0</span>
             </button>
 
             <button class="icon-btn" id="refreshBtn" title="تحديث البيانات">
-                <i class="fa-solid fa-arrows-rotate"></i>
+              <i class="fa-solid fa-arrows-rotate"></i>
             </button>
-            
           </div>
         </div>
       </header>
       <!-- Notification body  -->
       <div class="notification-dropdown" id="notificationDropdown">
-    <div class="dropdown-header">
-      <span>الاشعارات</span>
-      <button class="btn-mark-all" id="markAllBtn">تحديد الكل كمقروء</button>
-      </div>
+        <div class="dropdown-header">
+          <span>الاشعارات</span>
+          <button class="btn-mark-all" id="markAllBtn">
+            تحديد الكل كمقروء
+          </button>
+        </div>
 
-      <div class="notifications-list" id="notifList">
-    </div>
+        <div class="notifications-list" id="notifList"></div>
 
-      <div class="empty-state" id="emptyState" style="display: none;">
-        <i class="fa-regular fa-bell-slash"></i>
-        <p>لا توجد إشعارات جديدة</p>
+        <div class="empty-state" id="emptyState" style="display: none">
+          <i class="fa-regular fa-bell-slash"></i>
+          <p>لا توجد إشعارات جديدة</p>
+        </div>
       </div>
-    </div>
       <!-- Main Navigation -->
       <nav class="main-nav">
         <div class="nav-tabs">
@@ -265,7 +290,7 @@
             </div>
           </div>
         </div>
-        <!-- Create Request View -->
+        <!-- create leave request -->
         <div class="section-view" id="view-create">
           <div class="section-header">
             <div class="section-icon create">
@@ -289,7 +314,8 @@
             <div class="card-header">
               <h3 class="card-title">بيانات الطلب</h3>
               <div class="pill note">
-                <b>ملاحظة:</b> لو النوع يتطلب مستند، ارفع ملف (PDF/PNG/JPG)
+                <b>ملاحظة:</b> المرفقات المطلوبة ستظهر تلقائياً بناءً على نوع
+                الإجازة.
               </div>
             </div>
 
@@ -313,6 +339,27 @@
               </div>
             </div>
 
+            <div
+              class="form-group"
+              id="delegateWrapper"
+              style="
+                display: none;
+                background: #f8fafc;
+                padding: 15px;
+                border-radius: 8px;
+                border: 1px dashed #cbd5e1;
+                margin-bottom: 20px;
+              "
+            >
+              <label style="color: #0f172a">👤 الفائم على العمل</label>
+              <select id="delegateSelect" style="width: 100%; margin-top: 8px">
+                <option value="">-- جاري تحميل القائمة... --</option>
+              </select>
+              <div class="muted" style="margin-top: 5px; font-size: 13px">
+                هذا النوع من الإجازة يتطلب تفويض زميل للقيام بمهامك.
+              </div>
+            </div>
+
             <div class="form-group">
               <label>السبب</label>
               <textarea
@@ -322,13 +369,7 @@
               ></textarea>
             </div>
 
-            <div class="form-group" id="docWrap" style="display: none">
-              <label>مستند داعم</label>
-              <input id="document" type="file" accept=".pdf,.png,.jpg,.jpeg" />
-              <div class="muted" style="margin-top: 8px">
-                مطلوب فقط إذا كان نوع الإجازة يحتاج مستند
-              </div>
-            </div>
+            <div id="dynamicDocsContainer" style="margin-bottom: 20px"></div>
 
             <div
               id="dateWarn"
@@ -343,17 +384,20 @@
               ⚠️ تنبيه: لو الفترة بتعدّي 1 يوليو (بداية السنة المالية في
               النظام)، السيرفر ممكن يرفض الطلب.
             </div>
+
             <div class="acknowledgement-box">
               <label class="checkbox-wrapper">
-                <input type="checkbox" id="acknowledgementCheckbox">
+                <input type="checkbox" id="acknowledgementCheckbox" />
                 <div class="checkbox-text">
                   <span class="title">إقرار القيام بالإجازة</span>
                   <p class="desc">
-                    أقر بأنني أديت أعمالي المصلحية حتى تاريخ بدء الإجازة المحدد أعلاه، ولا مانع لدي من القيام بها.
+                    أقر بأنني أديت أعمالي المصلحية حتى تاريخ بدء الإجازة المحدد
+                    أعلاه، ولا مانع لدي من القيام بها.
                   </p>
                 </div>
               </label>
             </div>
+
             <div class="form-actions">
               <button
                 class="btn primary"
