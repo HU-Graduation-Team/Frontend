@@ -761,6 +761,8 @@ async function loadRequests() {
 async function loadAll() {
   try {
     toast("تحميل", "جاري جلب بيانات الموظف...");
+    loadNotifications();
+    fetchUnreadCount();
     await Promise.all([
       loadProfile(),
       loadDashboard(),
@@ -874,7 +876,7 @@ qs("#submitBtn").addEventListener("click", async () => {
 });
 
 // 2. Fetch The List (The 20 most recent)
-async function fetchNotificationList() {
+async function loadNotifications() {
   const notifList = document.getElementById("notifList");
   const emptyState = document.getElementById("emptyState");
 
@@ -968,35 +970,53 @@ async function fetchNotificationList() {
 }
 
 // 3. Fetch Unread Count (For the Red Badge)
-async function fetchUnreadCount() {
-  // 1. هل العنصر موجود؟
-  const badge = document.querySelector(".badge-count");
-  console.log("🔍 Badge Element Found?", badge); // يجب أن يطبع العنصر، ليس null
 
+
+// 3. Fetch Unread Count (Universal Fix)
+async function fetchUnreadCount() {
+  const badge = document.querySelector(".badge-count");
+
+  // 1. Safety Check: Does the HTML element exist?
   if (!badge) return;
 
   try {
-    // 2. ماذا يرجع السيرفر؟
     const res = await apiFetch("/api/notifications/unread-count");
-    console.log("📩 API Response:", res);
+    
+    // Debug to see exactly what arrives
+    console.log("📩 Unread Count Response:", res);
 
-    // 3. تحويل القيمة لرقم
-    const count = Number(res.data) || 0;
-    console.log("🔢 Parsed Count:", count);
+    let finalCount = 0;
 
-    if (count > 0) {
-      badge.style.display = "flex";
-      badge.innerText = count > 99 ? "99+" : count;
-      console.log("✅ Showing Badge");
+    // --- LOGIC TO HANDLE ALL FORMATS ---
+    
+    // Case A: Backend sends { data: 5 } (Raw Number)
+    if (typeof res.data === 'number') {
+      finalCount = res.data;
+    }
+    // Case B: Backend sends { count: 5 } (Top level key)
+    else if (typeof res.count === 'number') {
+        finalCount = res.count;
+    }
+    // Case C: Backend sends { data: { unreadCount: 5 } } or { data: { count: 5 } }
+    else if (res.data && typeof res.data === 'object') {
+      // Check all possible naming conventions
+      finalCount = res.data.unreadCount || res.data.count || res.data.unread || 0;
+    }
+
+    // --- UPDATE UI ---
+    if (finalCount > 0) {
+      badge.style.display = "flex"; 
+      badge.textContent = finalCount > 99 ? "99+" : finalCount;
+      badge.classList.add('pulse-animation');
     } else {
       badge.style.display = "none";
-      console.log("🙈 Hiding Badge (Count is 0)");
     }
+
   } catch (e) {
     console.error("❌ Failed to load unread count", e);
+    badge.style.display = "none";
   }
 }
-
 // 4. Mark Single Item Read
 async function markAsRead(id, event) {
   if (event) event.stopPropagation(); // Prevent clicking the item container
@@ -1055,9 +1075,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Initial Load when page starts
   loadNotifications();
-
+  fetchUnreadCount();
   // Optional: Auto-refresh every 60 seconds to check for new messages
-  setInterval(loadNotifications, 60000);
+  setInterval(() => {
+    loadNotifications();
+    fetchUnreadCount();
+  }, 60000);
 });
 
 // ✅ NEW: Function to handle "Return to Work"

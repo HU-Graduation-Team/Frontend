@@ -1,7 +1,7 @@
 // // ===== PROTECTION LOGIC (Add at the top) =====
 // (function protectManagerPage() {
 //     const user = JSON.parse(localStorage.getItem('user'));
-    
+
 //     // 1. Check Login
 //     if (!user || !localStorage.getItem('token')) {
 //         window.location.href = '../index.html'; // Or login.html
@@ -10,7 +10,7 @@
 
 //     // 2. Check Role Authorization
 //     const allowedRoles = ['Manager', 'Dean', 'Head_of_Department', 'HR_Admin'];
-    
+
 //     // If role is NOT in the allowed list, redirect to employee dashboard
 //     if (!allowedRoles.includes(user.role)) {
 //         alert("عفواً، ليس لديك صلاحية للوصول لبوابة المدير.");
@@ -91,15 +91,15 @@ async function loadProfile() {
   try {
     const res = await apiFetch(`/api/profile`);
     const user = res?.data?.user;
-    
+
     if (user) {
       currentUser = user;
-      
+
       // 1. Fill Header Info
       const nameEl = qs("#userName");
       const avatarEl = qs("#userAvatar");
       const deptEl = qs("#userDepartment");
-      
+
       if (nameEl) nameEl.textContent = user.name || "المدير";
       if (avatarEl) avatarEl.textContent = (user.name || "م")[0];
       if (deptEl) deptEl.textContent = translateRole(user.role);
@@ -107,45 +107,45 @@ async function loadProfile() {
       // 2. Fill Dropdown Info
       const dropName = qs("#dropName");
       const dropRole = qs("#dropRole");
-      if(dropName) dropName.textContent = user.name;
-      if(dropRole) dropRole.textContent = translateRole(user.role);
+      if (dropName) dropName.textContent = user.name;
+      if (dropRole) dropRole.textContent = translateRole(user.role);
 
       // 3. Setup Dropdown Toggle
       const userInfoEl = qs("#userInfo");
       const dropdown = qs("#profileDropdown");
 
       if (userInfoEl && dropdown) {
-          userInfoEl.onclick = (e) => {
-              // Only toggle if we didn't click a link inside
-              if(!e.target.closest('.dropdown-item')) {
-                  e.stopPropagation();
-                  dropdown.classList.toggle('active');
-              }
-          };
+        userInfoEl.onclick = (e) => {
+          // Only toggle if we didn't click a link inside
+          if (!e.target.closest(".dropdown-item")) {
+            e.stopPropagation();
+            dropdown.classList.toggle("active");
+          }
+        };
 
-          // Close when clicking outside
-          document.addEventListener('click', (e) => {
-              if (!dropdown.contains(e.target) && !userInfoEl.contains(e.target)) {
-                  dropdown.classList.remove('active');
-              }
-          });
+        // Close when clicking outside
+        document.addEventListener("click", (e) => {
+          if (!dropdown.contains(e.target) && !userInfoEl.contains(e.target)) {
+            dropdown.classList.remove("active");
+          }
+        });
       }
 
       // 4. ✅ FIX: Set Link to Go TO Employee Portal
       const switchBtn = qs("#switchRoleBtn");
       if (switchBtn) {
-          // This sets the correct path relative to the manager folder
-          switchBtn.href = "../employee/employee.html"; 
+        // This sets the correct path relative to the manager folder
+        switchBtn.href = "../employee/employee.html";
       }
 
       // 5. Setup Logout Logic
       const logoutBtn = qs("#logoutBtn");
       if (logoutBtn) {
-          logoutBtn.onclick = (e) => {
-              e.preventDefault();
-              clearToken();
-              window.location.href = "../index.html"; 
-          };
+        logoutBtn.onclick = (e) => {
+          e.preventDefault();
+          clearToken();
+          window.location.href = "../index.html";
+        };
       }
     }
   } catch (e) {
@@ -155,13 +155,13 @@ async function loadProfile() {
 
 // Helper to Translate Roles
 function translateRole(role) {
-    const map = {
-        'Manager': 'مدير',
-        'Dean': 'عميد الكلية',
-        'Head_of_Department': 'رئيس القسم',
-        'HR_Admin': 'الموارد البشرية'
-    };
-    return map[role] || role;
+  const map = {
+    Manager: "مدير",
+    Dean: "عميد الكلية",
+    Head_of_Department: "رئيس القسم",
+    HR_Admin: "الموارد البشرية",
+  };
+  return map[role] || role;
 }
 function showUserProfile() {
   if (!currentUser) return;
@@ -661,14 +661,16 @@ function renderReports(data) {
   // Render table
   const body = qs("#reportsBody");
 
-body.innerHTML = report.length
-  ? report.map((r) => {
-      
-      // 🟢 START OF NEW CODE: Handling Comments nicely
-      let commentsHtml = "-";
+  body.innerHTML = report.length
+    ? report
+        .map((r) => {
+          // 🟢 START OF NEW CODE: Handling Comments nicely
+          let commentsHtml = "-";
 
-if (Array.isArray(r.comments) && r.comments.length > 0) {
-  commentsHtml = r.comments.map(c => `
+          if (Array.isArray(r.comments) && r.comments.length > 0) {
+            commentsHtml = r.comments
+              .map(
+                (c) => `
     <div style="
         background-color: #fff; 
         border: 1px solid #e2e8f0; 
@@ -703,11 +705,13 @@ if (Array.isArray(r.comments) && r.comments.length > 0) {
           ${escapeHtml(c.comment || "")}
       </div>
     </div>
-  `).join("");
-}
-      // 🔴 END OF NEW CODE
+  `
+              )
+              .join("");
+          }
+          // 🔴 END OF NEW CODE
 
-      return `
+          return `
         <tr>
           <td>${escapeHtml(r.employeeName || "-")}</td>
           <td>${escapeHtml(r.department || "-")}</td>
@@ -723,8 +727,9 @@ if (Array.isArray(r.comments) && r.comments.length > 0) {
           </td>
         </tr>
       `;
-    }).join("")
-  : `<tr><td colspan="9" class="muted">لا يوجد بيانات.</td></tr>`;
+        })
+        .join("")
+    : `<tr><td colspan="9" class="muted">لا يوجد بيانات.</td></tr>`;
 }
 
 // Wire reports button
@@ -788,12 +793,14 @@ qs("#loadTeamLeaveBtn")?.addEventListener("click", () => loadTeamOnLeave());
 async function loadAll() {
   try {
     toast("تحميل", "جاري جلب بيانات المدير...");
+    loadNotifications();
+    fetchUnreadCount();
     // ✅ يجب إضافة loadProfile() هنا ليعمل الهيدر
     await Promise.all([
-        loadProfile(), 
-        loadDashboard(), 
-        loadReports(), 
-        loadTeamOnLeave()
+      loadProfile(),
+      loadDashboard(),
+      loadReports(),
+      loadTeamOnLeave(),
     ]);
     toast("تمام", "تم تحديث البيانات بنجاح");
   } catch (e) {
@@ -810,69 +817,78 @@ let myNotifications = [];
 
 // 1. Master Load Function (Loads List & Count in parallel)
 async function loadNotifications() {
-    await Promise.all([
-        fetchNotificationList(),
-        fetchUnreadCount()
-    ]);
+  await Promise.all([fetchNotificationList(), fetchUnreadCount()]);
 }
 
 // 2. Fetch The List (The 20 most recent)
 async function fetchNotificationList() {
-    const notifList = document.getElementById('notifList');
-    const emptyState = document.getElementById('emptyState');
-    
-    try {
-        // Calls: GET /api/notifications
-        const res = await apiFetch('/api/notifications'); 
-        
-        // Based on your controller: res.data is the array (data.rows)
-        const data = res.data || [];
-        myNotifications = data;
+  const notifList = document.getElementById("notifList");
+  const emptyState = document.getElementById("emptyState");
 
-        // Clear current HTML list
-        notifList.innerHTML = '';
+  try {
+    // Calls: GET /api/notifications
+    const res = await apiFetch("/api/notifications");
 
-        // Handle Empty State
-        if (myNotifications.length === 0) {
-            emptyState.style.display = 'block';
-            return;
-        }
+    // Based on your controller: res.data is the array (data.rows)
+    const data = res.data || [];
+    myNotifications = data;
 
-        emptyState.style.display = 'none';
+    // Clear current HTML list
+    notifList.innerHTML = "";
 
-        // Render Items
-        myNotifications.forEach(notif => {
-            // Check if read or unread
-            const isUnread = !notif.is_read; 
-            const itemClass = isUnread ? 'notif-item unread' : 'notif-item';
-            
-            // Icon & Color Logic based on Title/Type
-            let icon = '<i class="fa-solid fa-circle-info"></i>';
-            let bgClass = 'primary-bg'; 
+    // Handle Empty State
+    if (myNotifications.length === 0) {
+      emptyState.style.display = "block";
+      return;
+    }
 
-            const title = (notif.title || "").toLowerCase();
-            const type = (notif.type || "").toUpperCase();
+    emptyState.style.display = "none";
 
-            // Customize icons
-            if (type === 'SUCCESS' || title.includes('قبول') || title.includes('approved')) {
-                icon = '<i class="fa-solid fa-check"></i>';
-                bgClass = 'success-bg'; 
-            } else if (type === 'WARNING' || title.includes('مراجعة') || title.includes('pending')) {
-                icon = '<i class="fa-solid fa-hourglass-half"></i>';
-                bgClass = 'warning-bg'; 
-            } else if (type === 'ERROR' || title.includes('رفض') || title.includes('rejected')) {
-                icon = '<i class="fa-solid fa-xmark"></i>';
-                bgClass = 'danger-bg'; 
-            }
+    // Render Items
+    myNotifications.forEach((notif) => {
+      // Check if read or unread
+      const isUnread = !notif.is_read;
+      const itemClass = isUnread ? "notif-item unread" : "notif-item";
 
-            // Create HTML Element
-            const li = document.createElement('div');
-            li.className = itemClass;
-            
-            // Use correct ID field
-            const nId = notif.notification_id || notif.id; 
+      // Icon & Color Logic based on Title/Type
+      let icon = '<i class="fa-solid fa-circle-info"></i>';
+      let bgClass = "primary-bg";
 
-            li.innerHTML = `
+      const title = (notif.title || "").toLowerCase();
+      const type = (notif.type || "").toUpperCase();
+
+      // Customize icons
+      if (
+        type === "SUCCESS" ||
+        title.includes("قبول") ||
+        title.includes("approved")
+      ) {
+        icon = '<i class="fa-solid fa-check"></i>';
+        bgClass = "success-bg";
+      } else if (
+        type === "WARNING" ||
+        title.includes("مراجعة") ||
+        title.includes("pending")
+      ) {
+        icon = '<i class="fa-solid fa-hourglass-half"></i>';
+        bgClass = "warning-bg";
+      } else if (
+        type === "ERROR" ||
+        title.includes("رفض") ||
+        title.includes("rejected")
+      ) {
+        icon = '<i class="fa-solid fa-xmark"></i>';
+        bgClass = "danger-bg";
+      }
+
+      // Create HTML Element
+      const li = document.createElement("div");
+      li.className = itemClass;
+
+      // Use correct ID field
+      const nId = notif.notification_id || notif.id;
+
+      li.innerHTML = `
                 <div class="notif-icon ${bgClass}">
                     ${icon}
                 </div>
@@ -881,112 +897,136 @@ async function fetchNotificationList() {
                     <p>${escapeHtml(notif.message)}</p>
                     <span class="time">${fmtDate(notif.created_at)}</span>
                 </div>
-                ${isUnread ? `
+                ${
+                  isUnread
+                    ? `
                 <button class="mark-read-btn" onclick="markAsRead(${nId}, event)" title="تحديد كمقروء">
                     <i class="fa-solid fa-check-double"></i>
-                </button>` : ''}
+                </button>`
+                    : ""
+                }
             `;
-            notifList.appendChild(li);
-        });
-
-    } catch (e) {
-        console.error("Failed to load notifications list", e);
-        notifList.innerHTML = `<div class="muted" style="padding:10px; text-align:center;">فشل تحميل الإشعارات</div>`;
-    }
+      notifList.appendChild(li);
+    });
+  } catch (e) {
+    console.error("Failed to load notifications list", e);
+    notifList.innerHTML = `<div class="muted" style="padding:10px; text-align:center;">فشل تحميل الإشعارات</div>`;
+  }
 }
 
 // 3. Fetch Unread Count (For the Red Badge)
+// 3. Fetch Unread Count (Universal Fix for Manager)
 async function fetchUnreadCount() {
-    // 1. هل العنصر موجود؟
-    const badge = document.querySelector('.badge-count');
-    console.log("🔍 Badge Element Found?", badge); // يجب أن يطبع العنصر، ليس null
+  const badge = document.querySelector(".badge-count");
 
-    if (!badge) return;
+  // 1. Safety Check
+  if (!badge) return;
 
-    try {
-        // 2. ماذا يرجع السيرفر؟
-        const res = await apiFetch('/api/notifications/unread-count');
-        console.log("📩 API Response:", res); 
+  try {
+    const res = await apiFetch("/api/notifications/unread-count");
 
-        // 3. تحويل القيمة لرقم
-        const count = Number(res.data) || 0;
-        console.log("🔢 Parsed Count:", count);
+    // Debugging
+    console.log("📩 Manager Unread Count Response:", res);
 
-        if (count > 0) {
-            badge.style.display = 'flex';
-            badge.innerText = count > 99 ? '99+' : count;
-            console.log("✅ Showing Badge");
-        } else {
-            badge.style.display = 'none';
-            console.log("🙈 Hiding Badge (Count is 0)");
-        }
-    } catch (e) {
-        console.error("❌ Failed to load unread count", e);
+    let finalCount = 0;
+
+    // --- LOGIC TO HANDLE ALL BACKEND FORMATS ---
+
+    // Case A: Backend sends { data: 5 } (Raw Number)
+    if (typeof res.data === "number") {
+      finalCount = res.data;
     }
+    // Case B: Backend sends { count: 5 } (Top level key)
+    else if (typeof res.count === "number") {
+      finalCount = res.count;
+    }
+    // Case C: Backend sends { data: { count: 5 } } (Object wrapper)
+    else if (res.data && typeof res.data === "object") {
+      finalCount =
+        res.data.count || res.data.unreadCount || res.data.unread || 0;
+    }
+
+    console.log("🔢 Final Manager Count:", finalCount);
+
+    // --- UPDATE UI ---
+    if (finalCount > 0) {
+      badge.style.display = "flex";
+      badge.innerText = finalCount > 99 ? "99+" : finalCount;
+      // Optional: Add animation class if you have css for it
+      // badge.classList.add('pulse-animation');
+    } else {
+      badge.style.display = "none";
+    }
+  } catch (e) {
+    console.error("❌ Failed to load manager unread count", e);
+    badge.style.display = "none";
+  }
 }
 
 // 4. Mark Single Item Read
 async function markAsRead(id, event) {
-    if(event) event.stopPropagation(); // Prevent clicking the item container
+  if (event) event.stopPropagation(); // Prevent clicking the item container
 
-    try {
-        // Calls: PATCH /api/notifications/:id/read
-        await apiFetch(`/api/notifications/${id}/read`, { method: 'PATCH' });
-        
-        // Reload list and count to sync UI
-        loadNotifications();
-        
-    } catch (e) {
-        toast("خطأ", "تعذر تحديث حالة الإشعار");
-    }
+  try {
+    // Calls: PATCH /api/notifications/:id/read
+    await apiFetch(`/api/notifications/${id}/read`, { method: "PATCH" });
+
+    // Reload list and count to sync UI
+    loadNotifications();
+  } catch (e) {
+    toast("خطأ", "تعذر تحديث حالة الإشعار");
+  }
 }
 
 // 5. Mark All Read
-const markAllBtn = document.getElementById('markAllBtn');
-if(markAllBtn) {
-    markAllBtn.addEventListener('click', async () => {
-        try {
-            // Calls: PATCH /api/notifications/mark-all-read
-            await apiFetch(`/api/notifications/mark-all-read`, { method: 'PATCH' });
-            
-            toast("تم", "تم تحديد الكل كمقروء");
-            loadNotifications(); // Refresh UI
-        } catch (e) {
-            toast("خطأ", "حدث خطأ أثناء التحديث");
-        }
-    });
+const markAllBtn = document.getElementById("markAllBtn");
+if (markAllBtn) {
+  markAllBtn.addEventListener("click", async () => {
+    try {
+      // Calls: PATCH /api/notifications/mark-all-read
+      await apiFetch(`/api/notifications/mark-all-read`, { method: "PATCH" });
+
+      toast("تم", "تم تحديد الكل كمقروء");
+      loadNotifications(); // Refresh UI
+    } catch (e) {
+      toast("خطأ", "حدث خطأ أثناء التحديث");
+    }
+  });
 }
 
 // 6. Initialization (DOMContentLoaded)
-document.addEventListener('DOMContentLoaded', function() {
-    const notifBtn = document.querySelector('button[title="الاشعارات"]');
-    const dropdown = document.getElementById('notificationDropdown');
+document.addEventListener("DOMContentLoaded", function () {
+  const notifBtn = document.querySelector('button[title="الاشعارات"]');
+  const dropdown = document.getElementById("notificationDropdown");
 
-    if(notifBtn && dropdown) {
-        // Toggle Menu
-        notifBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            dropdown.classList.toggle('active');
-            
-            // Reload data when opening to ensure freshness
-            if (dropdown.classList.contains('active')) {
-                loadNotifications();
-            }
-        });
+  if (notifBtn && dropdown) {
+    // Toggle Menu
+    notifBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      dropdown.classList.toggle("active");
 
-        // Close on click outside
-        document.addEventListener('click', (e) => {
-            if (!dropdown.contains(e.target) && !notifBtn.contains(e.target)) {
-                dropdown.classList.remove('active');
-            }
-        });
-    }
+      // Reload data when opening to ensure freshness
+      if (dropdown.classList.contains("active")) {
+        loadNotifications();
+      }
+    });
 
-    // Initial Load when page starts
+    // Close on click outside
+    document.addEventListener("click", (e) => {
+      if (!dropdown.contains(e.target) && !notifBtn.contains(e.target)) {
+        dropdown.classList.remove("active");
+      }
+    });
+  }
+
+  // Initial Load when page starts
+  loadNotifications();
+  fetchUnreadCount();
+  // Optional: Auto-refresh every 60 seconds to check for new messages
+  setInterval(() => {
     loadNotifications();
-
-    // Optional: Auto-refresh every 60 seconds to check for new messages
-    setInterval(loadNotifications, 60000);
+    fetchUnreadCount();
+  }, 60000);
 });
 
 // ==========================================
@@ -994,68 +1034,72 @@ document.addEventListener('DOMContentLoaded', function() {
 // ==========================================
 
 function exportReportsToExcel() {
-    // 1. Check if data exists
-    if (!reportsData || !reportsData.report || reportsData.report.length === 0) {
-        toast("تنبيه", "لا يوجد بيانات لتصديرها");
-        return;
-    }
+  // 1. Check if data exists
+  if (!reportsData || !reportsData.report || reportsData.report.length === 0) {
+    toast("تنبيه", "لا يوجد بيانات لتصديرها");
+    return;
+  }
 
-    // 2. Define Arabic Headers
-    const headers = [
-        "اسم الموظف",
-        "القسم",
-        "نوع الإجازة",
-        "تاريخ البداية",
-        "تاريخ النهاية",
-        "المدة (أيام)",
-        "الحالة",
-        "تاريخ الطلب"
-    ];
+  // 2. Define Arabic Headers
+  const headers = [
+    "اسم الموظف",
+    "القسم",
+    "نوع الإجازة",
+    "تاريخ البداية",
+    "تاريخ النهاية",
+    "المدة (أيام)",
+    "الحالة",
+    "تاريخ الطلب",
+  ];
 
-    // 3. Map Data Rows
-    const rows = reportsData.report.map(r => {
-        return [
-            `"${r.employeeName || "-"}"`,  // Wrap in quotes to handle commas in names
-            `"${r.department || "-"}"`,
-            `"${r.leaveType || "-"}"`,
-            fmtDate(r.startDate),
-            fmtDate(r.endDate),
-            r.duration || 0,
-            `"${translateStatusForExcel(r.status)}"`, // Translate status to Arabic
-            fmtDate(r.createdAt)
-        ].join(","); // Join columns with comma
-    });
+  // 3. Map Data Rows
+  const rows = reportsData.report.map((r) => {
+    return [
+      `"${r.employeeName || "-"}"`, // Wrap in quotes to handle commas in names
+      `"${r.department || "-"}"`,
+      `"${r.leaveType || "-"}"`,
+      fmtDate(r.startDate),
+      fmtDate(r.endDate),
+      r.duration || 0,
+      `"${translateStatusForExcel(r.status)}"`, // Translate status to Arabic
+      fmtDate(r.createdAt),
+    ].join(","); // Join columns with comma
+  });
 
-    // 4. Combine Headers and Rows
-    const csvContent = [headers.join(","), ...rows].join("\n");
+  // 4. Combine Headers and Rows
+  const csvContent = [headers.join(","), ...rows].join("\n");
 
-    // 5. Create Blob with BOM (Byte Order Mark) for Arabic Support
-    // \uFEFF is crucial for Excel to recognize Arabic characters correctly
-    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
-    
-    // 6. Trigger Download
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `تقرير_الاجازات_${new Date().toISOString().slice(0,10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  // 5. Create Blob with BOM (Byte Order Mark) for Arabic Support
+  // \uFEFF is crucial for Excel to recognize Arabic characters correctly
+  const blob = new Blob(["\uFEFF" + csvContent], {
+    type: "text/csv;charset=utf-8;",
+  });
+
+  // 6. Trigger Download
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.setAttribute("href", url);
+  link.setAttribute(
+    "download",
+    `تقرير_الاجازات_${new Date().toISOString().slice(0, 10)}.csv`
+  );
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }
 
 // Helper to translate status for the Excel file (Plain text, no HTML)
 function translateStatusForExcel(status) {
-    const s = String(status).toLowerCase();
-    if (s.includes('approve')) return 'مقبول';
-    if (s.includes('reject')) return 'مرفوض';
-    if (s.includes('pend')) return 'قيد الانتظار';
-    return status;
+  const s = String(status).toLowerCase();
+  if (s.includes("approve")) return "مقبول";
+  if (s.includes("reject")) return "مرفوض";
+  if (s.includes("pend")) return "قيد الانتظار";
+  return status;
 }
 // Wire Export Button
 const exportBtn = document.getElementById("exportReportBtn");
 if (exportBtn) {
-    exportBtn.addEventListener("click", exportReportsToExcel);
+  exportBtn.addEventListener("click", exportReportsToExcel);
 }
-
 
 loadAll();
