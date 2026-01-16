@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>بوابة طلب الإجازات</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="login.css">
+</head>
+<body>
+
+<!-- اللوجو -->
+<div class="logo" id="logo">
+  <img src="AD.JPG" alt="شعار جامعة الغردقة">
+</div>
+
+<!-- زر الرجوع -->
+<button class="back-btn" id="backBtn" onclick="closeLogin()">رجوع</button>
+
+<!-- البانر -->
+<div class="banner" id="banner">
+  <div class="banner-content">
+    <h1>جامعة الغردقة</h1>
+    <p>مرحبًا بكم في الموقع الرسمي المعتمد لتقديم طلبات الإجازات</p>
+
+    <button class="login-btn" onclick="openLogin()">
+      تسجيل الدخول
+    </button>
+  </div>
+</div>
+
+<!-- نموذج تسجيل الدخول -->
+<div class="login-box" id="loginBox">
+  <h2>تسجيل الدخول</h2>
+
+  <form id="loginForm">
+    <!-- email -->
+    <input type="email" id="loginEmail" placeholder="البريد الإلكتروني" required>
+
+    <!-- كلمة المرور + العين -->
+    <div class="password-wrapper">
+      <input type="password" id="loginPassword" placeholder="كلمة المرور" required>
+      <span class="toggle-eye" onclick="togglePassword('loginPassword')"></span>
+    </div>
+
+    <button type="submit">دخول</button>
+  </form>
+</div>
+
+<script src="login.js"></script>
+</body>
+</html>
