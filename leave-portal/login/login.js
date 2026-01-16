@@ -74,7 +74,7 @@ document
 
       // تحويل حسب حالة المستخدم
       if (result.data.status === "activation_required") {
-        window.location.href = "complete-onboarding.html";
+        window.location.href = "../onboarding/complete-onboarding.html";
       } else {
         redirectByRole(result.data.user.role);
       }
