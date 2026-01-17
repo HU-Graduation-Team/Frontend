@@ -250,7 +250,7 @@ function renderDashboard(data) {
                     <div style="display:flex; align-items:center; gap:8px;">
                         ${statusBadge(r.status)}
                         <button class="btn" 
-                                style="background-color: #014964; color: white; border:none; padding: 4px 10px; font-size: 12px;" 
+                                style="background-color: #014366; color: white; border:none; padding: 4px 10px; font-size: 12px;" 
                                 onclick="submitReturnDeclaration(${
                                   r.request_id
                                 })">
@@ -383,7 +383,7 @@ function renderRequestsTable() {
           // If ready to return, show "Return to Work" button instead
           if (isApproved && isFinished && notReturned) {
             actionHtml = `
-                    <button class="btn" style="background-color: #014964; color: white;" 
+                    <button class="btn" style="background-color: #014366; color: white;" 
                             onclick="submitReturnDeclaration(${r.request_id})">
                         تسجيل عودة
                     </button>
@@ -571,7 +571,7 @@ async function showRequestDetails(requestId) {
 
                     <div style="margin-top: 20px; display: flex; align-items: center;">
                         <span>التوقيع:</span>
-                        <div style="border-bottom: 1px dotted #000; flex: 1; margin-right: 5px; font-family: 'Segoe Script', cursive; color: #00008b; text-align:center;">
+                        <div style="border-bottom: 1px dotted #000; flex: 1; margin-right: 5px; font-family: 'Segoe Script', cursive; color: #014366; text-align:center;">
                              ${managerName}
                         </div>
                     </div>
@@ -581,7 +581,7 @@ async function showRequestDetails(requestId) {
             <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
                 <div style="text-align: center; width: 200px;">
                     <div style="margin-bottom: 15px;">توقيع مقدم الطلب</div>
-                    <div style="border-bottom: 1px dotted #000; font-family: 'Segoe Script', cursive; color: #00008b;">
+                    <div style="border-bottom: 1px dotted #000; font-family: 'Segoe Script', cursive; color: #014366;">
                         ${employeeName}
                     </div>
                 </div>
@@ -1239,7 +1239,7 @@ document.addEventListener("DOMContentLoaded", function () {
 function submitReturnDeclaration(requestId) {
   // 1. فتح المودال بتصميم الإقرار
   openModal(`
-    <div class="modal-header" style="background: linear-gradient(135deg, #014964 0%, #026082 100%);">
+    <div class="modal-header" style="background: linear-gradient(135deg, #014366 0%, #0F93B4 100%);">
       <div class="modal-title">
         <span class="modal-icon">↩️</span>
         <div>
@@ -1254,13 +1254,13 @@ function submitReturnDeclaration(requestId) {
 
     <div class="modal-body" style="padding: 24px; text-align: center;">
       <div style="background: #f0f9ff; border: 1px solid #bae6fd; padding: 20px; border-radius: 12px; margin-bottom: 24px;">
-        <p style="font-size: 16px; line-height: 1.6; color: #014964; font-weight: 600; margin: 0;">
+        <p style="font-size: 16px; line-height: 1.6; color: #014366; font-weight: 600; margin: 0;">
           "أقر بأنني استأنفت أعمالي المصلحية في الكلية/الجامعة عقب انتهاء الإجازة المرخص لي بها، وذلك اعتباراً من تاريخ اليوم."
         </p>
       </div>
 
       <div class="actions" style="justify-content: center; gap: 16px;">
-        <button id="confirmReturnBtn" class="btn primary" style="background-color: #014964; font-size: 16px; padding: 12px 32px;">
+        <button id="confirmReturnBtn" class="btn primary" style="background-color: #014366; font-size: 16px; padding: 12px 32px;">
           تأكيد العودة
         </button>
         <button class="btn" onclick="closeModal()" style="font-size: 16px;">إلغاء</button>

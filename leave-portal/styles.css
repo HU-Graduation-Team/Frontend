@@ -11,15 +11,15 @@
   --shadow: 0 10px 30px rgba(16, 24, 40, 0.08);
   --radius: 16px;
   --gap: 16px;
-  --good: #17b26a;
-  --warn: #f79009;
-  --bad: #f04438;
-  --link: #175cd3;
-  --chip-1: #22c55e;
-  --chip-2: #f97316;
-  --chip-3: #3b82f6;
-  --chip-4: #a855f7;
-  --chip-5: #06b6d4;
+  --good: #2ECC71;
+  --warn: #F9BA36;
+  --bad: #E74C3C;
+  --link: #0F93B4;
+  --chip-1: #2ECC71;
+  --chip-2: #F9BA36;
+  --chip-3: #0F93B4;
+  --chip-4: #014366;
+  --chip-5: #0F93B4;
 }
 
 @import url("https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap");
@@ -79,7 +79,7 @@ a:hover {
   width: 46px;
   height: 46px;
   border-radius: 14px;
-  background: linear-gradient(135deg, #8cc4ff, #6ee3b0);
+  background: linear-gradient(135deg, #0F93B4, #2ECC71);
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
 }
 .brand h1 {
@@ -202,23 +202,26 @@ textarea {
   transform: translateY(1px);
 }
 .btn.primary {
-  background: linear-gradient(135deg, #8cc4ff, #6ee3b0);
-  border: none;
-  color: #0b1225;
+  background: #0F93B4;
+  border: 1px solid #0F93B4;
+  color: #fff;
   font-weight: 800;
-  box-shadow: 0 10px 24px rgba(79, 170, 255, 0.3);
+  box-shadow: 0 4px 12px rgba(15, 147, 180, 0.3);
 }
 .btn.danger {
-  background: rgba(240, 68, 56, 0.08);
-  border-color: rgba(240, 68, 56, 0.35);
+  background: #E74C3C;
+  border-color: #E74C3C;
+  color: #fff;
 }
 .btn.good {
-  background: rgba(23, 178, 106, 0.08);
-  border-color: rgba(23, 178, 106, 0.35);
+  background: #2ECC71;
+  border-color: #2ECC71;
+  color: #fff;
 }
 .btn.warn {
-  background: rgba(247, 144, 9, 0.08);
-  border-color: rgba(247, 144, 9, 0.35);
+  background: #F9BA36;
+  border-color: #F9BA36;
+  color: #fff;
 }
 
 .pills {
@@ -296,16 +299,16 @@ tr:hover td {
   background: #fff;
 }
 .badge.good {
-  border-color: rgba(23, 178, 106, 0.35);
-  background: rgba(23, 178, 106, 0.08);
+  border-color: rgba(46, 204, 113, 0.35);
+  background: rgba(46, 204, 113, 0.08);
 }
 .badge.warn {
-  border-color: rgba(247, 144, 9, 0.35);
-  background: rgba(247, 144, 9, 0.08);
+  border-color: rgba(249, 186, 54, 0.35);
+  background: rgba(249, 186, 54, 0.08);
 }
 .badge.bad {
-  border-color: rgba(240, 68, 56, 0.35);
-  background: rgba(240, 68, 56, 0.08);
+  border-color: rgba(231, 76, 60, 0.35);
+  background: rgba(231, 76, 60, 0.08);
 }
 
 hr.sep {

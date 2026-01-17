@@ -66,7 +66,7 @@ td {
 
 /* ===== Top Header ===== */
 .app-header {
-  background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+  background: linear-gradient(135deg, #014366 0%, #0F93B4 100%);
   color: #fff;
   padding: 20px 24px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
@@ -125,7 +125,7 @@ td {
 /* Hover effect: Turn white with blue icon */
 .icon-btn:hover {
   background: white;
-  color: #1e3a5f; /* Matches your header background color */
+  color: #014366; /* Matches your header background color */
   transform: translateY(-2px);
 }
 
@@ -137,12 +137,12 @@ td {
     right: -2px; /* Move it right slightly */
     min-width: 18px; /* Minimum width so it stays circular */
     height: 18px;
-    background-color: #ff4757; /* Red background */
+    background-color: #E74C3C; /* Red background */
     color: white;
     font-size: 0.7rem; /* Small text size */
     font-weight: bold;
     border-radius: 50%; /* Circle shape */
-    border: 2px solid #1e3a5f; /* Border matches header color */
+    border: 2px solid #014366; /* Border matches header color */
     
     /* Center the number perfectly */
     display: flex;
@@ -300,7 +300,7 @@ td {
     align-self: flex-start;
 }
 
-.mark-read-btn:hover { color: #ff4757; /* Red on hover */ }
+.mark-read-btn:hover { color: #E74C3C; /* Red on hover */ }
 
 /* Empty State */
 .empty-state {
@@ -342,13 +342,13 @@ td {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #8cc4ff, #6ee3b0);
+  background: linear-gradient(135deg, #0F93B4, #2ECC71);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 20px;
   font-weight: 700;
-  color: #1e3a5f;
+  color: #014366;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
@@ -458,13 +458,13 @@ td {
 
 .nav-tab:hover {
   color: var(--text);
-  background: rgba(59, 130, 246, 0.05);
+  background: rgba(15, 147, 180, 0.05);
 }
 
 .nav-tab.active {
-  color: var(--link);
-  border-bottom-color: var(--link);
-  background: rgba(59, 130, 246, 0.08);
+  color: #0F93B4;
+  border-bottom-color: #0F93B4;
+  background: rgba(15, 147, 180, 0.08);
 }
 
 .nav-tab svg {
@@ -537,23 +537,23 @@ td {
 }
 
 .section-icon.dashboard {
-  background: linear-gradient(135deg, #3b82f6, #06b6d4);
+  background: linear-gradient(135deg, #0F93B4, #014366);
   color: #fff;
 }
 .section-icon.create {
-  background: linear-gradient(135deg, #22c55e, #10b981);
+  background: linear-gradient(135deg, #2ECC71, #27ae60);
   color: #fff;
 }
 .section-icon.history {
-  background: linear-gradient(135deg, #a855f7, #8b5cf6);
+  background: linear-gradient(135deg, #014366, #0F93B4);
   color: #fff;
 }
 .section-icon.types {
-  background: linear-gradient(135deg, #f97316, #f59e0b);
+  background: linear-gradient(135deg, #F9BA36, #f1c40f);
   color: #fff;
 }
 .section-icon.settings {
-  background: linear-gradient(135deg, #6b7280, #4b5563);
+  background: linear-gradient(135deg, #014366, #0F93B4);
   color: #fff;
 }
 
@@ -844,8 +844,8 @@ td {
   padding: 32px 24px;
   background: linear-gradient(
     135deg,
-    rgba(124, 58, 237, 0.08),
-    rgba(168, 85, 247, 0.05)
+    rgba(15, 147, 180, 0.08),
+    rgba(1, 67, 102, 0.05)
   );
   border-radius: 16px;
   margin-bottom: 24px;
@@ -860,14 +860,14 @@ td {
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, #7c3aed, #a855f7, #7c3aed);
+  background: linear-gradient(90deg, #0F93B4, #014366, #0F93B4);
 }
 
 .profile-avatar {
   width: 90px;
   height: 90px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  background: linear-gradient(135deg, #0F93B4, #014366);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -875,7 +875,7 @@ td {
   font-weight: 700;
   color: #fff;
   margin: 0 auto 16px;
-  box-shadow: 0 12px 32px rgba(124, 58, 237, 0.35);
+  box-shadow: 0 12px 32px rgba(15, 147, 180, 0.35);
   border: 4px solid rgba(255, 255, 255, 0.9);
 }
 
@@ -890,8 +890,8 @@ td {
 .profile-role {
   font-size: 14px;
   font-weight: 600;
-  color: #7c3aed;
-  background: rgba(124, 58, 237, 0.12);
+  color: #0F93B4;
+  background: rgba(15, 147, 180, 0.12);
   padding: 6px 16px;
   border-radius: 20px;
   display: inline-block;
@@ -945,7 +945,7 @@ td {
   align-items: center;
   justify-content: space-between;
   padding: 20px 24px;
-  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+  background: linear-gradient(135deg, #0F93B4 0%, #014366 100%);
   color: white;
   border-radius: 16px 16px 0 0;
   margin: -20px -20px 20px -20px;
@@ -1031,7 +1031,7 @@ td {
   height: 22px !important;
   margin-top: 2px !important;
   cursor: pointer;
-  accent-color: #014964; /* Matches your header color */
+  accent-color: #014366; /* Matches your header color */
   flex-shrink: 0;
 }
 
@@ -1044,12 +1044,12 @@ td {
 .checkbox-text .title {
   font-weight: 900;
   font-size: 18px;
-  color: #014964;
+  color: #014366;
 }
 
 .checkbox-text .desc {
   font-size: 16px;
-  color: #4b5563; /* Dark gray for readability */
+  color: #014366; /* Dark gray for readability */
   line-height: 1.5;
   margin: 0;
 }
@@ -1112,23 +1112,23 @@ td {
 
 .dropdown-item:hover { background: #f1f5f9; color: #0f172a; }
 .dropdown-item i { width: 20px; text-align: center; font-size: 16px; color: #94a3b8; }
-.dropdown-item:hover i { color: #3b82f6; }
+.dropdown-item:hover i { color: #0F93B4; }
 
 /* Switch Button Style */
 .dropdown-item.switch-role {
     background: #eff6ff;
-    color: #1d4ed8;
+    color: #014366;
     margin: 8px;
     border-radius: 8px;
     border: 1px dashed #bfdbfe;
 }
-.dropdown-item.switch-role:hover { background: #dbeafe; border-color: #3b82f6; }
-.dropdown-item.switch-role i { color: #1d4ed8; }
+.dropdown-item.switch-role:hover { background: #dbeafe; border-color: #0F93B4; }
+.dropdown-item.switch-role i { color: #014366; }
 
 /* Logout */
-.dropdown-item.danger { color: #dc2626; border-top: 1px solid #f1f5f9; margin-top: 4px; }
+.dropdown-item.danger { color: #E74C3C; border-top: 1px solid #f1f5f9; margin-top: 4px; }
 .dropdown-item.danger:hover { background: #fef2f2; }
-.dropdown-item.danger i { color: #ef4444; }
+.dropdown-item.danger i { color: #E74C3C; }
 
 /* =========================================
    🛠️ FIXED PROFILE MODAL STYLES (Blue Theme for Employee)
@@ -1136,7 +1136,7 @@ td {
 
 /* 1. Fix the Modal Header Color (Match App Header) */
 .modal-header {
-    background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%) !important;
+    background: linear-gradient(135deg, #014366 0%, #0F93B4 100%) !important;
     padding: 20px 24px;
     border-bottom: 1px solid rgba(255,255,255,0.1);
 }
@@ -1168,7 +1168,7 @@ td {
     width: 80px;
     height: 80px;
     margin: 0 auto 12px auto;
-    background: linear-gradient(135deg, #1e3a5f, #3b82f6); /* Blue Gradient */
+    background: linear-gradient(135deg, #014366, #0F93B4); /* Blue Gradient */
     color: white;
     font-size: 32px;
     font-weight: 700;
@@ -1190,7 +1190,7 @@ td {
 .profile-role {
     display: inline-block;
     background-color: #e0f2fe; /* Light Blue Bg */
-    color: #0284c7; /* Blue Text */
+    color: #0F93B4; /* Blue Text */
     font-size: 13px;
     font-weight: 600;
     padding: 4px 12px;

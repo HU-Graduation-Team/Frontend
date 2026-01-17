@@ -474,7 +474,7 @@ async function openTask(stepId) {
         <div class="doc-footer" style="margin-top: 20px; padding-top: 10px; border-top: 1px solid #ccc;">
             <div class="signature-box" style="flex: 1;">
                 <div>توقيع الموظف</div>
-                <div style="font-family: 'Segoe Script', cursive; font-size: 16px; color: #00008b; margin-top: 15px;">
+                <div style="font-family: 'Segoe Script', cursive; font-size: 16px; color: #014366; margin-top: 15px;">
                     ${escapeHtml(emp?.name?.split(' ')[0] || "Employee")}
                 </div>
             </div>
@@ -532,10 +532,10 @@ async function openTask(stepId) {
                 <i class="fa-solid fa-print"></i> طباعة / حفظ PDF
             </button>
 
-            <button class="btn" id="rejectBtn" style="background-color: #ef4444; color: white; border: none; padding: 10px 20px; border-radius: 6px;">
+            <button class="btn" id="rejectBtn" style="background-color: #E74C3C; color: white; border: none; padding: 10px 20px; border-radius: 6px;">
                 <i class="fa-solid fa-xmark"></i> رفض
             </button>
-            <button class="btn" id="approveBtn" style="background-color: #014964; color: white; border: none; padding: 10px 20px; border-radius: 6px;">
+            <button class="btn" id="approveBtn" style="background-color: #2ECC71; color: white; border: none; padding: 10px 20px; border-radius: 6px;">
                 <i class="fa-solid fa-check"></i> موافقة
             </button>
         </div>

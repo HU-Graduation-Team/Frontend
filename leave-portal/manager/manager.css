@@ -66,7 +66,7 @@ td {
 
 /* ===== Top Header ===== */
 .app-header {
-  background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+  background: linear-gradient(135deg, #014366 0%, #0F93B4 100%);
   color: #fff;
   padding: 20px 24px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
@@ -136,7 +136,7 @@ td {
 /* Hover effect: Turn white with blue icon */
 .icon-btn:hover {
   background: white;
-  color: #1e3a5f; /* Matches your header background color */
+  color: #014366; /* Matches your header background color */
   transform: translateY(-2px);
 }
 
@@ -148,12 +148,12 @@ td {
     right: -2px; /* Move it right slightly */
     min-width: 18px; /* Minimum width so it stays circular */
     height: 18px;
-    background-color: #ff4757; /* Red background */
+    background-color: #E74C3C; /* Red background */
     color: white;
     font-size: 0.7rem; /* Small text size */
     font-weight: bold;
     border-radius: 50%; /* Circle shape */
-    border: 2px solid #1e3a5f; /* Border matches header color */
+    border: 2px solid #014366; /* Border matches header color */
     
     /* Center the number perfectly */
     display: flex;
@@ -311,7 +311,7 @@ td {
     align-self: flex-start;
 }
 
-.mark-read-btn:hover { color: #ff4757; /* Red on hover */ }
+.mark-read-btn:hover { color: #E74C3C; /* Red on hover */ }
 
 /* Empty State */
 .empty-state {
@@ -354,13 +354,13 @@ td {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #8cc4ff, #6ee3b0);
+  background: linear-gradient(135deg, #0F93B4, #2ECC71);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 20px;
   font-weight: 700;
-  color: #1e3a5f;
+  color: #014366;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
@@ -470,13 +470,13 @@ td {
 
 .nav-tab:hover {
   color: var(--text);
-  background: rgba(168, 85, 247, 0.05);
+  background: rgba(15, 147, 180, 0.05);
 }
 
 .nav-tab.active {
-  color: #7c3aed;
-  border-bottom-color: #7c3aed;
-  background: rgba(168, 85, 247, 0.08);
+  color: #0F93B4;
+  border-bottom-color: #0F93B4;
+  background: rgba(15, 147, 180, 0.08);
 }
 
 .nav-tab svg {
@@ -488,8 +488,8 @@ td {
 .nav-tab .badge {
   font-size: 12px;
   padding: 3px 8px;
-  border-radius: 99px;
-  background: #7c3aed;
+  border-radius: 999px;
+  background: #0F93B4;
   color: #fff;
   font-weight: 700;
   margin-right: 4px;
@@ -553,27 +553,27 @@ td {
 }
 
 .section-icon.dashboard {
-  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  background: linear-gradient(135deg, #014366, #0F93B4);
   color: #fff;
 }
 .section-icon.tasks {
-  background: linear-gradient(135deg, #f59e0b, #fbbf24);
+  background: linear-gradient(135deg, #F9BA36, #f1c40f);
   color: #fff;
 }
 .section-icon.pending {
-  background: linear-gradient(135deg, #3b82f6, #60a5fa);
+  background: linear-gradient(135deg, #0F93B4, #0F93B4);
   color: #fff;
 }
 .section-icon.team-leave {
-  background: linear-gradient(135deg, #f59e0b, #fbbf24);
+  background: linear-gradient(135deg, #F9BA36, #f1c40f);
   color: #fff;
 }
 .section-icon.reports {
-  background: linear-gradient(135deg, #10b981, #34d399);
+  background: linear-gradient(135deg, #2ECC71, #27ae60);
   color: #fff;
 }
 .section-icon.settings {
-  background: linear-gradient(135deg, #6b7280, #4b5563);
+  background: linear-gradient(135deg, #014366, #0F93B4);
   color: #fff;
 }
 
@@ -686,19 +686,19 @@ td {
 .stat-box.highlight {
   background: linear-gradient(
     135deg,
-    rgba(124, 58, 237, 0.08),
-    rgba(168, 85, 247, 0.08)
+    rgba(15, 147, 180, 0.08),
+    rgba(15, 147, 180, 0.08)
   );
-  border-color: rgba(124, 58, 237, 0.2);
+  border-color: rgba(15, 147, 180, 0.2);
 }
 
 .stat-box.urgent {
   background: linear-gradient(
     135deg,
-    rgba(239, 68, 68, 0.08),
-    rgba(248, 113, 113, 0.08)
+    rgba(231, 76, 60, 0.08),
+    rgba(231, 76, 60, 0.08)
   );
-  border-color: rgba(239, 68, 68, 0.2);
+  border-color: rgba(231, 76, 60, 0.2);
 }
 
 /* ===== Form Grid ===== */
@@ -774,12 +774,12 @@ td {
   width: 6px;
   height: 60px;
   border-radius: 3px;
-  background: var(--chip-3);
+  background: #0F93B4;
   flex-shrink: 0;
 }
 
 .task-card .priority-indicator.high {
-  background: var(--bad);
+  background: #E74C3C;
 }
 
 .task-card .task-info {
@@ -890,7 +890,7 @@ td {
   align-items: center;
   justify-content: space-between;
   padding: 20px 24px;
-  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+  background: linear-gradient(135deg, #014366 0%, #0F93B4 100%);
   color: white;
 }
 
@@ -975,7 +975,7 @@ td {
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  background: linear-gradient(135deg, #014366, #0F93B4);
   color: white;
   display: flex;
   align-items: center;
@@ -993,7 +993,7 @@ td {
 
 .department-badge {
   display: inline-block;
-  background: #7c3aed;
+  background: #0F93B4;
   color: white;
   padding: 3px 10px;
   border-radius: 20px;
@@ -1028,11 +1028,11 @@ td {
 }
 
 .balance-value.used {
-  color: #ef4444;
+  color: #E74C3C;
 }
 
 .balance-value.remaining {
-  color: #22c55e;
+  color: #2ECC71;
 }
 
 .balance-label {
@@ -1082,7 +1082,7 @@ td {
 }
 
 .detail-value.highlight {
-  color: #7c3aed;
+  color: #0F93B4;
   font-size: 16px;
 }
 
@@ -1136,7 +1136,7 @@ td {
 }
 
 .attachment-action {
-  color: #22c55e;
+  color: #2ECC71;
   font-weight: 600;
   font-size: 13px;
 }
@@ -1174,15 +1174,15 @@ td {
 }
 
 .timeline-dot.pending {
-  background: #fbbf24;
+  background: #F9BA36;
 }
 
 .timeline-dot.approved {
-  background: #22c55e;
+  background: #2ECC71;
 }
 
 .timeline-dot.rejected {
-  background: #ef4444;
+  background: #E74C3C;
 }
 
 .timeline-content {
@@ -1208,7 +1208,7 @@ td {
 
 .timeline-comment {
   font-size: 13px;
-  color: #7c3aed;
+  color: #0F93B4;
   font-style: italic;
   margin-top: 4px;
 }
@@ -1244,7 +1244,7 @@ td {
 
 .comments-section textarea:focus {
   outline: none;
-  border-color: #7c3aed;
+  border-color: #0F93B4;
 }
 
 .action-buttons {
@@ -1268,23 +1268,23 @@ td {
 }
 
 .approve-btn {
-  background: linear-gradient(135deg, #22c55e, #16a34a);
+  background: #2ECC71;
   color: white;
 }
 
 .approve-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+  box-shadow: 0 6px 20px rgba(46, 204, 113, 0.4);
 }
 
 .reject-btn {
-  background: linear-gradient(135deg, #ef4444, #dc2626);
+  background: #E74C3C;
   color: white;
 }
 
 .reject-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+  box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
 }
 
 /* Modal Mobile Responsive */
@@ -1440,13 +1440,13 @@ td {
 }
 
 .dropdown-item:hover i {
-    color: #3b82f6;
+    color: #0F93B4;
 }
 
 /* Switch Role Button Specifics */
 .dropdown-item.switch-role {
     background: #eff6ff;
-    color: #1d4ed8;
+    color: #014366;
     margin: 8px;
     border-radius: 8px;
     border: 1px dashed #bfdbfe;
@@ -1454,16 +1454,16 @@ td {
 
 .dropdown-item.switch-role:hover {
     background: #dbeafe;
-    border-color: #3b82f6;
+    border-color: #0F93B4;
 }
 
 .dropdown-item.switch-role i {
-    color: #1d4ed8;
+    color: #014366;
 }
 
 /* Logout Button */
 .dropdown-item.danger {
-    color: #dc2626;
+    color: #E74C3C;
     border-top: 1px solid #f1f5f9;
     margin-top: 4px;
 }
@@ -1473,7 +1473,7 @@ td {
 }
 
 .dropdown-item.danger i {
-    color: #ef4444;
+    color: #E74C3C;
 }
 
 /* =========================================
@@ -1482,7 +1482,7 @@ td {
 
 /* 1. Fix the Modal Header Color (Match App Header) */
 .modal-header {
-    background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%) !important;
+    background: linear-gradient(135deg, #014366 0%, #0F93B4 100%) !important;
     padding: 20px 24px;
     border-bottom: 1px solid rgba(255,255,255,0.1);
 }
@@ -1509,7 +1509,7 @@ td {
     width: 80px;
     height: 80px;
     margin: 0 auto 12px auto;
-    background: linear-gradient(135deg, #1e3a5f, #3b82f6); /* Blue Gradient */
+    background: linear-gradient(135deg, #014366, #0F93B4); /* Blue Gradient */
     color: white;
     font-size: 32px;
     font-weight: 700;
@@ -1531,7 +1531,7 @@ td {
 .profile-role {
     display: inline-block;
     background-color: #e0f2fe; /* Light Blue Bg */
-    color: #0284c7; /* Blue Text */
+    color: #0F93B4; /* Blue Text */
     font-size: 13px;
     font-weight: 600;
     padding: 4px 12px;
