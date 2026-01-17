@@ -1252,3 +1252,74 @@ td {
     gap: 4px;
     font-size: 14px;
 }
+
+/* =========================================
+   🖨️ PRINT STYLES (Fixed for A4 & No Blank Page)
+   ========================================= */
+@media print {
+  /* 1. RESET PAGE SETTINGS */
+  @page {
+    size: A4 portrait;
+    margin: 0; /* We handle margins manually in the .official-doc */
+  }
+
+  /* 2. HIDE EVERYTHING ELSE (Collapse space) */
+  body > *:not(#modal) {
+    display: none !important;
+  }
+  
+  /* Hide specific modal parts */
+  .modal-close-btn,
+  .modal-footer,
+  button, 
+  .comments-section,
+  .toast,
+  .sep {
+    display: none !important;
+  }
+
+  /* 3. SETUP THE MODAL CONTAINER */
+  body, html, #modal, .box, #modalBody {
+    background: white !important;
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    position: static !important;
+    display: block !important;
+    visibility: visible !important;
+  }
+
+  /* 4. STYLE THE DOCUMENT (The Paper Look) */
+  .official-doc {
+    display: block !important;
+    visibility: visible !important;
+    position: absolute;
+    left: 0;
+    top: 0;
+    
+    /* A4 Width & Padding */
+    width: 100% !important; 
+    max-width: 210mm !important; /* Force A4 width */
+    min-height: 290mm;           /* Force A4 height */
+    
+    /* 🟢 THIS FIXES THE CRAMPED TEXT */
+    padding: 15mm 20mm !important; /* Top/Bottom 15mm, Left/Right 20mm */
+    margin: 0 auto !important;
+    
+    border: none !important;
+    box-shadow: none !important;
+    direction: rtl !important;
+    box-sizing: border-box;
+  }
+
+  /* 5. FORCE COLORS (For table borders and backgrounds) */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* 6. Clean up links */
+  a { text-decoration: none !important; color: #000 !important; }
+}

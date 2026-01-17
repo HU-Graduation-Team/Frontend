@@ -420,65 +420,200 @@ async function showRequestDetails(requestId) {
     const d = res?.data;
 
     const canCancel = String(d?.status || "").toLowerCase() === "pending";
+    const steps = d?.approvalSteps || [];
+    const attachments = d?.attachments || [];
+
+    // Helper to format dates
+    const fmt = (date) => date ? new Date(date).toISOString().split('T')[0] : "-";
+    
+    // --- 🟢 NEW LOGIC: Extract Approval Data for Print ---
+    // Find the step where the request was Approved or Rejected
+    const decisionStep = steps.find(s => s.status === 'Approved' || s.status === 'Rejected') || {};
+    
+    const isApproved = d.status === 'Approved';
+    const isRejected = d.status === 'Rejected';
+    
+    // Get Manager Name & Comments if they exist
+    const managerName = decisionStep.approver?.name || "";
+    const managerComment = decisionStep.comments || "";
+    
+    // Get Employee Name (Fixing the 'undefined' bug)
+    const employeeName = d?.user?.name || currentUser?.name || "موظف";
+    // -----------------------------------------------------
 
     openModal(`
-      <div class="kv" style="font-size: 16px;">
-        <div class="k">رقم الطلب</div><div class="v">${escapeHtml(
-          d?.request_id
-        )}</div>
-        <div class="k">الحالة</div><div class="v">${statusBadge(
-          d?.status
-        )}</div>
-        <div class="k">نوع الإجازة</div><div class="v">${escapeHtml(
-          d?.leaveType?.type_name || "-"
-        )}</div>
-        <div class="k">السبب</div><div class="v">${escapeHtml(
-          d?.reason || "-"
-        )}</div>
+      <button onclick="closeModal()" 
+              style="position: absolute; left: 20px; top: 20px; background: #f3f4f6; border: 1px solid #d1d5db; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #4b5563; font-size: 18px; transition: all 0.2s; z-index: 10;"
+              onmouseover="this.style.background='#e5e7eb'; this.style.color='#1f2937';"
+              onmouseout="this.style.background='#f3f4f6'; this.style.color='#4b5563';">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="official-doc">
+        
+        <div class="doc-header">
+          <div class="doc-logo">
+            <img src="../../Assets/شعار_جامعة_الغردقة.png" alt="University Logo" style="max-height: 80px;">
+          </div>
+          <div class="doc-title">
+            <h2>طلب إجازة</h2>
+            <span>Leave Request Form</span>
+          </div>
+          <div class="doc-meta" style="text-align: left; font-size: 12px; line-height: 1.6;">
+             <div><b>رقم الطلب:</b> #${d?.request_id}</div>
+             <div><b>تاريخ الطلب:</b> ${fmt(d?.created_at)}</div>
+             <div><b>الحالة الحالية:</b> ${statusBadge(d?.status)}</div>
+          </div>
+        </div>
+
+        <div class="doc-section">
+          <div class="doc-row">
+            <span class="doc-label">اسم الموظف:</span>
+            <span class="doc-value">${escapeHtml(employeeName)}</span>
+          </div>
+          <div style="display: flex; gap: 20px;">
+            <div class="doc-row" style="flex: 1;">
+                <span class="doc-label">الوظيفة:</span>
+                <span class="doc-value">${escapeHtml(d?.user?.job_title || d?.user?.role || "-")}</span>
+            </div>
+            <div class="doc-row" style="flex: 1;">
+                <span class="doc-label">الجهة/القسم:</span>
+                <span class="doc-value">${escapeHtml(d?.user?.department?.department_name || d?.user?.department || "-")}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="doc-section" style="margin-top: 15px;">
+          <div class="doc-row">
+            <span class="doc-label">نوع الإجازة:</span>
+            <span class="doc-value">${escapeHtml(d?.leaveType?.type_name || "-")}</span>
+          </div>
+          
+          <div style="display: flex; gap: 20px;">
+             <div class="doc-row" style="flex: 1;">
+                <span class="doc-label">من تاريخ:</span>
+                <span class="doc-value">${fmt(d?.start_date)}</span>
+             </div>
+             <div class="doc-row" style="flex: 1;">
+                <span class="doc-label">إلى تاريخ:</span>
+                <span class="doc-value">${fmt(d?.end_date)}</span>
+             </div>
+          </div>
+
+          <div class="doc-row">
+            <span class="doc-label">المدة المطلوبة:</span>
+            <span class="doc-value">${d?.duration || 0} يوم</span>
+          </div>
+
+           <div class="doc-row" style="margin-top: 10px;">
+            <span class="doc-label">السبب:</span>
+            <span class="doc-value">${escapeHtml(d?.reason || "-")}</span>
+           </div>
+        </div>
+
+        ${attachments.length ? `
+        <div style="margin-top: 15px; padding: 10px; border: 1px dashed #ccc;">
+           <strong>📎 المرفقات:</strong>
+           ${attachments.map(a => `<a href="${a.filePath}" target="_blank" style="color: blue; margin-right: 10px; text-decoration: underline;">${a.fileName || "ملف"}</a>`).join(" ")}
+        </div>
+        ` : ''}
+
+        <div style="margin-top: 20px; border-top: 1px solid #ccc; padding-top: 10px;">
+            <h4>📜 السجل الرقمي (Digital History)</h4>
+            <table style="width: 100%; font-size: 12px; margin-top: 5px; border-collapse: collapse;">
+                <thead>
+                    <tr style="background: #f3f4f6; text-align: right;">
+                        <th style="padding: 5px;">الخطوة</th>
+                        <th style="padding: 5px;">الحالة</th>
+                        <th style="padding: 5px;">المعتمد</th>
+                        <th style="padding: 5px;">ملاحظات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${steps.map(s => `
+                        <tr style="border-bottom: 1px solid #eee;">
+                            <td style="padding: 5px;">${s.step_order || "-"}</td>
+                            <td style="padding: 5px;">${statusBadge(s.status)}</td>
+                            <td style="padding: 5px;">${s.approver?.name || "-"}</td>
+                            <td style="padding: 5px;">${s.comments || "-"}</td>
+                        </tr>
+                    `).join("")}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="print-only-section" style="margin-top: 30px; border: 2px solid #000; padding: 15px; page-break-inside: avoid;">
+            <div style="text-align: center; font-weight: bold; text-decoration: underline; margin-bottom: 15px; font-size: 16px;">
+                الاعتمادات (للاستخدام الورقي / الإداري)
+            </div>
+            
+            <div style="display: flex; gap: 20px;">
+                <div style="flex: 1; border-left: 1px solid #000; padding-left: 10px;">
+                    <div style="font-weight: bold; margin-bottom: 8px;">مراجعة شؤون العاملين:</div>
+                    <div style="margin-bottom: 5px;">الرصيد يسمح: [ نعم ]  [ لا ]</div>
+                    <div style="margin-top: 25px; display: flex; align-items: center;">
+                        <span>التوقيع:</span>
+                        <div style="border-bottom: 1px dotted #000; flex: 1; margin-right: 5px;"></div>
+                    </div>
+                </div>
+
+                <div style="flex: 1;">
+                    <div style="font-weight: bold; margin-bottom: 8px;">اعتماد السلطة المختصة:</div>
+                    
+                    <div style="margin-bottom: 5px;">
+                        ${isApproved ? '[ ✔ ]' : '[ &nbsp;&nbsp; ]'} موافقة
+                    </div>
+                    <div style="margin-bottom: 5px;">
+                        ${isRejected ? '[ ✔ ]' : '[ &nbsp;&nbsp; ]'} رفض
+                    </div>
+
+                    ${managerComment ? `<div style="font-size: 11px; margin-top:5px; font-style: italic;">ملاحظات: "${escapeHtml(managerComment)}"</div>` : ''}
+
+                    <div style="margin-top: 20px; display: flex; align-items: center;">
+                        <span>التوقيع:</span>
+                        <div style="border-bottom: 1px dotted #000; flex: 1; margin-right: 5px; font-family: 'Segoe Script', cursive; color: #00008b; text-align:center;">
+                             ${managerName}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
+                <div style="text-align: center; width: 200px;">
+                    <div style="margin-bottom: 15px;">توقيع مقدم الطلب</div>
+                    <div style="border-bottom: 1px dotted #000; font-family: 'Segoe Script', cursive; color: #00008b;">
+                        ${employeeName}
+                    </div>
+                </div>
+            </div>
+        </div>
+
       </div>
-      <hr class="sep"/>
-      <div class="row" style="justify-content:space-between;">
-        <div style="font-weight:800; font-size: 18px;">خطوات الموافقة</div>
-      </div>
-      <div class="table-wrap" style="margin-top:12px;">
-        <table>
-          <thead>
-            <tr>
-              <th>الخطوة</th><th>الحالة</th><th>المعتمد</th><th>ملاحظات</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${
-              (d?.approvalSteps?.length ? d.approvalSteps : [])
-                .map(
-                  (s, idx) => `
-              <tr>
-                <td>${s.step_order ?? s.step ?? idx + 1}</td>
-                <td>${statusBadge(s.status)}</td>
-                <td>${escapeHtml(s.approver?.name || "-")}</td>
-                <td>${escapeHtml(s.comments || "-")}</td>
-              </tr>
-            `
-                )
-                .join("") ||
-              `<tr><td colspan="4" class="muted">لا يوجد خطوات.</td></tr>`
-            }
-          </tbody>
-        </table>
-      </div>
-      <hr class="sep"/>
-      <div class="actions">
-        ${
-          canCancel
-            ? `<button class="btn danger" id="cancelBtn" style="font-size: 16px;">إلغاء الطلب</button>`
-            : `<span class="muted">لا يمكن الإلغاء إلا إذا الحالة Pending.</span>`
-        }
-        <button class="btn" onclick="closeModal()" style="font-size: 16px;">إغلاق</button>
+      <div class="modal-footer" style="background: #f9fafb; border-top: 1px solid #e5e7eb; padding: 20px; display: flex; justify-content: space-between; align-items: center;">
+         
+         <div>
+            ${canCancel ? `
+                <button class="btn danger" id="cancelBtn" style="font-size: 14px;">
+                    <i class="fa-solid fa-trash"></i> إلغاء الطلب
+                </button>
+            ` : ''}
+         </div>
+
+         <div style="display: flex; gap: 10px;">
+            <button class="btn" onclick="window.print()" style="background-color: #4b5563; color: white; border: none; padding: 10px 20px; border-radius: 6px;">
+                <i class="fa-solid fa-print"></i> طباعة الطلب
+            </button>
+            <button class="btn" onclick="closeModal()" style="border: 1px solid #ccc;">
+                إغلاق
+            </button>
+         </div>
       </div>
     `);
 
+    // Wire up Cancel Button Logic
     if (canCancel) {
-      qs("#cancelBtn").addEventListener("click", async () => {
+      document.getElementById("cancelBtn").addEventListener("click", async () => {
+        if (!confirm("هل أنت متأكد من رغبتك في إلغاء هذا الطلب؟")) return;
         try {
           await apiFetch(`/api/me/leave-requests/${requestId}/cancel`, {
             method: "PUT",
@@ -491,6 +626,7 @@ async function showRequestDetails(requestId) {
         }
       });
     }
+
   } catch (e) {
     toast("خطأ", e.message);
   }
@@ -533,17 +669,32 @@ async function loadProfile() {
         "Manager",
         "Dean",
         "Head_of_Department",
-        "HR_Admin",
+        
       ];
-
+      const adminRoles = ["HR_Admin"];
       if (switchBtn) {
-        if (managerRoles.includes(user.role)) {
-          switchBtn.style.display = "flex"; // Show button
-          // You can customize the link based on role if needed, e.g.:
-          // if (user.role === 'HR_Admin') switchBtn.href = '../admin/admin.html';
-        } else {
-          switchBtn.style.display = "none"; // Hide for normal employees
-        }
+  // A. Case: User is an ADMIN
+  if (adminRoles.includes(user.role)) {
+    switchBtn.style.display = "flex";
+    switchBtn.href = "../Admin/hr.html"; 
+    
+    // Update the text to say "Admin Portal"
+    const textSpan = switchBtn.querySelector("span");
+    if (textSpan) textSpan.textContent = "التبديل إلى لوحة المسؤول";
+  } 
+  // B. Case: User is a MANAGER
+  else if (managerRoles.includes(user.role)) {
+    switchBtn.style.display = "flex";
+    switchBtn.href = "../manager/manager.html"; 
+    
+    // Update the text to say "Manager Portal"
+    const textSpan = switchBtn.querySelector("span");
+    if (textSpan) textSpan.textContent = "التبديل إلى بوابة المدير";
+  } 
+  // C. Case: User is a regular EMPLOYEE
+  else {
+    switchBtn.style.display = "none"; // Hide the button
+  }
       }
 
       // 4. Setup Dropdown Toggle

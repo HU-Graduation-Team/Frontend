@@ -358,6 +358,7 @@ function renderPendingFromDashboard(data) {
 
 async function openTask(stepId) {
   try {
+    // 1. Fetch Data
     const res = await apiFetch(`/api/manager/approval-tasks/${stepId}`);
     const d = res?.data?.data || res?.data;
 
@@ -367,212 +368,191 @@ async function openTask(stepId) {
     const hist = Array.isArray(d?.history) ? d.history : [];
     const attachments = Array.isArray(req.attachments) ? req.attachments : [];
 
-    // Get leave type properly
+    // 2. Prepare Variables
     const leaveType = req?.leaveType?.type_name || req?.type || "-";
     const startDate = req?.start_date || req?.startDate;
     const endDate = req?.end_date || req?.endDate;
 
+    // 3. Render Modal Content
     openModal(`
-      <div class="modal-header">
-        <div class="modal-title">
-          <span class="modal-icon">📋</span>
-          <div>
-            <h2>طلب إجازة #${escapeHtml(
-              req?.request_id || req?.id || stepId
-            )}</h2>
-            <span class="modal-subtitle">${statusBadge(d?.status)}</span>
+      <button onclick="closeModal()" 
+              style="position: absolute; left: 20px; top: 20px; background: #f3f4f6; border: 1px solid #d1d5db; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #4b5563; font-size: 18px; transition: all 0.2s; z-index: 10;"
+              onmouseover="this.style.background='#e5e7eb'; this.style.color='#1f2937';"
+              onmouseout="this.style.background='#f3f4f6'; this.style.color='#4b5563';">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="official-doc">
+        
+        <div class="doc-header">
+          <div class="doc-logo">
+            <img src="../../Assets/شعار_جامعة_الغردقة.png" alt="University Logo" style="max-height: 80px;">
+          </div>
+          <div class="doc-title">
+            <h2>طلب إجازة</h2>
+            <span>Leave Request Form</span>
+          </div>
+          <div class="doc-meta" style="text-align: left; font-size: 12px; line-height: 1.6;">
+             <div><b>رقم الطلب:</b> #${req?.request_id || stepId}</div>
+             <div><b>التاريخ:</b> ${fmtDate(req?.created_at || new Date())}</div>
           </div>
         </div>
-        <button class="modal-close-btn" onclick="closeModal()">
-          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-          </svg>
-        </button>
-      </div>
 
-      <div class="modal-body">
-        <!-- Employee Info Card -->
-        <div class="info-card employee-card">
-          <div class="info-card-header">
-            <div class="avatar">${escapeHtml((emp?.name || "?")[0])}</div>
-            <div class="employee-info">
-              <h3>${escapeHtml(emp?.name || "-")}</h3>
-              <span class="department-badge">${escapeHtml(
-                emp?.department || "-"
-              )}</span>
-            </div>
+        <div class="doc-section">
+          <div class="doc-row">
+            <span class="doc-label">اسم الموظف:</span>
+            <span class="doc-value">${escapeHtml(emp?.name || "-")}</span>
           </div>
-          <div class="employee-email">${escapeHtml(emp?.email || "-")}</div>
-          <div class="balance-row">
-            <div class="balance-item">
-              <span class="balance-value">${bal.total ?? "-"}</span>
-              <span class="balance-label">إجمالي</span>
+          
+          <div style="display: flex; gap: 20px;">
+            <div class="doc-row" style="flex: 1;">
+                <span class="doc-label">الوظيفة:</span>
+                <span class="doc-value">${escapeHtml(emp?.job_title || emp?.role || "-")}</span>
             </div>
-            <div class="balance-item">
-              <span class="balance-value used">${bal.used ?? "-"}</span>
-              <span class="balance-label">مستخدم</span>
-            </div>
-            <div class="balance-item">
-              <span class="balance-value remaining">${
-                bal.remaining ?? "-"
-              }</span>
-              <span class="balance-label">متبقي</span>
+            <div class="doc-row" style="flex: 1;">
+                <span class="doc-label">الجهة/القسم:</span>
+                <span class="doc-value">${escapeHtml(emp?.department || "-")}</span>
             </div>
           </div>
         </div>
 
-        <!-- Request Details Card -->
-        <div class="info-card request-card">
-          <h4>📝 تفاصيل الطلب</h4>
-          <div class="request-details">
-            <div class="detail-row">
-              <span class="detail-icon">🏷️</span>
-              <div class="detail-content">
-                <span class="detail-label">نوع الإجازة</span>
-                <span class="detail-value highlight">${escapeHtml(
-                  leaveType
-                )}</span>
-              </div>
-            </div>
-            <div class="detail-row">
-              <span class="detail-icon">📅</span>
-              <div class="detail-content">
-                <span class="detail-label">من</span>
-                <span class="detail-value">${fmtDate(startDate)}</span>
-              </div>
-            </div>
-            <div class="detail-row">
-              <span class="detail-icon">📅</span>
-              <div class="detail-content">
-                <span class="detail-label">إلى</span>
-                <span class="detail-value">${fmtDate(endDate)}</span>
-              </div>
-            </div>
-            <div class="detail-row">
-              <span class="detail-icon">⏱️</span>
-              <div class="detail-content">
-                <span class="detail-label">المدة</span>
-                <span class="detail-value">${escapeHtml(
-                  req?.duration ?? "-"
-                )} يوم</span>
-              </div>
-            </div>
-            ${
-              req?.reason
-                ? `
-            <div class="detail-row reason-row">
-              <span class="detail-icon">💬</span>
-              <div class="detail-content">
-                <span class="detail-label">السبب</span>
-                <span class="detail-value reason-text">${escapeHtml(
-                  req.reason
-                )}</span>
-              </div>
-            </div>
-            `
-                : ""
-            }
+        <div class="doc-section" style="margin-top: 15px;">
+          <div class="doc-row">
+            <span class="doc-label">نوع الإجازة:</span>
+            <span class="doc-value">${escapeHtml(leaveType)}</span>
+          </div>
+          
+          <div style="display: flex; gap: 20px;">
+             <div class="doc-row" style="flex: 1;">
+                <span class="doc-label">من تاريخ:</span>
+                <span class="doc-value">${fmtDate(startDate)}</span>
+             </div>
+             <div class="doc-row" style="flex: 1;">
+                <span class="doc-label">إلى تاريخ:</span>
+                <span class="doc-value">${fmtDate(endDate)}</span>
+             </div>
+          </div>
+          
+          <div class="doc-row">
+            <span class="doc-label">المدة المطلوبة:</span>
+            <span class="doc-value">${req?.duration || "-"} يوم</span>
           </div>
         </div>
 
-        <!-- Attachments -->
-        ${
-          attachments.length
-            ? `
-        <div class="info-card attachments-card">
-          <h4>📎 المرفقات</h4>
-          <div class="attachments-list">
-            ${attachments
-              .map(
-                (a, i) => `
-              <a href="${escapeHtml(
-                a.filePath || "#"
-              )}" target="_blank" rel="noopener" class="attachment-item">
-                <span class="attachment-icon">📄</span>
-                <span class="attachment-name">${escapeHtml(
-                  a.fileName || `مرفق ${i + 1}`
-                )}</span>
-                <span class="attachment-action">فتح ←</span>
-              </a>
-            `
-              )
-              .join("")}
+        <div class="doc-table-section">
+          <div class="doc-table-header">بيان رصيد الإجازات (للاستخدام الإداري)</div>
+          <div class="doc-table-grid">
+            <div class="doc-cell">
+                <span>الرصيد الكلي</span>
+                <strong>${bal.total ?? 0}</strong>
+            </div>
+            <div class="doc-cell">
+                <span>تم استهلاكه</span>
+                <strong>${bal.used ?? 0}</strong>
+            </div>
+            <div class="doc-cell">
+                <span>المتبقي</span>
+                <strong style="color: ${bal.remaining < 3 ? 'red' : 'green'}">${bal.remaining ?? 0}</strong>
+            </div>
           </div>
         </div>
-        `
-            : ""
-        }
 
-        <!-- Approval History -->
-        ${
-          hist.length
-            ? `
-        <div class="info-card history-card">
-          <h4>📜 سجل الموافقات</h4>
-          <div class="history-timeline">
-            ${hist
-              .map(
-                (h, i) => `
-              <div class="timeline-item">
-                <div class="timeline-dot ${(
-                  h.status || ""
-                ).toLowerCase()}"></div>
-                <div class="timeline-content">
-                  <div class="timeline-header">
-                    <span class="timeline-step">الخطوة ${escapeHtml(
-                      h.step ?? i + 1
-                    )}</span>
-                    ${statusBadge(h.status)}
-                  </div>
-                  <div class="timeline-approver">${escapeHtml(
-                    h.approver || "-"
-                  )}</div>
-                  ${
-                    h.comments
-                      ? `<div class="timeline-comment">"${escapeHtml(
-                          h.comments
-                        )}"</div>`
-                      : ""
-                  }
+        <div style="margin-top: 15px;">
+            <label style="font-weight: bold; display: block; margin-bottom: 5px;">سبب الإجازة / ملاحظات:</label>
+            <div class="doc-box">
+                ${escapeHtml(req?.reason || "لا يوجد سبب محدد")}
+            </div>
+        </div>
+
+        ${attachments.length ? `
+        <div style="margin-bottom: 20px;">
+           <strong>المرفقات:</strong>
+           ${attachments.map(a => `<a href="${a.filePath}" target="_blank" style="color: blue; margin-right: 10px; text-decoration: underline;">📄 ${a.fileName || "مرفق"}</a>`).join(" ")}
+        </div>
+        ` : ''}
+
+        <div class="doc-footer" style="margin-top: 20px; padding-top: 10px; border-top: 1px solid #ccc;">
+            <div class="signature-box" style="flex: 1;">
+                <div>توقيع الموظف</div>
+                <div style="font-family: 'Segoe Script', cursive; font-size: 16px; color: #00008b; margin-top: 15px;">
+                    ${escapeHtml(emp?.name?.split(' ')[0] || "Employee")}
                 </div>
-              </div>
-            `
-              )
-              .join("")}
-          </div>
+            </div>
+            <div class="signature-box" style="flex: 1;">
+                <div>الاعتمادات السابقة</div>
+                <div style="font-size: 12px; margin-top: 5px; color: #666; line-height: 1.4;">
+                     ${hist.length ? hist.map(h => `<div>✔ ${h.status} (${h.role})</div>`).join("") : "لا يوجد"}
+                </div>
+            </div>
+            <div class="signature-box" style="flex: 1;">
+                 <div>ختم الكلية</div>
+                 <div class="stamp-placeholder">
+                    <i class="fa-solid fa-stamp" style="font-size: 30px; opacity: 0.2;"></i>
+                 </div>
+            </div>
         </div>
-        `
-            : ""
-        }
-      </div>
 
-      <!-- Action Footer -->
-      <div class="modal-footer">
-        <div class="comments-section">
-          <label>💬 ملاحظات المدير</label>
-          <textarea id="managerComments" placeholder="اكتب ملاحظاتك هنا... (مطلوب للرفض)"></textarea>
+        <div class="print-only-section" style="margin-top: 20px; border: 2px solid #000; padding: 15px; page-break-inside: avoid;">
+            <div style="text-align: center; font-weight: bold; text-decoration: underline; margin-bottom: 15px; font-size: 16px;">
+                رأي الرئيس المباشر / اعتماد العميد
+            </div>
+            
+            <div style="display: flex; gap: 20px;">
+                <div style="flex: 1; border-left: 1px solid #000; padding-left: 10px;">
+                    <div style="font-weight: bold; margin-bottom: 8px;">رأي الرئيس المباشر:</div>
+                    <div style="margin-bottom: 5px;">[ &nbsp;&nbsp; ] أوافق</div>
+                    <div style="margin-bottom: 5px;">[ &nbsp;&nbsp; ] لا أوافق، بسبب: ....................</div>
+                    <div style="margin-top: 25px; display: flex; align-items: center;">
+                        <span>التوقيع:</span>
+                        <div style="border-bottom: 1px dotted #000; flex: 1; margin-right: 5px;"></div>
+                    </div>
+                </div>
+
+                <div style="flex: 1;">
+                    <div style="font-weight: bold; margin-bottom: 8px;">قرار السلطة المختصة:</div>
+                    <div style="margin-bottom: 5px;">[ &nbsp;&nbsp; ] موافقة</div>
+                    <div style="margin-bottom: 5px;">[ &nbsp;&nbsp; ] رفض</div>
+                    <div style="margin-top: 25px; display: flex; align-items: center;">
+                        <span>التوقيع:</span>
+                        <div style="border-bottom: 1px dotted #000; flex: 1; margin-right: 5px;"></div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="action-buttons">
-          <button class="action-btn approve-btn" id="approveBtn">
-            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-              <path d="M20 6L9 17l-5-5"/>
-            </svg>
-            موافقة
-          </button>
-          <button class="action-btn reject-btn" id="rejectBtn">
-            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
-            رفض
-          </button>
+
+      </div> 
+      <div class="modal-footer" style="background: #f9fafb; border-top: 1px solid #e5e7eb; padding: 20px; display: flex; flex-direction: column; gap: 15px;">
+        <div class="comments-section" style="width: 100%;">
+            <label style="font-weight: bold; margin-bottom: 5px; display: block;">قرار المدير / العميد (للحفظ الإلكتروني):</label>
+            <textarea id="managerComments" class="form-control" placeholder="أضف أي ملاحظات أو سبب الرفض هنا..." style="width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; min-height: 60px;"></textarea>
+        </div>
+        
+        <div style="display: flex; gap: 10px; justify-content: flex-end; width: 100%;">
+            <button class="btn" id="printBtn" style="background-color: #4b5563; color: white; border: none; padding: 10px 20px; border-radius: 6px; margin-right: auto;">
+                <i class="fa-solid fa-print"></i> طباعة / حفظ PDF
+            </button>
+
+            <button class="btn" id="rejectBtn" style="background-color: #ef4444; color: white; border: none; padding: 10px 20px; border-radius: 6px;">
+                <i class="fa-solid fa-xmark"></i> رفض
+            </button>
+            <button class="btn" id="approveBtn" style="background-color: #014964; color: white; border: none; padding: 10px 20px; border-radius: 6px;">
+                <i class="fa-solid fa-check"></i> موافقة
+            </button>
         </div>
       </div>
     `);
 
-    // wire actions
-    qs("#approveBtn").addEventListener("click", async () => {
+    // 4. Wire up the buttons logic
+    
+    // Print
+    document.getElementById("printBtn").addEventListener("click", () => {
+        window.print();
+    });
+
+    // Approve
+    document.getElementById("approveBtn").addEventListener("click", async () => {
       try {
-        const comments = qs("#managerComments").value.trim();
+        const comments = document.getElementById("managerComments").value.trim();
         await apiFetch(`/api/manager/approval-tasks/${stepId}/approve`, {
           method: "POST",
           body: { comments },
@@ -585,8 +565,9 @@ async function openTask(stepId) {
       }
     });
 
-    qs("#rejectBtn").addEventListener("click", async () => {
-      const comments = qs("#managerComments").value.trim();
+    // Reject
+    document.getElementById("rejectBtn").addEventListener("click", async () => {
+      const comments = document.getElementById("managerComments").value.trim();
       if (!comments) {
         toast("ناقص", "يجب كتابة سبب الرفض في الملاحظات");
         return;
@@ -603,6 +584,7 @@ async function openTask(stepId) {
         toast("خطأ", e.message);
       }
     });
+
   } catch (e) {
     toast("خطأ", e.message);
   }

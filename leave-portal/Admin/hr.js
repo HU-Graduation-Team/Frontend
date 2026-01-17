@@ -605,7 +605,7 @@
     $("#switchToEmployeePortal")?.addEventListener("click", (e) => {
       e.preventDefault();
       dropdown.classList.remove("active");
-      window.location.href = "./employee.html";
+      window.location.href = "../employee/employee.html";
     });
   }
 
