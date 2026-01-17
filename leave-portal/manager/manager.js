@@ -48,23 +48,6 @@ if (savedTab) {
   switchTab(savedTab);
 }
 
-const apiBaseInput = qs("#apiBase");
-const tokenInput = qs("#token");
-apiBaseInput.value = CONFIG.API_BASE;
-tokenInput.value = getToken();
-
-qs("#saveBtn").addEventListener("click", () => {
-  CONFIG.API_BASE = apiBaseInput.value.trim() || CONFIG.API_BASE;
-  setToken(tokenInput.value);
-  toast("تم الحفظ", "تم حفظ الـ API Base + Token");
-});
-
-qs("#clearBtn").addEventListener("click", () => {
-  tokenInput.value = "";
-  clearToken();
-  toast("تم المسح", "تم مسح التوكن");
-});
-
 qs("#refreshBtn").addEventListener("click", () => loadAll());
 
 let dashboard = null;

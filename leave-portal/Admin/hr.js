@@ -808,100 +808,6 @@
     });
   }
 
-  // ---------- Settings ----------
-  function initSettings() {
-    const baseInput = $("#apiBase");
-    const tokenInput = $("#token");
-
-    if (baseInput) baseInput.value = CONFIG?.API_BASE || "";
-    if (tokenInput) tokenInput.value = getToken?.() || "";
-
-    $("#saveBtn")?.addEventListener("click", async () => {
-      const base = baseInput?.value?.trim();
-      const tok = tokenInput?.value?.trim();
-
-      if (base) CONFIG.API_BASE = base.replace(/\/$/, "");
-      if (tok != null) setToken(tok);
-
-      toast("تم", "تم حفظ الإعدادات", "success");
-      await bootAfterToken();
-    });
-
-    $("#clearBtn")?.addEventListener("click", () => {
-      clearToken();
-      if (tokenInput) tokenInput.value = "";
-      toast("تم", "تم مسح التوكن", "success");
-      state.me = null;
-      renderProfile(null);
-      setBadge(0);
-      setPendingBadge(0);
-    });
-
-    $("#loginOpenBtn")?.addEventListener("click", () => showLoginModal());
-  }
-
-  function showLoginModal() {
-    openFancyModal({
-      title: "تسجيل الدخول",
-      subtitle: "أدخل بيانات حساب الإدارة",
-      iconHtml: `<i class="fa-solid fa-right-to-bracket"></i>`,
-      bodyHtml: `
-        <div class="form-grid">
-          <div>
-            <label class="muted">البريد الإلكتروني</label>
-            <input class="input" id="lgEmail" placeholder="أدخل البريد الإلكتروني" />
-          </div>
-          <div>
-            <label class="muted">كلمة المرور</label>
-            <input class="input" id="lgPass" type="password" placeholder="••••••••" />
-          </div>
-        </div>
-      `,
-      footerHtml: `
-        <button class="btn" onclick="closeModal()">إلغاء</button>
-        <button class="btn primary" id="lgGo">دخول</button>
-      `,
-    });
-
-    $("#lgGo")?.addEventListener("click", async () => {
-      const email = $("#lgEmail")?.value?.trim();
-      const password = $("#lgPass")?.value?.trim();
-      if (!email || !password)
-        return toast("تنبيه", "أدخل البريد وكلمة المرور", "warn");
-
-      try {
-        setLoading(true, "جاري تسجيل الدخول...");
-        const res = await apiFetch("/api/auth/login", {
-          method: "POST",
-          body: { email, password },
-        });
-
-        const data = unwrap(res) || {};
-        const token =
-          data.token ||
-          data.access_token ||
-          data.accessToken ||
-          data?.data?.token ||
-          data?.data?.access_token;
-
-        if (!token) throw new Error("لم يتم استلام رمز الدخول من الخادم");
-
-        setToken(token);
-        const tokenInput = $("#token");
-        if (tokenInput) tokenInput.value = token;
-
-        toast("تم", "تم تسجيل الدخول", "success");
-        closeModal();
-
-        await bootAfterToken();
-      } catch (e) {
-        toast("خطأ", e?.message || "فشل تسجيل الدخول", "error");
-      } finally {
-        setLoading(false);
-      }
-    });
-  }
-
   // ---------- Profile ----------
   async function loadProfile() {
     let me = null;
@@ -2730,7 +2636,6 @@
       wireModalClose?.();
       initTabs();
       initUserMenu();
-      initSettings();
       wireButtons();
 
       renderProfile(null);
@@ -2742,7 +2647,7 @@
         setPendingBadge(0);
         toast(
           "تنبيه",
-          "اذهب للإعدادات وضع التوكن أو استخدم تسجيل الدخول",
+          "يرجى تسجيل الدخول أولاً",
           "warn"
         );
       }

@@ -122,11 +122,6 @@
             التقارير
             <span class="badge urgent" id="pendingBadge">0</span>
           </button>
-
-          <button class="nav-tab" data-tab="settings">
-            <i class="fa-solid fa-gear" style="font-size: 18px"></i>
-            الإعدادات
-          </button>
         </div>
       </nav>
 
@@ -583,59 +578,6 @@
                   التالي <i class="fa-solid fa-chevron-left"></i>
                 </button>
               </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Settings -->
-        <div class="section-view" id="view-settings">
-          <div class="section-header">
-            <div class="section-icon settings">
-              <i class="fa-solid fa-gear" style="font-size: 22px"></i>
-            </div>
-            <div class="section-title">
-              <h2>الإعدادات</h2>
-              <div class="desc">الرابط الأساسي + التوكن + تسجيل الدخول</div>
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="card-header">
-              <h3 class="card-title">الاتصال والمصادقة</h3>
-            </div>
-
-            <div class="config-grid">
-              <div class="form-group">
-                <label>الرابط الأساسي للخدمة</label>
-                <input id="apiBase" />
-              </div>
-
-              <div class="form-group">
-                <label>رمز الدخول</label>
-                <input
-                  id="token"
-                  placeholder="الصق التوكن (بدون بادئة المصادقة)"
-                />
-              </div>
-            </div>
-
-            <div class="form-actions">
-              <button class="btn primary" id="saveBtn">
-                <i class="fa-solid fa-floppy-disk"></i> حفظ
-              </button>
-              <button class="btn danger" id="clearBtn">
-                <i class="fa-solid fa-trash"></i> مسح التوكن
-              </button>
-              <button class="btn" id="loginOpenBtn">
-                <i class="fa-solid fa-right-to-bracket"></i> تسجيل الدخول
-              </button>
-            </div>
-
-            <hr class="sep" />
-
-            <div class="doc-hint">
-              <b>ملاحظة:</b> مسارات الإدارة تحت <code>/api/admin/*</code>،
-              والتقارير تحت <code>/api/admin/leave-requests</code>
             </div>
           </div>
         </div>
