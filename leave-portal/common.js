@@ -43,11 +43,16 @@ function escapeHtml(str){
     .replaceAll("'","&#039;");
 }
 
-function toast(title, msg){
+function toast(title, msg, type = ""){
   const el = qs("#toast");
   if(!el) return;
   qs(".title", el).textContent = title;
   qs(".msg", el).textContent = msg || "";
+  
+  // Clean up previous types
+  el.classList.remove("error", "success", "warn");
+  if(type) el.classList.add(type);
+
   el.classList.add("show");
   clearTimeout(el._t);
   el._t = setTimeout(()=> el.classList.remove("show"), 3200);

@@ -1,510 +1,405 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Employee - Leave Management</title>
-    <link rel="stylesheet" href="../styles.css" />
-    <link rel="stylesheet" href="./employee.css" />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
-  </head>
-  <body>
-    <div class="app-container">
-      <!-- App Header -->
-      <header class="app-header">
-        <div class="header-content">
-          <div class="header-brand">
-            <div class="header-logo">
-              <img
-                src="../../Assets/شعار_جامعة_الغردقة.png"
-                alt="شعار الجامعة"
-              />
-            </div>
-            <div>
-              <h1>بوابة الموظف</h1>
-              <div class="subtitle">Leave Management System</div>
-            </div>
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Employee - Leave Management</title>
+  <link rel="stylesheet" href="../styles.css" />
+  <link rel="stylesheet" href="./employee.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+</head>
+
+<body>
+  <div class="app-container">
+    <!-- App Header -->
+    <header class="app-header">
+      <div class="header-content">
+        <div class="header-brand">
+          <div class="header-logo">
+            <img src="../../Assets/شعار_جامعة_الغردقة.png" alt="شعار الجامعة" />
           </div>
-          <!-- Employee Info -->
-          <div
-            class="user-info"
-            id="userInfo"
-            style="position: relative; cursor: pointer"
-          >
-            <div class="user-avatar" id="userAvatar">؟</div>
-            <div class="user-details">
-              <div class="user-name" id="userName">جاري التحميل...</div>
-              <div class="user-meta">
-                <span class="user-department" id="userDepartment">—</span>
-              </div>
-            </div>
-            <i
-              class="fa-solid fa-chevron-down"
-              style="margin-right: 10px; opacity: 0.7; font-size: 14px"
-            ></i>
-
-            <div class="profile-dropdown" id="profileDropdown">
-              <div class="dropdown-user-info">
-                <strong id="dropName">الاسم</strong>
-                <small id="dropRole">الوظيفة</small>
-              </div>
-
-              <a
-                href="../manager/manager.html"
-                class="dropdown-item switch-role"
-                id="switchRoleBtn"
-                style="display: none"
-              >
-                <i class="fa-solid fa-shuffle"></i>
-                <span>التبديل إلى بوابة المدير</span>
-              </a>
-
-              <a
-                href="#"
-                onclick="showUserProfile(); return false;"
-                class="dropdown-item"
-              >
-                <i class="fa-regular fa-user"></i>
-                <span>ملفي الشخصي</span>
-              </a>
-
-              <a href="#" id="logoutBtn" class="dropdown-item danger">
-                <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                <span>تسجيل خروج</span>
-              </a>
-            </div>
-          </div>
-          <div class="header-actions">
-            <button
-              class="icon-btn"
-              title="الاشعارات"
-              style="position: relative"
-            >
-              <i class="fa-regular fa-bell"></i>
-              <span class="badge-count" style="display: none">0</span>
-            </button>
-
-            <button class="icon-btn" id="refreshBtn" title="تحديث البيانات">
-              <i class="fa-solid fa-arrows-rotate"></i>
-            </button>
+          <div>
+            <h1>بوابة الموظف</h1>
+            <div class="subtitle">Leave Management System</div>
           </div>
         </div>
-      </header>
-      <!-- Notification body  -->
-      <div class="notification-dropdown" id="notificationDropdown">
-        <div class="dropdown-header">
-          <span>الاشعارات</span>
-          <button class="btn-mark-all" id="markAllBtn">
-            تحديد الكل كمقروء
+        <!-- Employee Info -->
+        <div class="user-info" id="userInfo" style="position: relative; cursor: pointer">
+          <div class="user-avatar" id="userAvatar">؟</div>
+          <div class="user-details">
+            <div class="user-name" id="userName">جاري التحميل...</div>
+            <div class="user-meta">
+              <span class="user-department" id="userDepartment">—</span>
+            </div>
+          </div>
+          <i class="fa-solid fa-chevron-down" style="margin-right: 10px; opacity: 0.7; font-size: 14px"></i>
+
+          <div class="profile-dropdown" id="profileDropdown">
+            <div class="dropdown-user-info">
+              <strong id="dropName">الاسم</strong>
+              <small id="dropRole">الوظيفة</small>
+            </div>
+
+            <a href="../manager/manager.html" class="dropdown-item switch-role" id="switchRoleBtn"
+              style="display: none">
+              <i class="fa-solid fa-shuffle"></i>
+              <span>التبديل إلى بوابة المدير</span>
+            </a>
+
+            <a href="#" onclick="showUserProfile(); return false;" class="dropdown-item">
+              <i class="fa-regular fa-user"></i>
+              <span>ملفي الشخصي</span>
+            </a>
+
+            <a href="#" id="logoutBtn" class="dropdown-item danger">
+              <i class="fa-solid fa-arrow-right-from-bracket"></i>
+              <span>تسجيل خروج</span>
+            </a>
+          </div>
+        </div>
+        <div class="header-actions">
+          <button class="icon-btn" title="الاشعارات" style="position: relative">
+            <i class="fa-regular fa-bell"></i>
+            <span class="badge-count" style="display: none">0</span>
+          </button>
+
+          <button class="icon-btn" id="refreshBtn" title="تحديث البيانات">
+            <i class="fa-solid fa-arrows-rotate"></i>
           </button>
         </div>
-
-        <div class="notifications-list" id="notifList"></div>
-
-        <div class="empty-state" id="emptyState" style="display: none">
-          <i class="fa-regular fa-bell-slash"></i>
-          <p>لا توجد إشعارات جديدة</p>
-        </div>
       </div>
-      <!-- Main Navigation -->
-      <nav class="main-nav">
-        <div class="nav-tabs">
-          <button class="nav-tab active" data-tab="dashboard">
-            <svg
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              viewBox="0 0 24 24"
-            >
+    </header>
+    <!-- Notification body  -->
+    <div class="notification-dropdown" id="notificationDropdown">
+      <div class="dropdown-header">
+        <span>الاشعارات</span>
+        <button class="btn-mark-all" id="markAllBtn">
+          تحديد الكل كمقروء
+        </button>
+      </div>
+
+      <div class="notifications-list" id="notifList"></div>
+
+      <div class="empty-state" id="emptyState" style="display: none">
+        <i class="fa-regular fa-bell-slash"></i>
+        <p>لا توجد إشعارات جديدة</p>
+      </div>
+    </div>
+    <!-- Main Navigation -->
+    <nav class="main-nav">
+      <div class="nav-tabs">
+        <button class="nav-tab active" data-tab="dashboard">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <rect x="3" y="3" width="7" height="7" rx="1" />
+            <rect x="14" y="3" width="7" height="7" rx="1" />
+            <rect x="3" y="14" width="7" height="7" rx="1" />
+            <rect x="14" y="14" width="7" height="7" rx="1" />
+          </svg>
+          لوحة التحكم
+        </button>
+        <button class="nav-tab" data-tab="create">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 8v8M8 12h8" />
+          </svg>
+          طلب جديد
+        </button>
+        <button class="nav-tab" data-tab="history">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M12 8v4l3 3" />
+            <circle cx="12" cy="12" r="9" />
+          </svg>
+          طلباتي
+          <span class="badge" id="requestsCount">0</span>
+        </button>
+        <button class="nav-tab" data-tab="types">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M4 6h16M4 12h16M4 18h10" />
+          </svg>
+          أنواع الإجازات
+        </button>
+      </div>
+    </nav>
+
+    <!-- Page Content -->
+    <div class="page-content">
+      <!-- Dashboard View -->
+      <div class="section-view active" id="view-dashboard">
+        <div class="section-header">
+          <div class="section-icon dashboard">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <rect x="3" y="3" width="7" height="7" rx="1" />
               <rect x="14" y="3" width="7" height="7" rx="1" />
               <rect x="3" y="14" width="7" height="7" rx="1" />
               <rect x="14" y="14" width="7" height="7" rx="1" />
             </svg>
-            لوحة التحكم
-          </button>
-          <button class="nav-tab" data-tab="create">
-            <svg
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              viewBox="0 0 24 24"
-            >
-              <circle cx="12" cy="12" r="9" />
-              <path d="M12 8v8M8 12h8" />
-            </svg>
-            طلب جديد
-          </button>
-          <button class="nav-tab" data-tab="history">
-            <svg
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              viewBox="0 0 24 24"
-            >
-              <path d="M12 8v4l3 3" />
-              <circle cx="12" cy="12" r="9" />
-            </svg>
-            طلباتي
-            <span class="badge" id="requestsCount">0</span>
-          </button>
-          <button class="nav-tab" data-tab="types">
-            <svg
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              viewBox="0 0 24 24"
-            >
-              <path d="M4 6h16M4 12h16M4 18h10" />
-            </svg>
-            أنواع الإجازات
-          </button>
-        </div>
-      </nav>
-
-      <!-- Page Content -->
-      <div class="page-content">
-        <!-- Dashboard View -->
-        <div class="section-view active" id="view-dashboard">
-          <div class="section-header">
-            <div class="section-icon dashboard">
-              <svg
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                viewBox="0 0 24 24"
-              >
-                <rect x="3" y="3" width="7" height="7" rx="1" />
-                <rect x="14" y="3" width="7" height="7" rx="1" />
-                <rect x="3" y="14" width="7" height="7" rx="1" />
-                <rect x="14" y="14" width="7" height="7" rx="1" />
-              </svg>
-            </div>
-            <div class="section-title">
-              <h2>لوحة التحكم</h2>
-              <div class="desc">نظرة عامة على إجازاتك وطلباتك الأخيرة</div>
-            </div>
           </div>
+          <div class="section-title">
+            <h2>لوحة التحكم</h2>
+            <div class="desc">نظرة عامة على إجازاتك وطلباتك الأخيرة</div>
+          </div>
+        </div>
 
-          <!-- Balances -->
-          <div class="balances-row" id="balancesPills"></div>
+        <!-- Balances -->
+        <div class="balances-row" id="balancesPills"></div>
 
-          <!-- Stats -->
-          <div class="stats-row">
-            <div class="stat-box">
-              <div class="label">إجمالي الطلبات (30 يوم)</div>
-              <div class="value" id="statTotal">—</div>
-              <div class="bar">
-                <span
-                  id="statTotalBar"
-                  style="
+        <!-- Stats -->
+        <div class="stats-row">
+          <div class="stat-box">
+            <div class="label">إجمالي الطلبات (30 يوم)</div>
+            <div class="value" id="statTotal">—</div>
+            <div class="bar">
+              <span id="statTotalBar" style="
                     width: 0%;
                     background: linear-gradient(
                       90deg,
                       var(--chip-3),
                       var(--chip-5)
                     );
-                  "
-                ></span>
-              </div>
-            </div>
-            <div class="stat-box">
-              <div class="label">المعتمدة</div>
-              <div class="value" id="statApproved">—</div>
-              <div class="bar">
-                <span
-                  id="statApprovedBar"
-                  style="width: 0%; background: var(--chip-1)"
-                ></span>
-              </div>
-            </div>
-            <div class="stat-box">
-              <div class="label">قيد الموافقة</div>
-              <div class="value" id="statPending">—</div>
-              <div class="bar">
-                <span
-                  id="statPendingBar"
-                  style="width: 0%; background: var(--chip-3)"
-                ></span>
-              </div>
-            </div>
-            <div class="stat-box">
-              <div class="label">المرفوضة</div>
-              <div class="value" id="statRejected">—</div>
-              <div class="bar">
-                <span
-                  id="statRejectedBar"
-                  style="width: 0%; background: var(--bad)"
-                ></span>
-              </div>
+                  "></span>
             </div>
           </div>
-
-          <!-- Chart -->
-          <div class="chart-container">
-            <div class="chart-header">
-              <div class="chart-title">ملخص الإجازات حسب الشهر</div>
-              <div class="muted">طلبات آخر 12 شهرًا</div>
+          <div class="stat-box">
+            <div class="label">المعتمدة</div>
+            <div class="value" id="statApproved">—</div>
+            <div class="bar">
+              <span id="statApprovedBar" style="width: 0%; background: var(--chip-1)"></span>
             </div>
-            <div id="chartBars" class="bar-chart"></div>
           </div>
-
-          <!-- Recent Requests -->
-          <div class="card" style="margin-top: 24px">
-            <div class="card-header">
-              <h3 class="card-title">آخر الطلبات</h3>
+          <div class="stat-box">
+            <div class="label">قيد الموافقة</div>
+            <div class="value" id="statPending">—</div>
+            <div class="bar">
+              <span id="statPendingBar" style="width: 0%; background: var(--chip-3)"></span>
             </div>
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>رقم الطلب</th>
-                    <th>نوع الإجازة</th>
-                    <th>تاريخ البداية</th>
-                    <th>الحالة</th>
-                  </tr>
-                </thead>
-                <tbody id="recentBody">
-                  <tr>
-                    <td colspan="4" class="muted">—</td>
-                  </tr>
-                </tbody>
-              </table>
+          </div>
+          <div class="stat-box">
+            <div class="label">المرفوضة</div>
+            <div class="value" id="statRejected">—</div>
+            <div class="bar">
+              <span id="statRejectedBar" style="width: 0%; background: var(--bad)"></span>
             </div>
           </div>
         </div>
-        <!-- create leave request -->
-        <div class="section-view" id="view-create">
-          <div class="section-header">
-            <div class="section-icon create">
-              <svg
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                viewBox="0 0 24 24"
-              >
-                <circle cx="12" cy="12" r="9" />
-                <path d="M12 8v8M8 12h8" />
-              </svg>
-            </div>
-            <div class="section-title">
-              <h2>طلب إجازة جديد</h2>
-              <div class="desc">قم بتعبئة النموذج لإنشاء طلب إجازة جديد</div>
+
+        <!-- Chart -->
+        <div class="chart-container">
+          <div class="chart-header">
+            <div class="chart-title">ملخص الإجازات حسب الشهر</div>
+            <div class="muted">طلبات آخر 12 شهرًا</div>
+          </div>
+          <div id="chartBars" class="bar-chart"></div>
+        </div>
+
+        <!-- Recent Requests -->
+        <div class="card" style="margin-top: 24px">
+          <div class="card-header">
+            <h3 class="card-title">آخر الطلبات</h3>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>رقم الطلب</th>
+                  <th>نوع الإجازة</th>
+                  <th>تاريخ البداية</th>
+                  <th>الحالة</th>
+                </tr>
+              </thead>
+              <tbody id="recentBody">
+                <tr>
+                  <td colspan="4" class="muted">—</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <!-- create leave request -->
+      <div class="section-view" id="view-create">
+        <div class="section-header">
+          <div class="section-icon create">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 8v8M8 12h8" />
+            </svg>
+          </div>
+          <div class="section-title">
+            <h2>طلب إجازة جديد</h2>
+            <div class="desc">قم بتعبئة النموذج لإنشاء طلب إجازة جديد</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">بيانات الطلب</h3>
+            <div class="pill note">
+              <b>ملاحظة:</b> المرفقات المطلوبة ستظهر تلقائياً بناءً على نوع
+              الإجازة.
             </div>
           </div>
 
-          <div class="card">
-            <div class="card-header">
-              <h3 class="card-title">بيانات الطلب</h3>
-              <div class="pill note">
-                <b>ملاحظة:</b> المرفقات المطلوبة ستظهر تلقائياً بناءً على نوع
-                الإجازة.
-              </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>نوع الإجازة</label>
+              <select id="typeSelect"></select>
+              <div id="typeHint" class="muted" style="margin-top: 8px; font-size: 14px"></div>
             </div>
-
-            <div class="form-grid">
-              <div class="form-group">
-                <label>نوع الإجازة</label>
-                <select id="typeSelect"></select>
-                <div
-                  id="typeHint"
-                  class="muted"
-                  style="margin-top: 8px; font-size: 14px"
-                ></div>
-              </div>
-              <div class="form-group">
-                <label>تاريخ البداية</label>
-                <input id="startDate" type="date" />
-              </div>
-              <div class="form-group">
-                <label>تاريخ النهاية</label>
-                <input id="endDate" type="date" />
-              </div>
+            <div class="form-group">
+              <label>تاريخ البداية</label>
+              <input id="startDate" type="date" />
             </div>
+            <div class="form-group">
+              <label>تاريخ النهاية</label>
+              <input id="endDate" type="date" />
+            </div>
+          </div>
 
-            <div
-              class="form-group"
-              id="delegateWrapper"
-              style="
+          <div class="form-group" id="delegateWrapper" style="
                 display: none;
                 background: #f8fafc;
                 padding: 15px;
                 border-radius: 8px;
                 border: 1px dashed #cbd5e1;
                 margin-bottom: 20px;
-              "
-            >
-              <label style="color: #0f172a">👤 الفائم على العمل</label>
-              <select id="delegateSelect" style="width: 100%; margin-top: 8px">
-                <option value="">-- جاري تحميل القائمة... --</option>
-              </select>
-              <div class="muted" style="margin-top: 5px; font-size: 13px">
-                هذا النوع من الإجازة يتطلب تفويض زميل للقيام بمهامك.
-              </div>
+              ">
+            <label style="color: #0f172a">👤 الفائم على العمل</label>
+            <select id="delegateSelect" style="width: 100%; margin-top: 8px">
+              <option value="">-- جاري تحميل القائمة... --</option>
+            </select>
+            <div class="muted" style="margin-top: 5px; font-size: 13px">
+              هذا النوع من الإجازة يتطلب تفويض زميل للقيام بمهامك.
             </div>
+          </div>
 
-            <div class="form-group">
-              <label>السبب</label>
-              <textarea
-                id="reason"
-                placeholder="اكتب سبب الإجازة هنا..."
-                style="min-height: 120px"
-              ></textarea>
-            </div>
+          <div class="form-group">
+            <label>السبب</label>
+            <textarea id="reason" placeholder="اكتب سبب الإجازة هنا..." style="min-height: 120px"></textarea>
+          </div>
 
-            <div id="dynamicDocsContainer" style="margin-bottom: 20px"></div>
+          <div id="dynamicDocsContainer" style="margin-bottom: 20px"></div>
 
-            <div
-              id="dateWarn"
-              class="doc-hint"
-              style="
+          <div id="dateWarn" class="doc-hint" style="
                 display: none;
                 color: var(--warn);
                 border-color: rgba(255, 209, 102, 0.45);
                 margin-bottom: 20px;
-              "
-            >
-              ⚠️ تنبيه: لو الفترة بتعدّي 1 يوليو (بداية السنة المالية في
-              النظام)، السيرفر ممكن يرفض الطلب.
-            </div>
-
-            <div class="acknowledgement-box">
-              <label class="checkbox-wrapper">
-                <input type="checkbox" id="acknowledgementCheckbox" />
-                <div class="checkbox-text">
-                  <span class="title">إقرار القيام بالإجازة</span>
-                  <p class="desc">
-                    أقر بأنني أديت أعمالي المصلحية حتى تاريخ بدء الإجازة المحدد
-                    أعلاه، ولا مانع لدي من القيام بها.
-                  </p>
-                </div>
-              </label>
-            </div>
-
-            <div class="form-actions">
-              <button
-                class="btn primary"
-                id="submitBtn"
-                style="font-size: 16px; padding: 14px 28px"
-              >
-                <svg
-                  width="20"
-                  height="20"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  viewBox="0 0 24 24"
-                  style="margin-left: 8px"
-                >
-                  <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
-                </svg>
-                إرسال الطلب
-              </button>
-              <button class="btn" id="resetBtn">تفريغ الحقول</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- History View -->
-        <div class="section-view" id="view-history">
-          <div class="section-header">
-            <div class="section-icon history">
-              <svg
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                viewBox="0 0 24 24"
-              >
-                <path d="M12 8v4l3 3" />
-                <circle cx="12" cy="12" r="9" />
-              </svg>
-            </div>
-            <div class="section-title">
-              <h2>طلباتي</h2>
-              <div class="desc">سجل جميع طلبات الإجازة الخاصة بك</div>
-            </div>
+              ">
+            ⚠️ تنبيه: لو الفترة بتعدّي 1 يوليو (بداية السنة المالية في
+            النظام)، السيرفر ممكن يرفض الطلب.
           </div>
 
-          <div class="card">
-            <div class="card-header">
-              <h3 class="card-title">جميع الطلبات</h3>
-              <div class="row" style="gap: 12px">
-                <input
-                  id="search"
-                  placeholder="بحث: ID / نوع / حالة"
-                  style="width: 260px"
-                />
-                <button class="btn" id="loadRequestsBtn">تحديث القائمة</button>
+          <div class="acknowledgement-box">
+            <label class="checkbox-wrapper">
+              <input type="checkbox" id="acknowledgementCheckbox" />
+              <div class="checkbox-text">
+                <span class="title">إقرار القيام بالإجازة</span>
+                <p class="desc">
+                  أقر بأنني أديت أعمالي المصلحية حتى تاريخ بدء الإجازة المحدد
+                  أعلاه، ولا مانع لدي من القيام بها.
+                </p>
               </div>
-            </div>
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>رقم الطلب</th>
-                    <th>نوع الإجازة</th>
-                    <th>الحالة</th>
-                    <th>تفاصيل</th>
-                  </tr>
-                </thead>
-                <tbody id="requestsBody">
-                  <tr>
-                    <td colspan="4" class="muted">—</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+            </label>
           </div>
-        </div>
 
-        <!-- Types View -->
-        <div class="section-view" id="view-types">
-          <div class="section-header">
-            <div class="section-icon types">
-              <svg
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                viewBox="0 0 24 24"
-              >
-                <path d="M4 6h16M4 12h16M4 18h10" />
+          <div class="form-actions">
+            <button class="btn primary" id="submitBtn" style="font-size: 16px; padding: 14px 28px">
+              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                style="margin-left: 8px">
+                <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
               </svg>
-            </div>
-            <div class="section-title">
-              <h2>أنواع الإجازات المتاحة</h2>
-              <div class="desc">جميع أنواع الإجازات التي يمكنك طلبها</div>
-            </div>
-          </div>
-
-          <div class="types-grid" id="typesList">
-            <div class="muted">جاري التحميل...</div>
+              إرسال الطلب
+            </button>
+            <button class="btn" id="resetBtn">تفريغ الحقول</button>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Toast -->
-    <div class="toast" id="toast">
-      <div class="title">—</div>
-      <div class="msg">—</div>
-    </div>
+      <!-- History View -->
+      <div class="section-view" id="view-history">
+        <div class="section-header">
+          <div class="section-icon history">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M12 8v4l3 3" />
+              <circle cx="12" cy="12" r="9" />
+            </svg>
+          </div>
+          <div class="section-title">
+            <h2>طلباتي</h2>
+            <div class="desc">سجل جميع طلبات الإجازة الخاصة بك</div>
+          </div>
+        </div>
 
-    <!-- Modal -->
-    <div class="modal" id="modal">
-      <div class="box">
-        <!-- <div class="row" style="justify-content: space-between">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">جميع الطلبات</h3>
+            <div class="row" style="gap: 12px">
+              <input id="search" placeholder="بحث: ID / نوع / حالة" style="width: 260px" />
+              <button class="btn" id="loadRequestsBtn">تحديث القائمة</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>رقم الطلب</th>
+                  <th>نوع الإجازة</th>
+                  <th>الحالة</th>
+                  <th>تفاصيل</th>
+                </tr>
+              </thead>
+              <tbody id="requestsBody">
+                <tr>
+                  <td colspan="4" class="muted">—</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Types View -->
+      <div class="section-view" id="view-types">
+        <div class="section-header">
+          <div class="section-icon types">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M4 6h16M4 12h16M4 18h10" />
+            </svg>
+          </div>
+          <div class="section-title">
+            <h2>أنواع الإجازات المتاحة</h2>
+            <div class="desc">جميع أنواع الإجازات التي يمكنك طلبها</div>
+          </div>
+        </div>
+
+        <div class="types-grid" id="typesList">
+          <div class="muted">جاري التحميل...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast">
+    <div class="title">—</div>
+    <div class="msg">—</div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal" id="modal">
+    <div class="box">
+      <!-- <div class="row" style="justify-content: space-between">
           <div style="font-weight: 900; font-size: 20px">تفاصيل الطلب</div>
           <button class="btn" onclick="closeModal()">إغلاق</button>
         </div> -->
-        <hr class="sep" />
-        <div id="modalBody"></div>
-      </div>
+      <hr class="sep" />
+      <div id="modalBody"></div>
     </div>
+  </div>
 
-    <script src="../common.js"></script>
-    <script src="./employee.js"></script>
-  </body>
+  <script src="../common.js"></script>
+  <script src="./employee.js"></script>
+</body>
+
 </html>

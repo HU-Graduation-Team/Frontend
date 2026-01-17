@@ -36,7 +36,7 @@ qs("#resetBtn").addEventListener("click", () => {
   qs("#endDate").value = "";
   qs("#reason").value = "";
   qs("#document").value = "";
-  toast("تم", "اتعمل Reset للفورم");
+  toast("تم", "اتعمل Reset للفورم", "success");
 });
 
 // data cache
@@ -600,17 +600,17 @@ async function showRequestDetails(requestId) {
           await apiFetch(`/api/me/leave-requests/${requestId}/cancel`, {
             method: "PUT",
           });
-          toast("تم", "تم إلغاء الطلب بنجاح");
+          toast("تم", "تم إلغاء الطلب بنجاح", "success");
           closeModal();
           await loadAll();
         } catch (e) {
-          toast("خطأ", e.message);
+          toast("خطأ", e.message, "error");
         }
       });
     }
 
   } catch (e) {
-    toast("خطأ", e.message);
+    toast("خطأ", e.message, "error");
   }
 }
 
@@ -893,7 +893,7 @@ async function loadRequests() {
 
 async function loadAll() {
   try {
-    toast("تحميل", "جاري جلب بيانات الموظف...");
+    toast("تحميل", "جاري جلب بيانات الموظف...", "warn");
     loadNotifications();
     fetchUnreadCount();
     await Promise.all([
@@ -902,9 +902,9 @@ async function loadAll() {
       loadEligibleTypes(),
       loadRequests(),
     ]);
-    toast("تمام", "اتحدثت البيانات بنجاح");
+    toast("تمام", "اتحدثت البيانات بنجاح", "success");
   } catch (e) {
-    toast("خطأ", e.message);
+    toast("خطأ", e.message, "error");
   }
 }
 
@@ -921,12 +921,12 @@ qs("#submitBtn").addEventListener("click", async () => {
 
     // 2. Basic Validation
     if (!type_id || !start_date || !end_date || !reason) {
-      toast("ناقص بيانات", "من فضلك املأ النوع + التواريخ + السبب");
+      toast("ناقص بيانات", "من فضلك املأ النوع + التواريخ + السبب", "warn");
       return;
     }
 
     if (!ackCheckbox || !ackCheckbox.checked) {
-      toast("تنبيه", "⚠️ يجب الموافقة على الإقرار.");
+      toast("تنبيه", "⚠️ يجب الموافقة على الإقرار.", "warn");
       return;
     }
 
@@ -938,7 +938,7 @@ qs("#submitBtn").addEventListener("click", async () => {
     // If delegate wrapper is visible, validation is required
     if (delegateWrap && delegateWrap.style.display !== "none") {
       if (!delegateSelect.value) {
-        toast("تنبيه", "هذا النوع من الإجازة يتطلب تحديد موظف مفوض.");
+        toast("تنبيه", "هذا النوع من الإجازة يتطلب تحديد موظف مفوض.", "warn");
         return;
       }
       delegateId = delegateSelect.value;
@@ -954,7 +954,7 @@ qs("#submitBtn").addEventListener("click", async () => {
       const file = input.files[0];
 
       if (isMandatory && !file) {
-        toast("مستند ناقص", "يرجى إرفاق جميع المستندات المطلوبة.");
+        toast("مستند ناقص", "يرجى إرفاق جميع المستندات المطلوبة.", "error");
         return;
       }
 
@@ -986,7 +986,7 @@ qs("#submitBtn").addEventListener("click", async () => {
       isForm: true,
     });
 
-    toast("تم الإرسال", "تم إنشاء الطلب بنجاح");
+    toast("تم الإرسال", "تم إنشاء الطلب بنجاح", "success");
 
     // Reset Form
     qs("#reason").value = "";
@@ -997,7 +997,7 @@ qs("#submitBtn").addEventListener("click", async () => {
     await loadAll();
     switchTab("history");
   } catch (e) {
-    toast("خطأ", e.message);
+    toast("خطأ", e.message, "error");
   } finally {
     const submitBtn = qs("#submitBtn");
     submitBtn.disabled = false;
@@ -1161,7 +1161,7 @@ async function markAsRead(id, event) {
     // Reload list and count to sync UI
     loadNotifications();
   } catch (e) {
-    toast("خطأ", "تعذر تحديث حالة الإشعار");
+    toast("خطأ", "تعذر تحديث حالة الإشعار", "error");
   }
 }
 
@@ -1173,10 +1173,10 @@ if (markAllBtn) {
       // Calls: PATCH /api/notifications/mark-all-read
       await apiFetch(`/api/notifications/mark-all-read`, { method: "PATCH" });
 
-      toast("تم", "تم تحديد الكل كمقروء");
+      toast("تم", "تم تحديد الكل كمقروء", "success");
       loadNotifications(); // Refresh UI
     } catch (e) {
-      toast("خطأ", "حدث خطأ أثناء التحديث");
+      toast("خطأ", "حدث خطأ أثناء التحديث", "error");
     }
   });
 }
@@ -1266,7 +1266,7 @@ function submitReturnDeclaration(requestId) {
             method: "POST",
           });
 
-          toast("تم بنجاح", "تم تسجيل إقرار العودة للعمل.");
+          toast("تم بنجاح", "تم تسجيل إقرار العودة للعمل.", "success");
           closeModal();
           await loadRequests(); // تحديث الجدول لإخفاء الزر
 
@@ -1279,7 +1279,7 @@ function submitReturnDeclaration(requestId) {
             loadDashboard();
           }
         } catch (e) {
-          toast("خطأ", e.message);
+          toast("خطأ", e.message, "error");
           confirmBtn.textContent = "تأكيد العودة";
           confirmBtn.disabled = false;
         }

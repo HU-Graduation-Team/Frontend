@@ -540,11 +540,11 @@ async function openTask(stepId) {
           method: "POST",
           body: { comments },
         });
-        toast("تم", "تمت الموافقة بنجاح");
+        toast("تم", "تمت الموافقة بنجاح", "success");
         closeModal();
         await loadAll();
       } catch (e) {
-        toast("خطأ", e.message);
+        toast("خطأ", e.message, "error");
       }
     });
 
@@ -552,7 +552,7 @@ async function openTask(stepId) {
     document.getElementById("rejectBtn").addEventListener("click", async () => {
       const comments = document.getElementById("managerComments").value.trim();
       if (!comments) {
-        toast("ناقص", "يجب كتابة سبب الرفض في الملاحظات");
+        toast("ناقص", "يجب كتابة سبب الرفض في الملاحظات", "warn");
         return;
       }
       try {
@@ -560,16 +560,16 @@ async function openTask(stepId) {
           method: "POST",
           body: { comments },
         });
-        toast("تم", "تم رفض الطلب بنجاح");
+        toast("تم", "تم رفض الطلب بنجاح", "success");
         closeModal();
         await loadAll();
       } catch (e) {
-        toast("خطأ", e.message);
+        toast("خطأ", e.message, "error");
       }
     });
 
   } catch (e) {
-    toast("خطأ", e.message);
+    toast("خطأ", e.message, "error");
   }
 }
 
@@ -598,7 +598,7 @@ async function loadReports() {
     reportsData = d;
     renderReports(d);
   } catch (e) {
-    toast("خطأ", e.message);
+    toast("خطأ", e.message, "error");
   }
 }
 
@@ -710,7 +710,7 @@ async function loadTeamOnLeave() {
     teamOnLeaveData = d;
     renderTeamOnLeave(d);
   } catch (e) {
-    toast("خطأ", e.message);
+    toast("خطأ", e.message, "error");
   }
 }
 
@@ -757,7 +757,7 @@ qs("#loadTeamLeaveBtn")?.addEventListener("click", () => loadTeamOnLeave());
 
 async function loadAll() {
   try {
-    toast("تحميل", "جاري جلب بيانات المدير...");
+    toast("تحميل", "جاري جلب بيانات المدير...", "warn");
     loadNotifications();
     fetchUnreadCount();
     // ✅ يجب إضافة loadProfile() هنا ليعمل الهيدر
@@ -767,9 +767,9 @@ async function loadAll() {
       loadReports(),
       loadTeamOnLeave(),
     ]);
-    toast("تمام", "تم تحديث البيانات بنجاح");
+    toast("تمام", "تم تحديث البيانات بنجاح", "success");
   } catch (e) {
-    toast("خطأ", e.message);
+    toast("خطأ", e.message, "error");
   }
 }
 
@@ -939,7 +939,7 @@ async function markAsRead(id, event) {
     // Reload list and count to sync UI
     loadNotifications();
   } catch (e) {
-    toast("خطأ", "تعذر تحديث حالة الإشعار");
+    toast("خطأ", "تعذر تحديث حالة الإشعار", "error");
   }
 }
 
@@ -951,10 +951,10 @@ if (markAllBtn) {
       // Calls: PATCH /api/notifications/mark-all-read
       await apiFetch(`/api/notifications/mark-all-read`, { method: "PATCH" });
 
-      toast("تم", "تم تحديد الكل كمقروء");
+      toast("تم", "تم تحديد الكل كمقروء", "success");
       loadNotifications(); // Refresh UI
     } catch (e) {
-      toast("خطأ", "حدث خطأ أثناء التحديث");
+      toast("خطأ", "حدث خطأ أثناء التحديث", "error");
     }
   });
 }
@@ -1001,7 +1001,7 @@ document.addEventListener("DOMContentLoaded", function () {
 function exportReportsToExcel() {
   // 1. Check if data exists
   if (!reportsData || !reportsData.report || reportsData.report.length === 0) {
-    toast("تنبيه", "لا يوجد بيانات لتصديرها");
+    toast("تنبيه", "لا يوجد بيانات لتصديرها", "warn");
     return;
   }
 
