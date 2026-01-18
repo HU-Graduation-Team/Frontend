@@ -76,25 +76,30 @@ function renderEligibleTypes() {
     return;
   }
   list.innerHTML = eligibleTypes
-    .map(
-      (t) => `
-    <div class="type-card">
-      <div class="type-card-header">
-        <div class="name">${escapeHtml(t.type_name)}</div>
-      </div>
-      <div class="desc">${escapeHtml(t.description || "لا يوجد وصف")}</div>
-      <div class="meta">
-        <span class="tag"><b>ID:</b> ${t.type_id}</span>
-        <span class="tag"><b>الحد الأقصى:</b> ${
-          t.max_days_per_request ?? "-"
-        } يوم</span>
-        <span class="tag"><b>مستند:</b> ${
-          t.requires_document ? "مطلوب" : "غير مطلوب"
-        }</span>
-      </div>
-    </div>
-  `
-    )
+    .map((t) => {
+      // Logic for Badges
+      const isPaid = t.is_paid 
+        ? '<span class="tag" style="color: #10b981; background: #dcfce7;">💰 مدفوعة</span>' 
+        : '<span class="tag" style="color: #ef4444; background: #fee2e2;">🚫 غير مدفوعة</span>';
+      
+      const deduct = t.deduct_from_balance 
+        ? '<span class="tag" style="color: #f59e0b; background: #fef3c7;">📉 تخصم</span>' 
+        : '<span class="tag" style="color: #3b82f6; background: #dbeafe;">✨ لا تخصم</span>';
+
+      return `
+        <div class="type-card">
+          <div class="type-card-header">
+            <div class="name">${escapeHtml(t.type_name)}</div>
+          </div>
+          <div class="desc">${escapeHtml(t.description || "لا يوجد وصف")}</div>
+          <div class="meta" style="gap:8px;">
+            ${isPaid}
+            ${deduct}
+            <span class="tag"><b>الحد الأقصى:</b> ${t.max_days_per_request ? t.max_days_per_request + ' يوم' : 'مفتوح'}</span>
+          </div>
+        </div>
+      `;
+    })
     .join("");
 }
 
@@ -124,15 +129,20 @@ function onTypeChange() {
 
   if (!t) return;
 
-  // 🔍 Debug: See exactly what the API sent in the console
-  console.log("Selected Type Data:", t);
+  // 2. Update Hint with Policy Details
+  const limitTxt = t.max_days_per_request ? `أقصى مدة: ${t.max_days_per_request} يوم` : 'المدة: مفتوحة';
+  const paidTxt = t.is_paid ? 'مدفوعة الأجر' : 'غير مدفوعة';
+  const deductTxt = t.deduct_from_balance ? 'تخصم من الرصيد' : 'لا تخصم من الرصيد';
+  
+  if (hint) {
+    hint.innerHTML = `
+      <span style="display:inline-block; margin-left:10px; background:#f1f5f9; padding:2px 8px; border-radius:4px;">${limitTxt}</span>
+      <span style="display:inline-block; margin-left:10px; color:${t.is_paid ? '#059669' : '#dc2626'}">${paidTxt}</span>
+      <span style="display:inline-block; color:#4b5563">${deductTxt}</span>
+    `;
+  }
 
-  // 2. Update Hint
-  if (hint)
-    hint.textContent = `الحد الأقصى: ${t.max_days_per_request ?? "-"} يوم`;
-
-  // 3. Handle Delegate (ROBUST CHECK FIXED 🛠️)
-  // We explicitly convert to boolean using Boolean() to handle 1 or true
+  // 3. Handle Delegate
   const rawDelegateVal = t.requires_delegate ?? t.requiresDelegate;
   const needsDelegate = Boolean(rawDelegateVal) === true;
 
@@ -146,21 +156,16 @@ function onTypeChange() {
 
   if (requirements.length > 0) {
     requirements.forEach((doc) => {
-      // Create Wrapper
       const div = document.createElement("div");
       div.className = "form-group";
 
-      // Label
       const label = document.createElement("label");
-      label.textContent =
-        (doc.document_name || doc.name) +
-        (doc.is_mandatory ? " *" : " (اختياري)");
+      label.textContent = (doc.document_name || doc.name) + (doc.is_mandatory ? " *" : " (اختياري)");
       label.style.display = "block";
       label.style.marginBottom = "8px";
       label.style.fontWeight = "600";
       if (doc.is_mandatory) label.style.color = "#dc2626";
 
-      // Input
       const input = document.createElement("input");
       input.type = "file";
       input.accept = ".pdf,.png,.jpg,.jpeg";
@@ -170,7 +175,6 @@ function onTypeChange() {
       input.style.border = "1px solid #e2e8f0";
       input.style.borderRadius = "8px";
 
-      // Store ID
       const reqId = doc.document_requirement_id || doc.id;
       input.setAttribute("data-req-id", reqId);
       input.setAttribute("data-mandatory", doc.is_mandatory);
@@ -181,7 +185,6 @@ function onTypeChange() {
     });
   }
 }
-
 function renderDashboard(data) {
   const balances = data?.leaveBalances || [];
   const recent = data?.recentRequests || [];
@@ -214,39 +217,34 @@ function renderDashboard(data) {
   todayDateOnly.setHours(0, 0, 0, 0);
 
   body.innerHTML = recent.length
-    ? recent
-        .map((r) => {
-          // --- منطق زر العودة ---
-          const endDate = new Date(r.end_date);
-
-          // هل الحالة Approved + التاريخ انتهى + لم يسجل عودة بعد؟
+    ? recent.map((r) => {
+          const startDate = new Date(r.start_date);
+          startDate.setHours(0,0,0,0);
+          
           const isApproved = r.status === "Approved";
-          const isFinished = todayDateOnly > endDate;
           const notReturned = !r.returned_at;
+          const canReturn = isApproved && notReturned && (todayDateOnly >= startDate);
 
-          let actionOrStatus = statusBadge(r.status); // الافتراضي: عرض الحالة فقط
+          let actionOrStatus = statusBadge(r.status); 
 
-          // لو الشروط تحققت، اعرض الزر بجانب الحالة أو بدلاً منها
-          if (isApproved && isFinished && notReturned) {
+          if (canReturn) {
             actionOrStatus = `
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        ${statusBadge(r.status)}
-                        <button class="btn" 
-                                style="background-color: #014366; color: white; border:none; padding: 4px 10px; font-size: 12px;" 
-                                onclick="submitReturnDeclaration(${
-                                  r.request_id
-                                })">
-                            تسجيل عودة ↩
-                        </button>
-                    </div>
-                `;
+                <div style="display:flex; align-items:center; gap:5px;">
+                    ${statusBadge(r.status)}
+                    <button class="btn" 
+                            style="background-color: #014366; color: white; border:none; padding: 4px 8px; font-size: 11px;" 
+                            onclick="submitReturnDeclaration(${r.request_id})">
+                        تسجيل عودة
+                    </button>
+                </div>
+            `;
           } else if (r.returned_at) {
-            actionOrStatus = `
-                    <div style="display:flex; flex-direction:column; gap:2px;">
-                        ${statusBadge(r.status)}
-                        <span style="font-size:11px; color:green; font-weight:bold;">تمت العودة ✅</span>
-                    </div>
-                 `;
+             actionOrStatus = `
+                <div style="display:flex; flex-direction:column; gap:2px;">
+                    ${statusBadge(r.status)}
+                    <span style="font-size:10px; color:green;">تمت العودة</span>
+                </div>
+             `;
           }
 
           return `
@@ -257,10 +255,8 @@ function renderDashboard(data) {
               <td>${actionOrStatus}</td>
             </tr>
           `;
-        })
-        .join("")
+        }).join("")
     : `<tr><td colspan="4" class="muted">لا يوجد طلبات حديثة.</td></tr>`;
-
   // 3. تحديث الإحصائيات (كما هي)
   const norm = (s) => String(s || "").toLowerCase();
   const approved = recent.filter((r) =>
@@ -339,40 +335,56 @@ function renderBarChart(recent) {
 function renderRequestsTable() {
   const body = qs("#requestsBody");
   const q = (qs("#search").value || "").trim().toLowerCase();
-  const today = new Date(); // Get current date for comparison
+  
+  // Use current date (reset time to 00:00:00 for accurate comparison)
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
   const filtered = !q
     ? allRequests
     : allRequests.filter((r) => {
-        const s = `${r.request_id} ${r.status} ${
-          r.leaveType?.type_name || ""
-        }`.toLowerCase();
+        const s = `${r.request_id} ${r.status} ${r.leaveType?.type_name || ""}`.toLowerCase();
         return s.includes(q);
       });
 
   body.innerHTML = filtered.length
-    ? filtered
-        .map((r) => {
-          // Logic for Return Button
+    ? filtered.map((r) => {
+          const startDate = new Date(r.start_date);
           const endDate = new Date(r.end_date);
+          startDate.setHours(0,0,0,0);
+          endDate.setHours(0,0,0,0);
+
           const isApproved = r.status === "Approved";
-          const isFinished = today > endDate; // Leave date has passed
-          const notReturned = r.returned_at === null; // Hasn't clicked button yet
+          const notReturned = r.returned_at === null;
+          
+          // Logic: Show "Return" button if Approved AND (Today >= Start Date) AND Not Returned yet
+          // This allows "Early Return" (Cutting leave) and "Normal Return"
+          const canReturn = isApproved && notReturned && (today >= startDate);
 
-          // Determine what to show in the 4th column
-          let actionHtml = `<button class="btn" data-view="${r.request_id}">عرض التفاصيل</button>`;
+          let actionHtml = `<button class="btn" data-view="${r.request_id}">تفاصيل</button>`;
 
-          // If ready to return, show "Return to Work" button instead
-          if (isApproved && isFinished && notReturned) {
+          if (canReturn) {
+            // Determine if it is early cut or normal return
+            const isEarly = today < endDate;
+            const btnText = isEarly ? "✂️ قطع الإجازة" : "↩️ تسجيل عودة";
+            const btnColor = isEarly ? "#d97706" : "#014366"; // Amber for cut, Blue for normal
+
             actionHtml = `
-                    <button class="btn" style="background-color: #014366; color: white;" 
+                <div style="display:flex; gap:5px;">
+                    <button class="btn" style="background-color: ${btnColor}; color: white; padding:6px 12px;" 
                             onclick="submitReturnDeclaration(${r.request_id})">
-                        تسجيل عودة
+                        ${btnText}
                     </button>
-                    <button class="btn" data-view="${r.request_id}" style="margin-right:5px; font-size:12px;">تفاصيل</button>
-                `;
+                    <button class="btn" data-view="${r.request_id}" style="padding:6px;">📄</button>
+                </div>
+            `;
           } else if (r.returned_at) {
-            actionHtml += ` <span style="font-size:12px; color:green; display:block">تمت العودة ✅</span>`;
+            actionHtml = `
+                <div style="display:flex; align-items:center; gap:5px;">
+                    <span style="font-size:12px; color:green; font-weight:bold;">تمت العودة ✅</span>
+                    <button class="btn" data-view="${r.request_id}" style="padding:4px 8px; font-size:12px">📄</button>
+                </div>
+            `;
           }
 
           return `
@@ -383,14 +395,11 @@ function renderRequestsTable() {
               <td>${actionHtml}</td>
             </tr>
           `;
-        })
-        .join("")
+        }).join("")
     : `<tr><td colspan="4" class="muted">لا توجد نتائج.</td></tr>`;
 
   qsa("button[data-view]", body).forEach((btn) => {
-    btn.addEventListener("click", () =>
-      showRequestDetails(btn.getAttribute("data-view"))
-    );
+    btn.addEventListener("click", () => showRequestDetails(btn.getAttribute("data-view")));
   });
 }
 
