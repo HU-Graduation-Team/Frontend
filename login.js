@@ -1,8 +1,9 @@
 const API_BASE = "https://leave-system-1af0.onrender.com";
-const completeOnboardingPage = "../onboarding/complete-onboarding.html";
-const adminPage = "../admin/hr.html";
-const managerPage = "../manager/manager.html";
-const employeePage = "../employee/employee.html";
+const completeOnboardingPage =
+  "leave-portal/onboarding/complete-onboarding.html";
+const adminPage = "leave-portal/admin/hr.html";
+const managerPage = "leave-portal/manager/manager.html";
+const employeePage = "leave-portal/employee/employee.html";
 
 // 🟢 فتح وغلق الـ login box
 function openLogin() {
