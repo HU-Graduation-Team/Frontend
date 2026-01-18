@@ -1,4 +1,8 @@
 const API_BASE = "https://leave-system-1af0.onrender.com";
+const completeOnboardingPage = "../onboarding/complete-onboarding.html";
+const adminPage = "../admin/hr.html";
+const managerPage = "../manager/manager.html";
+const employeePage = "../employee/employee.html";
 
 // 🟢 فتح وغلق الـ login box
 function openLogin() {
@@ -74,7 +78,7 @@ document
 
       // تحويل حسب حالة المستخدم
       if (result.data.status === "activation_required") {
-        window.location.href = "../onboarding/complete-onboarding.html";
+        window.location.href = completeOnboardingPage;
       } else {
         redirectByRole(result.data.user.role);
       }
@@ -87,11 +91,11 @@ document
 // 🟢 تحويل حسب الدور
 function redirectByRole(role) {
   if (role === "Employee") {
-    window.location.href = "../employee/employee.html";
+    window.location.href = employeePage;
   } else if (role === "Manager" || role === "Dean" || role === "President") {
-    window.location.href = "../manager/manager.html";
+    window.location.href = managerPage;
   } else if (role === "HR_Admin") {
-    window.location.href = "../admin/hr.html";
+    window.location.href = adminPage;
   } else {
     window.location.href = "login.html";
   }

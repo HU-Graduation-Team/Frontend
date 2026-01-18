@@ -20,7 +20,7 @@
 
   if (!apiFetch || !getToken || !setToken || !clearToken || !openModal) {
     console.warn(
-      "[hr.js] تأكد من تحميل common.js قبل hr.js لأن بعض الدوال المطلوبة غير موجودة."
+      "[hr.js] تأكد من تحميل common.js قبل hr.js لأن بعض الدوال المطلوبة غير موجودة.",
     );
   }
 
@@ -88,7 +88,7 @@
     const v = String(value ?? "").trim();
     if (!v) return fallback;
     const key = Object.keys(map).find(
-      (k) => k.toLowerCase() === v.toLowerCase()
+      (k) => k.toLowerCase() === v.toLowerCase(),
     );
     return key ? map[key] : v;
   }
@@ -135,12 +135,12 @@
   function getId(obj) {
     return (
       obj?.id ??
+      obj?.request_id ??
       obj?.user_id ??
       obj?.department_id ??
       obj?.college_id ??
       obj?.leave_type_id ??
       obj?.rule_id ??
-      obj?.request_id ??
       obj?._id
     );
   }
@@ -172,7 +172,7 @@
   }
 
   // ---------- Generic Modal ----------
-function openFancyModal({ title, subtitle, iconHtml, bodyHtml, footerHtml }) {
+  function openFancyModal({ title, subtitle, iconHtml, bodyHtml, footerHtml }) {
     openModal(`
       <div class="modal-header" style="background: linear-gradient(135deg, #014366, #0F93B4); color: white; display: flex; justify-content: space-between; align-items: center; padding: 15px 20px;">
         <div style="display: flex; align-items: center; gap: 12px;">
@@ -347,30 +347,73 @@ function openFancyModal({ title, subtitle, iconHtml, bodyHtml, footerHtml }) {
     return diff > 0 ? `${diff} يوم` : "—";
   }
 
-// ---------- Request Details Modal (Cairo Font + Perfect Print) ----------
+  // ---------- Request Details Modal (Cairo Font + Perfect Print) ----------
   function openRequestDetailsModal(req, requestId) {
     const id = requestId || getId(req) || "—";
-    
+
     const formatDate = (dateStr) => {
-        if (!dateStr || dateStr === "—") return "—";
-        try {
-            const d = new Date(dateStr);
-            if (isNaN(d.getTime())) return dateStr;
-            return d.toLocaleDateString("ar-EG");
-        } catch (e) { return dateStr; }
+      if (!dateStr || dateStr === "—") return "—";
+      try {
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return dateStr;
+        return d.toLocaleDateString("ar-EG");
+      } catch (e) {
+        return dateStr;
+      }
     };
 
-    const employeeName = getDeep(req, ["employee_name", "employee.name", "employee.full_name", "user.name", "user.full_name", "user_name"], "—");
-    const jobTitle = getDeep(req, ["employee.job_title", "user.job_title", "job_title"], "—");
-    const deptName = getDeep(req, ["department_name", "department.name", "employee.department.name"], "—");
-    const collegeName = getDeep(req, ["college_name", "college.name", "employee.college.name"], "—");
-    
-    const leaveType = getDeep(req, ["leave_type_name", "leave_type.type_name", "leaveType.type_name", "leave_type.name"], "—");
+    const employeeName = getDeep(
+      req,
+      [
+        "employee_name",
+        "employee.name",
+        "employee.full_name",
+        "user.name",
+        "user.full_name",
+        "user_name",
+      ],
+      "—",
+    );
+    const jobTitle = getDeep(
+      req,
+      ["employee.job_title", "user.job_title", "job_title"],
+      "—",
+    );
+    const deptName = getDeep(
+      req,
+      ["department_name", "department.name", "employee.department.name"],
+      "—",
+    );
+    const collegeName = getDeep(
+      req,
+      ["college_name", "college.name", "employee.college.name"],
+      "—",
+    );
+
+    const leaveType = getDeep(
+      req,
+      [
+        "leave_type_name",
+        "leave_type.type_name",
+        "leaveType.type_name",
+        "leave_type.name",
+      ],
+      "—",
+    );
     const from = getDeep(req, ["start_date", "from", "startDate"], "—");
     const to = getDeep(req, ["end_date", "to", "endDate"], "—");
-    const createdAt = getDeep(req, ["created_at", "createdAt"], new Date().toISOString());
-    const reason = getDeep(req, ["reason", "comment", "notes", "description"], "—");
-    const duration = (from !== "—" && to !== "—") ? calcDurationDays(from, to) : "—";
+    const createdAt = getDeep(
+      req,
+      ["created_at", "createdAt"],
+      new Date().toISOString(),
+    );
+    const reason = getDeep(
+      req,
+      ["reason", "comment", "notes", "description"],
+      "—",
+    );
+    const duration =
+      from !== "—" && to !== "—" ? calcDurationDays(from, to) : "—";
 
     const status = arStatus(req.status || "Pending");
     const managerName = req.manager_name || "المدير المباشر";
@@ -610,7 +653,7 @@ function openFancyModal({ title, subtitle, iconHtml, bodyHtml, footerHtml }) {
                 
                 <div class="sig-block">
                     <div class="sig-title">الاعتمادات</div>
-                    <div style="font-size: 14px; color: ${req.status === 'Approved' ? '#15803d' : '#64748b'}; margin-bottom: 5px;">
+                    <div style="font-size: 14px; color: ${req.status === "Approved" ? "#15803d" : "#64748b"}; margin-bottom: 5px;">
                         ${status}
                     </div>
                     <div class="sig-line">${esc(managerName)}</div>
@@ -1017,7 +1060,7 @@ function openFancyModal({ title, subtitle, iconHtml, bodyHtml, footerHtml }) {
           <div class="sk-big w-30"></div>
           <div class="sk-line w-80"></div>
         </div>
-      `
+      `,
         )
         .join("")}
     </div>
@@ -1174,16 +1217,16 @@ function openFancyModal({ title, subtitle, iconHtml, bodyHtml, footerHtml }) {
         state.colleges.length || 0,
         state.departments.length || 0,
         pending || 0,
-        1
+        1,
       );
       setStatBar("#barUsers", ((state.users.length || 0) / maxStat) * 100);
       setStatBar(
         "#barColleges",
-        ((state.colleges.length || 0) / maxStat) * 100
+        ((state.colleges.length || 0) / maxStat) * 100,
       );
       setStatBar(
         "#barDepartments",
-        ((state.departments.length || 0) / maxStat) * 100
+        ((state.departments.length || 0) / maxStat) * 100,
       );
       setStatBar("#barPending", ((pending || 0) / maxStat) * 100);
     } catch (e) {
@@ -1304,10 +1347,10 @@ function openFancyModal({ title, subtitle, iconHtml, bodyHtml, footerHtml }) {
               <td>
                 <div class="row" style="gap:8px; flex-wrap:wrap">
                   <button class="btn" data-action="edit" data-id="${esc(
-                    id
+                    id,
                   )}">تعديل</button>
                   <button class="btn danger" data-action="del" data-id="${esc(
-                    id
+                    id,
                   )}">حذف</button>
                 </div>
               </td>
@@ -1318,12 +1361,12 @@ function openFancyModal({ title, subtitle, iconHtml, bodyHtml, footerHtml }) {
 
       tb.querySelectorAll("button[data-action='edit']").forEach((b) => {
         b.addEventListener("click", () =>
-          showUserForm("edit", b.getAttribute("data-id"))
+          showUserForm("edit", b.getAttribute("data-id")),
         );
       });
       tb.querySelectorAll("button[data-action='del']").forEach((b) => {
         b.addEventListener("click", () =>
-          deleteUser(b.getAttribute("data-id"))
+          deleteUser(b.getAttribute("data-id")),
         );
       });
     } catch (e) {
@@ -1334,7 +1377,7 @@ function openFancyModal({ title, subtitle, iconHtml, bodyHtml, footerHtml }) {
     }
   }
 
-async function showUserForm(mode, id) {
+  async function showUserForm(mode, id) {
     await ensureDepsAndCollegesLoaded();
 
     let user = null;
@@ -1382,13 +1425,13 @@ async function showUserForm(mode, id) {
                   <div class="form-group">
                       <label>الاسم ثلاثي <span style="color:red">*</span></label>
                       <input type="text" id="name" class="form-control" placeholder="اسم الموظف" value="${esc(
-                        user?.name || user?.full_name || ""
+                        user?.name || user?.full_name || "",
                       )}" required />
                   </div>
                   <div class="form-group">
                       <label>البريد الإلكتروني <span style="color:red">*</span></label>
                       <input type="email" id="email" class="form-control" placeholder="example@univ.edu" value="${esc(
-                        user?.email || ""
+                        user?.email || "",
                       )}" ${isEdit ? "disabled" : ""} required />
                   </div>
               </div>
@@ -1397,7 +1440,7 @@ async function showUserForm(mode, id) {
                   <div class="form-group">
                       <label>الرقم القومي (SSN) <span style="color:red">*</span></label>
                       <input type="text" id="ssn" class="form-control" placeholder="14 رقم" maxlength="14" value="${esc(
-                        user?.ssn || ""
+                        user?.ssn || "",
                       )}" ${isEdit ? "disabled" : ""} required />
                   </div>
                   <div class="form-group">
@@ -1417,13 +1460,13 @@ async function showUserForm(mode, id) {
                   <div class="form-group">
                       <label>المسمى الوظيفي</label>
                       <input type="text" id="job_title" class="form-control" placeholder="مثال: مدرس، إداري..." value="${esc(
-                        user?.job_title || ""
+                        user?.job_title || "",
                       )}" />
                   </div>
                   <div class="form-group">
                       <label>جهة العمل</label>
                       <input type="text" id="workplace" class="form-control" placeholder="مثال: كلية الحاسبات" value="${esc(
-                        user?.workplace || ""
+                        user?.workplace || "",
                       )}" />
                   </div>
               </div>
@@ -1454,7 +1497,7 @@ async function showUserForm(mode, id) {
                                   String(user?.role || "Employee") === r.value
                                     ? "selected"
                                     : ""
-                                }>${r.label}</option>`
+                                }>${r.label}</option>`,
                             )
                             .join("")}
                       </select>
@@ -1470,7 +1513,7 @@ async function showUserForm(mode, id) {
                                   t.value
                                     ? "selected"
                                     : ""
-                                }>${t.label}</option>`
+                                }>${t.label}</option>`,
                             )
                             .join("")}
                       </select>
@@ -1510,29 +1553,31 @@ async function showUserForm(mode, id) {
     const depSel = document.getElementById("department_id");
 
     const populateDepartments = (targetDeptId = null) => {
-        const selectedColId = colSel.value;
-        
-        // Filter departments that belong to the selected college
-        // Convert to String to avoid type mismatch (e.g. "5" vs 5)
-        const filteredDeps = state.departments.filter(d => String(d.college_id) === String(selectedColId));
+      const selectedColId = colSel.value;
 
-        let html = '<option value="">-- اختر القسم --</option>';
-        
-        if (filteredDeps.length === 0 && selectedColId) {
-             html = '<option value="">-- لا توجد أقسام لهذه الكلية --</option>';
-        } else if (!selectedColId) {
-             html = '<option value="">-- اختر الكلية أولاً --</option>';
-        }
+      // Filter departments that belong to the selected college
+      // Convert to String to avoid type mismatch (e.g. "5" vs 5)
+      const filteredDeps = state.departments.filter(
+        (d) => String(d.college_id) === String(selectedColId),
+      );
 
-        filteredDeps.forEach(d => {
-             const dId = getId(d);
-             const dName = d.department_name || d.name;
-             // Select if it matches the target (user's existing dept)
-             const isSelected = targetDeptId && String(dId) === String(targetDeptId);
-             html += `<option value="${dId}" ${isSelected ? 'selected' : ''}>${esc(dName)}</option>`;
-        });
+      let html = '<option value="">-- اختر القسم --</option>';
 
-        depSel.innerHTML = html;
+      if (filteredDeps.length === 0 && selectedColId) {
+        html = '<option value="">-- لا توجد أقسام لهذه الكلية --</option>';
+      } else if (!selectedColId) {
+        html = '<option value="">-- اختر الكلية أولاً --</option>';
+      }
+
+      filteredDeps.forEach((d) => {
+        const dId = getId(d);
+        const dName = d.department_name || d.name;
+        // Select if it matches the target (user's existing dept)
+        const isSelected = targetDeptId && String(dId) === String(targetDeptId);
+        html += `<option value="${dId}" ${isSelected ? "selected" : ""}>${esc(dName)}</option>`;
+      });
+
+      depSel.innerHTML = html;
     };
 
     // 1. Trigger on load (to fill department if Editing)
@@ -1540,7 +1585,7 @@ async function showUserForm(mode, id) {
 
     // 2. Trigger on College Change
     colSel.addEventListener("change", () => {
-        populateDepartments(null); // Pass null so it doesn't auto-select old department
+      populateDepartments(null); // Pass null so it doesn't auto-select old department
     });
     // 🟢 CASCADING LOGIC ENDS HERE
 
@@ -1595,7 +1640,7 @@ async function showUserForm(mode, id) {
     });
   }
   // ---------- Colleges ----------
-// ---------- Colleges ----------
+  // ---------- Colleges ----------
   async function loadColleges() {
     const tb = $("#collegesBody");
     if (!tb) return;
@@ -1604,11 +1649,11 @@ async function showUserForm(mode, id) {
 
     try {
       setLoading(true, "جاري تحميل الكليات...");
-      
+
       // 1. Fetch Colleges AND Ensure Users are loaded (for Dean Name)
       const [res] = await Promise.all([
-          apiFetch("/api/admin/colleges"),
-          ensureUsersLoaded()
+        apiFetch("/api/admin/colleges"),
+        ensureUsersLoaded(),
       ]);
 
       const { items } = parseListResponse(res);
@@ -1623,11 +1668,13 @@ async function showUserForm(mode, id) {
         .map((c) => {
           const id = getId(c);
           const name = c.college_name || c.name || "—";
-          
+
           // 🟢 FIX: Find Dean Name from User List
           const deanId = c.dean_user_id ?? c.deanUserId;
-          const deanUser = state.users.find(u => String(getId(u)) === String(deanId));
-          const deanName = deanUser ? (deanUser.name || deanUser.full_name) : "—";
+          const deanUser = state.users.find(
+            (u) => String(getId(u)) === String(deanId),
+          );
+          const deanName = deanUser ? deanUser.name || deanUser.full_name : "—";
 
           return `
             <tr>
@@ -1646,12 +1693,12 @@ async function showUserForm(mode, id) {
 
       tb.querySelectorAll("button[data-action='edit']").forEach((b) => {
         b.addEventListener("click", () =>
-          showCollegeForm("edit", b.getAttribute("data-id"))
+          showCollegeForm("edit", b.getAttribute("data-id")),
         );
       });
       tb.querySelectorAll("button[data-action='del']").forEach((b) => {
         b.addEventListener("click", () =>
-          deleteCollege(b.getAttribute("data-id"))
+          deleteCollege(b.getAttribute("data-id")),
         );
       });
     } catch (e) {
@@ -1677,13 +1724,13 @@ async function showUserForm(mode, id) {
           <div style="flex:1; min-width:260px">
             <div class="muted">اسم الكلية</div>
             <input class="input" id="cName" value="${esc(
-              col?.college_name || col?.name || ""
+              col?.college_name || col?.name || "",
             )}" />
           </div>
           <div style="flex:1; min-width:260px">
             <div class="muted">معرّف العميد (اختياري)</div>
             <input class="input" id="cDean" value="${esc(
-              col?.dean_user_id ?? ""
+              col?.dean_user_id ?? "",
             )}" placeholder="مثال: 7" />
           </div>
         </div>
@@ -1742,7 +1789,7 @@ async function showUserForm(mode, id) {
   }
 
   // ---------- Departments ----------
-// ---------- Departments ----------
+  // ---------- Departments ----------
   async function loadDepartments() {
     const tb = $("#depsBody");
     if (!tb) return;
@@ -1751,12 +1798,12 @@ async function showUserForm(mode, id) {
 
     try {
       setLoading(true, "جاري تحميل الأقسام...");
-      
+
       // 1. Fetch Departments AND Ensure Reference Data (Users + Colleges) is loaded
       const [res] = await Promise.all([
-          apiFetch("/api/admin/departments"),
-          ensureUsersLoaded(),
-          ensureCollegesLoaded()
+        apiFetch("/api/admin/departments"),
+        ensureUsersLoaded(),
+        ensureCollegesLoaded(),
       ]);
 
       const { items } = parseListResponse(res);
@@ -1771,16 +1818,20 @@ async function showUserForm(mode, id) {
         .map((d) => {
           const id = getId(d);
           const name = d.department_name || d.name || "—";
-          
+
           // 🟢 FIX: Find College Name
           const collegeId = d.college_id ?? d.college?.id;
-          const colObj = state.colleges.find(c => String(getId(c)) === String(collegeId));
-          const collegeName = colObj ? (colObj.college_name || colObj.name) : "—";
+          const colObj = state.colleges.find(
+            (c) => String(getId(c)) === String(collegeId),
+          );
+          const collegeName = colObj ? colObj.college_name || colObj.name : "—";
 
           // 🟢 FIX: Find Head of Dept Name
           const headId = d.head_user_id ?? d.headUserId;
-          const headUser = state.users.find(u => String(getId(u)) === String(headId));
-          const headName = headUser ? (headUser.name || headUser.full_name) : "—";
+          const headUser = state.users.find(
+            (u) => String(getId(u)) === String(headId),
+          );
+          const headName = headUser ? headUser.name || headUser.full_name : "—";
 
           return `
             <tr>
@@ -1799,12 +1850,12 @@ async function showUserForm(mode, id) {
 
       tb.querySelectorAll("button[data-action='edit']").forEach((b) => {
         b.addEventListener("click", () =>
-          showDepartmentForm("edit", b.getAttribute("data-id"))
+          showDepartmentForm("edit", b.getAttribute("data-id")),
         );
       });
       tb.querySelectorAll("button[data-action='del']").forEach((b) => {
         b.addEventListener("click", () =>
-          deleteDepartment(b.getAttribute("data-id"))
+          deleteDepartment(b.getAttribute("data-id")),
         );
       });
     } catch (e) {
@@ -1832,14 +1883,14 @@ async function showUserForm(mode, id) {
           <div style="flex:1; min-width:260px">
             <div class="muted">اسم القسم</div>
             <input class="input" id="dName" value="${esc(
-              dep?.department_name || dep?.name || ""
+              dep?.department_name || dep?.name || "",
             )}" ${isEdit ? "disabled" : ""}/>
           </div>
 
           <div style="flex:1; min-width:260px">
             <div class="muted">الكلية</div>
             <select class="input" id="dCollege">${collegeOptions(
-              dep?.college_id
+              dep?.college_id,
             )}</select>
           </div>
         </div>
@@ -1848,7 +1899,7 @@ async function showUserForm(mode, id) {
           <div style="flex:1; min-width:260px">
             <div class="muted">معرّف رئيس القسم</div>
             <input class="input" id="dHead" value="${esc(
-              dep?.head_user_id ?? ""
+              dep?.head_user_id ?? "",
             )}" placeholder="مثال: 6" />
           </div>
         </div>
@@ -1909,10 +1960,10 @@ async function showUserForm(mode, id) {
     });
   }
 
- // ---------- Leave Types ----------
+  // ---------- Leave Types ----------
 
   // 1. Load Data
-// ============================================================
+  // ============================================================
   //  بداية قسم إدارة أنواع الإجازات (تصميم كلاسيكي - 9 أعمدة)
   // ============================================================
 
@@ -1947,7 +1998,7 @@ async function showUserForm(mode, id) {
     if (!tb) return;
 
     const search = ($("#typesSearch")?.value || "").trim().toLowerCase();
-    
+
     const filtered = items.filter((t) => {
       if (!search) return true;
       const name = String(t.type_name || t.name || "").toLowerCase();
@@ -1961,21 +2012,23 @@ async function showUserForm(mode, id) {
       return;
     }
 
-    tb.innerHTML = filtered.map((t) => {
-      const id = getId(t);
-      const name = t.type_name || t.name || "—";
-      const category = t.category || "—";
-      
-      const balanceTypeRaw = t.balance_type || "—";
-      const balanceAr = arBalanceType(balanceTypeRaw);
-      const fixedVal = t.fixed_balance || 0;
-      const balanceDisplay = balanceTypeRaw === 'fixed' ? `${balanceAr} (${fixedVal})` : balanceAr;
+    tb.innerHTML = filtered
+      .map((t) => {
+        const id = getId(t);
+        const name = t.type_name || t.name || "—";
+        const category = t.category || "—";
 
-      const docsText = t.requires_document ? "نعم" : "لا";
-      const genderText = arGender(t.gender_policy || "All");
-      const maxDays = t.max_days_per_request ? t.max_days_per_request : "—";
+        const balanceTypeRaw = t.balance_type || "—";
+        const balanceAr = arBalanceType(balanceTypeRaw);
+        const fixedVal = t.fixed_balance || 0;
+        const balanceDisplay =
+          balanceTypeRaw === "fixed" ? `${balanceAr} (${fixedVal})` : balanceAr;
 
-      return `
+        const docsText = t.requires_document ? "نعم" : "لا";
+        const genderText = arGender(t.gender_policy || "All");
+        const maxDays = t.max_days_per_request ? t.max_days_per_request : "—";
+
+        return `
         <tr>
           <td>${esc(name)}</td>
           <td>${esc(category)}</td>
@@ -1992,32 +2045,43 @@ async function showUserForm(mode, id) {
           </td>
         </tr>
       `;
-    }).join("");
+      })
+      .join("");
 
     tb.querySelectorAll("button[data-action='edit']").forEach((b) => {
-      b.addEventListener("click", () => showLeaveTypeForm("edit", b.getAttribute("data-id")));
+      b.addEventListener("click", () =>
+        showLeaveTypeForm("edit", b.getAttribute("data-id")),
+      );
     });
-    
+
     tb.querySelectorAll("button[data-action='del']").forEach((b) => {
       b.addEventListener("click", () => {
-         if(confirm("هل أنت متأكد من الحذف؟")) {
-             toast("تنبيه", "تم طلب الحذف", "info");
-         }
+        if (confirm("هل أنت متأكد من الحذف؟")) {
+          toast("تنبيه", "تم طلب الحذف", "info");
+        }
       });
     });
   }
   // 3. Helpers for Documents
   function docsToTextarea(required_documents) {
     if (!Array.isArray(required_documents)) return "";
-    return required_documents.map((d) => `${d.is_mandatory ? "* " : ""}${d.document_name || d.name || ""}`.trim()).join("\n");
+    return required_documents
+      .map((d) =>
+        `${d.is_mandatory ? "* " : ""}${d.document_name || d.name || ""}`.trim(),
+      )
+      .join("\n");
   }
 
   function textareaToDocs(text) {
-    return String(text || "").split("\n").map((l) => l.trim()).filter(Boolean).map((l) => {
-      const mandatory = l.startsWith("*");
-      const name = l.replace(/^\*\s*/, "").trim();
-      return { document_name: name, is_mandatory: mandatory };
-    });
+    return String(text || "")
+      .split("\n")
+      .map((l) => l.trim())
+      .filter(Boolean)
+      .map((l) => {
+        const mandatory = l.startsWith("*");
+        const name = l.replace(/^\*\s*/, "").trim();
+        return { document_name: name, is_mandatory: mandatory };
+      });
   }
 
   // 4. THE MAIN FORM MODAL (Add/Edit)
@@ -2027,31 +2091,31 @@ async function showUserForm(mode, id) {
 
     // Fetch fresh data if editing
     if (isEdit) {
-        try {
-            // Check if we have it in state first
-            t = state.leaveTypes.find((x) => String(getId(x)) === String(id));
-            // Optional: Fetch fresh details from API if needed
-            const res = await apiFetch(`/api/admin/leave-types/${id}`);
-            const data = unwrap(res);
-            if(data) t = data.leave_type || data; 
-        } catch (e) {
-            console.warn("Using local state fallback");
-        }
+      try {
+        // Check if we have it in state first
+        t = state.leaveTypes.find((x) => String(getId(x)) === String(id));
+        // Optional: Fetch fresh details from API if needed
+        const res = await apiFetch(`/api/admin/leave-types/${id}`);
+        const data = unwrap(res);
+        if (data) t = data.leave_type || data;
+      } catch (e) {
+        console.warn("Using local state fallback");
+      }
     }
 
     // Helper to safely get value
     const val = (p, alt) => t?.[p] ?? t?.[alt] ?? "";
-    
+
     // Workflow State (Local to this modal)
-    let workflowSteps = []; 
+    let workflowSteps = [];
 
     // Static Options
     const approverRoles = [
-        { value: "Head_of_Department", label: "رئيس القسم" },
-        { value: "Dean", label: "العميد" },
-        { value: "HR_Admin", label: "الموارد البشرية" },
-        { value: "Manager", label: "المدير المباشر" },
-        { value: "President", label: "رئيس الجامعة" }
+      { value: "Head_of_Department", label: "رئيس القسم" },
+      { value: "Dean", label: "العميد" },
+      { value: "HR_Admin", label: "الموارد البشرية" },
+      { value: "Manager", label: "المدير المباشر" },
+      { value: "President", label: "رئيس الجامعة" },
     ];
 
     openFancyModal({
@@ -2063,28 +2127,28 @@ async function showUserForm(mode, id) {
            <div class="form-row">
              <div class="form-group full-width">
                <label>اسم الإجازة <span style="color:red">*</span></label>
-               <input class="form-control" id="ltName" value="${esc(val('type_name', 'name'))}" placeholder="مثال: إجازة اعتيادية" />
+               <input class="form-control" id="ltName" value="${esc(val("type_name", "name"))}" placeholder="مثال: إجازة اعتيادية" />
              </div>
            </div>
            
            <div class="form-row">
              <div class="form-group full-width">
                <label>الوصف</label>
-               <textarea class="form-control" id="ltDesc" rows="2">${esc(val('description'))}</textarea>
+               <textarea class="form-control" id="ltDesc" rows="2">${esc(val("description"))}</textarea>
              </div>
            </div>
 
            <div class="form-row">
              <div class="form-group">
                <label>الفئة</label>
-               <input class="form-control" id="ltCat" value="${esc(val('category'))}" placeholder="مثال: سنوية" />
+               <input class="form-control" id="ltCat" value="${esc(val("category"))}" placeholder="مثال: سنوية" />
              </div>
              <div class="form-group">
                <label>الجنس المسموح</label>
                <select class="form-control" id="ltGender">
-                  <option value="All" ${val('gender_policy') === 'All' ? 'selected' : ''}>الجميع</option>
-                  <option value="Male" ${val('gender_policy') === 'Male' ? 'selected' : ''}>ذكور فقط</option>
-                  <option value="Female" ${val('gender_policy') === 'Female' ? 'selected' : ''}>إناث فقط</option>
+                  <option value="All" ${val("gender_policy") === "All" ? "selected" : ""}>الجميع</option>
+                  <option value="Male" ${val("gender_policy") === "Male" ? "selected" : ""}>ذكور فقط</option>
+                  <option value="Female" ${val("gender_policy") === "Female" ? "selected" : ""}>إناث فقط</option>
                </select>
              </div>
            </div>
@@ -2095,24 +2159,24 @@ async function showUserForm(mode, id) {
              <div class="form-group">
                 <label>نوع الرصيد</label>
                 <select class="form-control" id="ltBalType">
-                   <option value="fixed" ${val('balance_type') === 'fixed' ? 'selected' : ''}>رصيد ثابت</option>
-                   <option value="calculated" ${val('balance_type') === 'calculated' ? 'selected' : ''}>محسوب (قانون العمل)</option>
+                   <option value="fixed" ${val("balance_type") === "fixed" ? "selected" : ""}>رصيد ثابت</option>
+                   <option value="calculated" ${val("balance_type") === "calculated" ? "selected" : ""}>محسوب (قانون العمل)</option>
                 </select>
              </div>
              <div class="form-group">
                 <label>الرصيد الافتراضي</label>
-                <input type="number" class="form-control" id="ltFixedBal" value="${val('fixed_balance') || 0}" />
+                <input type="number" class="form-control" id="ltFixedBal" value="${val("fixed_balance") || 0}" />
              </div>
            </div>
 
            <div class="form-row" style="margin-top:10px;">
               <div class="form-group" style="flex-direction:row; gap:15px; align-items:center;">
                   <label class="checkbox-card" style="flex:1;">
-                      <input type="checkbox" class="custom-checkbox" id="ltIsPaid" ${t?.is_paid !== false ? 'checked' : ''}>
+                      <input type="checkbox" class="custom-checkbox" id="ltIsPaid" ${t?.is_paid !== false ? "checked" : ""}>
                       <span class="checkbox-label">مدفوعة الأجر (Paid)</span>
                   </label>
                   <label class="checkbox-card" style="flex:1;">
-                      <input type="checkbox" class="custom-checkbox" id="ltDeduct" ${t?.deduct_from_balance !== false ? 'checked' : ''}>
+                      <input type="checkbox" class="custom-checkbox" id="ltDeduct" ${t?.deduct_from_balance !== false ? "checked" : ""}>
                       <span class="checkbox-label">تخصم من الرصيد</span>
                   </label>
               </div>
@@ -2121,11 +2185,11 @@ async function showUserForm(mode, id) {
            <div class="form-row">
               <div class="form-group" style="flex-direction:row; gap:15px; align-items:center;">
                   <label class="checkbox-card" style="flex:1;">
-                      <input type="checkbox" class="custom-checkbox" id="ltReqDoc" ${t?.requires_document ? 'checked' : ''}>
+                      <input type="checkbox" class="custom-checkbox" id="ltReqDoc" ${t?.requires_document ? "checked" : ""}>
                       <span class="checkbox-label">تتطلب مرفقات</span>
                   </label>
                   <label class="checkbox-card" style="flex:1;">
-                      <input type="checkbox" class="custom-checkbox" id="ltReqDel" ${t?.requires_delegate ? 'checked' : ''}>
+                      <input type="checkbox" class="custom-checkbox" id="ltReqDel" ${t?.requires_delegate ? "checked" : ""}>
                       <span class="checkbox-label">تتطلب تفويض بديل</span>
                   </label>
               </div>
@@ -2136,22 +2200,22 @@ async function showUserForm(mode, id) {
            <div class="form-row">
              <div class="form-group">
                 <label>حد العمر (مرة)</label>
-                <input type="number" class="form-control" id="ltLife" value="${val('lifetime_limit')}" placeholder="بلا حد" />
+                <input type="number" class="form-control" id="ltLife" value="${val("lifetime_limit")}" placeholder="بلا حد" />
              </div>
              <div class="form-group">
                 <label>سنوات خدمة مطلوبة</label>
-                <input type="number" class="form-control" id="ltService" value="${val('years_of_service_required') || 0}" />
+                <input type="number" class="form-control" id="ltService" value="${val("years_of_service_required") || 0}" />
              </div>
            </div>
 
            <div class="form-row">
              <div class="form-group">
                 <label>أقل مدة (أيام)</label>
-                <input type="number" class="form-control" id="ltMinDays" value="${val('min_days_duration') || 1}" />
+                <input type="number" class="form-control" id="ltMinDays" value="${val("min_days_duration") || 1}" />
              </div>
              <div class="form-group">
                 <label>أقصى مدة للطلب</label>
-                <input type="number" class="form-control" id="ltMaxDays" value="${val('max_days_per_request')}" placeholder="مفتوح" />
+                <input type="number" class="form-control" id="ltMaxDays" value="${val("max_days_per_request")}" placeholder="مفتوح" />
              </div>
            </div>
 
@@ -2162,42 +2226,49 @@ async function showUserForm(mode, id) {
                </div>
            </div>
 
-           ${!isEdit ? `
+           ${
+             !isEdit
+               ? `
            <div class="form-section-title">مسار الموافقة (Workflow)</div>
            <div class="workflow-box">
                <div id="workflowList" class="workflow-list"></div>
                <div class="workflow-add-row">
                    <select id="wfRoleSelector" class="form-control" style="flex:2">
-                       ${approverRoles.map(r => `<option value="${r.value}">${r.label}</option>`).join("")}
+                       ${approverRoles.map((r) => `<option value="${r.value}">${r.label}</option>`).join("")}
                    </select>
                    <button type="button" id="btnAddStep" class="btn" style="flex:1; background:#e0f2fe; color:#014366; border:1px solid #bae6fd;">
                        <i class="fa-solid fa-plus"></i> إضافة خطوة
                    </button>
                </div>
            </div>
-           ` : ''}
+           `
+               : ""
+           }
         </div>
       `,
       footerHtml: `
         <button class="btn" onclick="closeModal()">إلغاء</button>
         <button class="btn primary" id="ltSave">${isEdit ? "حفظ التعديلات" : "إنشاء النوع"}</button>
-      `
+      `,
     });
 
     // --- Workflow Logic (Create Mode Only) ---
     if (!isEdit) {
-        const wfListEl = document.getElementById("workflowList");
-        const wfBtn = document.getElementById("btnAddStep");
-        const wfSelect = document.getElementById("wfRoleSelector");
+      const wfListEl = document.getElementById("workflowList");
+      const wfBtn = document.getElementById("btnAddStep");
+      const wfSelect = document.getElementById("wfRoleSelector");
 
-        const renderWorkflow = () => {
-            if (workflowSteps.length === 0) {
-                wfListEl.innerHTML = `<div style="text-align:center; color:#94a3b8; font-size:13px; padding:10px;">سيتم اعتماد المسار الافتراضي (رئيس القسم -> العميد)</div>`;
-                return;
-            }
-            wfListEl.innerHTML = workflowSteps.map((step, index) => {
-                const roleObj = approverRoles.find(r => r.value === step.approver_role);
-                return `
+      const renderWorkflow = () => {
+        if (workflowSteps.length === 0) {
+          wfListEl.innerHTML = `<div style="text-align:center; color:#94a3b8; font-size:13px; padding:10px;">سيتم اعتماد المسار الافتراضي (رئيس القسم -> العميد)</div>`;
+          return;
+        }
+        wfListEl.innerHTML = workflowSteps
+          .map((step, index) => {
+            const roleObj = approverRoles.find(
+              (r) => r.value === step.approver_role,
+            );
+            return `
                     <div class="workflow-step">
                         <div class="step-info">
                             <span class="step-badge">${index + 1}</span>
@@ -2207,76 +2278,85 @@ async function showUserForm(mode, id) {
                             <i class="fa-solid fa-trash"></i>
                         </div>
                     </div>`;
-            }).join("");
-        };
+          })
+          .join("");
+      };
 
-        window.removeWfStep = (index) => {
-            workflowSteps.splice(index, 1);
-            workflowSteps.forEach((s, i) => s.step_order = i + 1);
-            renderWorkflow();
-        };
-
-        wfBtn.addEventListener("click", () => {
-            workflowSteps.push({ step_order: workflowSteps.length + 1, approver_role: wfSelect.value });
-            renderWorkflow();
-        });
-        
+      window.removeWfStep = (index) => {
+        workflowSteps.splice(index, 1);
+        workflowSteps.forEach((s, i) => (s.step_order = i + 1));
         renderWorkflow();
+      };
+
+      wfBtn.addEventListener("click", () => {
+        workflowSteps.push({
+          step_order: workflowSteps.length + 1,
+          approver_role: wfSelect.value,
+        });
+        renderWorkflow();
+      });
+
+      renderWorkflow();
     }
 
     // --- Save Handler ---
     $("#ltSave").addEventListener("click", async () => {
-        const name = $("#ltName").value.trim();
-        if(!name) return toast("تنبيه", "اسم الإجازة مطلوب", "warn");
+      const name = $("#ltName").value.trim();
+      if (!name) return toast("تنبيه", "اسم الإجازة مطلوب", "warn");
 
-        const body = {
-            type_name: name,
-            description: $("#ltDesc").value.trim(),
-            category: $("#ltCat").value.trim(),
-            gender_policy: $("#ltGender").value,
-            
-            balance_type: $("#ltBalType").value,
-            fixed_balance: Number($("#ltFixedBal").value) || 0,
-            
-            // New Fields
-            is_paid: $("#ltIsPaid").checked,
-            deduct_from_balance: $("#ltDeduct").checked,
-            requires_document: $("#ltReqDoc").checked,
-            requires_delegate: $("#ltReqDel").checked,
-            
-            // Restrictions (Convert empty to null/0)
-            lifetime_limit: $("#ltLife").value ? Number($("#ltLife").value) : null,
-            years_of_service_required: Number($("#ltService").value) || 0,
-            min_days_duration: Number($("#ltMinDays").value) || 1,
-            max_days_per_request: $("#ltMaxDays").value ? Number($("#ltMaxDays").value) : null,
-            
-            required_documents: textareaToDocs($("#ltDocs").value),
-        };
+      const body = {
+        type_name: name,
+        description: $("#ltDesc").value.trim(),
+        category: $("#ltCat").value.trim(),
+        gender_policy: $("#ltGender").value,
 
-        // Only send workflow on creation
-        if(!isEdit) body.workflow = workflowSteps;
+        balance_type: $("#ltBalType").value,
+        fixed_balance: Number($("#ltFixedBal").value) || 0,
 
-        setLoading(true);
-        try {
-            if(isEdit) {
-                await apiFetch(`/api/admin/leave-types/${id}`, { method: "PUT", body });
-                toast("تم", "تم تحديث نوع الإجازة", "success");
-            } else {
-                await apiFetch(`/api/admin/leave-types`, { method: "POST", body });
-                toast("تم", "تم إنشاء نوع الإجازة", "success");
-            }
-            closeModal();
-            loadLeaveTypes(); 
-        } catch(e) {
-            toast("خطأ", e.message || "حدث خطأ أثناء الحفظ", "error");
-        } finally {
-            setLoading(false);
+        // New Fields
+        is_paid: $("#ltIsPaid").checked,
+        deduct_from_balance: $("#ltDeduct").checked,
+        requires_document: $("#ltReqDoc").checked,
+        requires_delegate: $("#ltReqDel").checked,
+
+        // Restrictions (Convert empty to null/0)
+        lifetime_limit: $("#ltLife").value ? Number($("#ltLife").value) : null,
+        years_of_service_required: Number($("#ltService").value) || 0,
+        min_days_duration: Number($("#ltMinDays").value) || 1,
+        max_days_per_request: $("#ltMaxDays").value
+          ? Number($("#ltMaxDays").value)
+          : null,
+
+        required_documents: textareaToDocs($("#ltDocs").value),
+      };
+
+      // Only send workflow on creation
+      if (!isEdit) body.workflow = workflowSteps;
+
+      setLoading(true);
+      try {
+        if (isEdit) {
+          await apiFetch(`/api/admin/leave-types/${id}`, {
+            method: "PUT",
+            body,
+          });
+          toast("تم", "تم تحديث نوع الإجازة", "success");
+        } else {
+          await apiFetch(`/api/admin/leave-types`, { method: "POST", body });
+          toast("تم", "تم إنشاء نوع الإجازة", "success");
         }
+        closeModal();
+        loadLeaveTypes();
+      } catch (e) {
+        toast("خطأ", e.message || "حدث خطأ أثناء الحفظ", "error");
+      } finally {
+        setLoading(false);
+      }
     });
-  }   
+  }
 
   // ---------- Eligibility (Rules) ----------
-// ---------- Eligibility (Rules) ----------
+  // ---------- Eligibility (Rules) ----------
   async function loadEligibility() {
     const tb = $("#rulesBody");
     if (!tb) return;
@@ -2288,8 +2368,8 @@ async function showUserForm(mode, id) {
       setLoading(true, "جاري تحميل الصلاحيات...");
 
       const [rulesRes, typesRes] = await Promise.all([
-          apiFetch("/api/admin/leave-eligibility"),
-          apiFetch("/api/admin/leave-types")
+        apiFetch("/api/admin/leave-eligibility"),
+        apiFetch("/api/admin/leave-types"),
       ]);
 
       const rules = parseListResponse(rulesRes).items;
@@ -2299,9 +2379,10 @@ async function showUserForm(mode, id) {
       state.leaveTypes = types;
 
       const typeMap = {};
-      types.forEach(t => {
-          if (t.id) typeMap[String(t.id)] = t.type_name || t.name || "—";
-          if (t.type_id) typeMap[String(t.type_id)] = t.type_name || t.name || "—";
+      types.forEach((t) => {
+        if (t.id) typeMap[String(t.id)] = t.type_name || t.name || "—";
+        if (t.type_id)
+          typeMap[String(t.type_id)] = t.type_name || t.name || "—";
       });
 
       if (!rules.length) {
@@ -2334,7 +2415,7 @@ async function showUserForm(mode, id) {
 
       tb.querySelectorAll("button[data-action='del']").forEach((b) => {
         b.addEventListener("click", () =>
-          deleteEligibilityRule(b.getAttribute("data-id"))
+          deleteEligibilityRule(b.getAttribute("data-id")),
         );
       });
     } catch (e) {
@@ -2352,8 +2433,8 @@ async function showUserForm(mode, id) {
       .map(
         (t) =>
           `<option value="${esc(getId(t))}">${esc(
-            t.type_name || t.name || getId(t)
-          )}</option>`
+            t.type_name || t.name || getId(t),
+          )}</option>`,
       )
       .join("");
 
@@ -2373,7 +2454,7 @@ async function showUserForm(mode, id) {
               <option value="All">${esc(arUserType("All"))}</option>
               <option value="Academic">${esc(arUserType("Academic"))}</option>
               <option value="Administrative">${esc(
-                arUserType("Administrative")
+                arUserType("Administrative"),
               )}</option>
             </select>
           </div>
@@ -2524,10 +2605,10 @@ async function showUserForm(mode, id) {
             <td>
               <div class="row" style="gap:8px; flex-wrap:wrap">
                 <button class="btn" data-action="details" data-id="${esc(
-                  id
+                  id,
                 )}">تفاصيل</button>
                 <button class="btn primary" data-action="override" data-id="${esc(
-                  id
+                  id,
                 )}">تعديل الحالة</button>
               </div>
             </td>
@@ -2540,7 +2621,7 @@ async function showUserForm(mode, id) {
       b.addEventListener("click", async () => {
         const id = b.getAttribute("data-id");
         let item = state.report.items.find(
-          (x) => String(getId(x)) === String(id)
+          (x) => String(getId(x)) === String(id),
         );
 
         if (!item) {
@@ -2556,7 +2637,7 @@ async function showUserForm(mode, id) {
 
     tb.querySelectorAll("button[data-action='override']").forEach((b) => {
       b.addEventListener("click", () =>
-        showOverrideModal(b.getAttribute("data-id"))
+        showOverrideModal(b.getAttribute("data-id")),
       );
     });
   }
@@ -2583,6 +2664,7 @@ async function showUserForm(mode, id) {
         end_date: filters.end,
         limit: state.report.limit,
         offset,
+        _t: Date.now(),
       }),
       buildQuery({
         status: filters.status,
@@ -2593,6 +2675,7 @@ async function showUserForm(mode, id) {
         endDate: filters.end,
         limit: state.report.limit,
         offset,
+        _t: Date.now(),
       }),
       buildQuery({
         status: filters.status,
@@ -2603,6 +2686,7 @@ async function showUserForm(mode, id) {
         to: filters.end,
         page: state.report.page,
         pageSize: state.report.limit,
+        _t: Date.now(),
       }),
     ];
 
@@ -2653,15 +2737,14 @@ async function showUserForm(mode, id) {
     } catch (e) {
       toast("خطأ", e?.message || "فشل تحميل التقارير", "error");
       $("#repBody") &&
-        ($(
-          "#repBody"
-        ).innerHTML = `<tr><td colspan="8" class="muted">فشل التحميل</td></tr>`);
+        ($("#repBody").innerHTML =
+          `<tr><td colspan="8" class="muted">فشل التحميل</td></tr>`);
     } finally {
       setLoading(false);
     }
   }
 
-function showOverrideModal(requestId) {
+  function showOverrideModal(requestId) {
     const statusOptions = [
       { value: "Approved", label: arStatus("Approved") },
       { value: "Rejected", label: arStatus("Rejected") },
@@ -2683,7 +2766,7 @@ function showOverrideModal(requestId) {
               <div class="form-group">
                 <label>الحالة الجديدة</label>
                 <select class="form-control" id="ovStatus">
-                  ${statusOptions.map(s => `<option value="${s.value}">${esc(s.label)}</option>`).join("")}
+                  ${statusOptions.map((s) => `<option value="${s.value}">${esc(s.label)}</option>`).join("")}
                 </select>
               </div>
             </div>
@@ -2708,58 +2791,110 @@ function showOverrideModal(requestId) {
       const reason = $("#ovReason")?.value?.trim();
 
       if (!reason || reason.length < 5) {
-          return toast("تنبيه", "يجب كتابة 5 أحرف على الأقل", "warn");
+        return toast("تنبيه", "يجب كتابة 5 أحرف على الأقل", "warn");
       }
 
-      const payload = { 
-          status: newStatus, 
-          comments: reason 
+      const payload = {
+        status: newStatus,
+        comments: reason,
       };
 
       try {
         setLoading(true, "جاري الإرسال...");
 
-        // 🟢 1. العودة إلى PUT (لأنها الطريقة الوحيدة التي استجاب لها السيرفر سابقاً)
-        const response = await fetch(`/api/admin/leave-requests/${requestId}/override-status`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('token') 
-            },
-            body: JSON.stringify(payload)
-        });
+        // 🟢 استخدام apiFetch لضمان الاتصال بالسيرفر الصحيح (يضيف Base URL + Token تلقائياً)
+        const res = await apiFetch(
+          `/api/admin/leave-requests/${requestId}/override-status`,
+          {
+            method: "PUT",
+            body: payload,
+          },
+        );
 
-        // 🟢 2. هنا السر: إذا كان الرد OK (200-299)، نعتبره نجاحاً فوراً دون محاولة قراءة JSON
-        if (response.ok) {
-            toast("تم", "تم تعديل الحالة بنجاح", "success");
-            closeModal();
+        // التحقق من رد السيرفر بشكل أعمق
+        console.log("[Override Response]", res);
 
-            // تحديث الجدول فوراً أمام عينيك
-            const btn = document.querySelector(`button[data-action="override"][data-id="${requestId}"]`);
-            if (btn) {
-                const tr = btn.closest("tr");
-                const badge = tr.querySelector(".status-badge");
-                if (badge) {
-                    badge.className = `status-badge status-${newStatus.toLowerCase()}`;
-                    badge.innerText = arStatus(newStatus);
-                    tr.style.backgroundColor = "#dcfce7";
-                    setTimeout(() => tr.style.backgroundColor = "", 1500);
-                }
-            }
-        } else {
-            // في حالة الفشل الحقيقي فقط (مثل 400 أو 500)
-            const errorText = await response.text();
-            alert(`فشل التعديل (${response.status}): ${errorText}`);
+        const possibleStatuses = [
+          "Approved",
+          "Rejected",
+          "Cancelled",
+          "Pending",
+          "Canceled",
+        ];
+        const findRealStatus = (obj) => {
+          if (!obj) return null;
+          if (typeof obj === "string" && possibleStatuses.includes(obj))
+            return obj;
+          if (typeof obj !== "object") return null;
+
+          // البحث في الخصائص المباشرة
+          for (const key of ["status", "current_status", "state"]) {
+            const val = obj[key];
+            if (val && possibleStatuses.includes(val)) return val;
+          }
+
+          // البحث في الكائنات المتداخلة
+          if (obj.data) {
+            const s = findRealStatus(obj.data);
+            if (s) return s;
+          }
+          if (obj.leave_request) {
+            const s = findRealStatus(obj.leave_request);
+            if (s) return s;
+          }
+          if (obj.request) {
+            const s = findRealStatus(obj.request);
+            if (s) return s;
+          }
+          return null;
+        };
+
+        const serverStatus = findRealStatus(res);
+
+        if (!serverStatus) {
+          console.warn("Could not find status in response, using fallback.");
         }
 
+        if (
+          serverStatus &&
+          String(serverStatus).toLowerCase() !== String(newStatus).toLowerCase()
+        ) {
+          alert(
+            `تنبيه: تم طلب "${newStatus}" ولكن السيرفر أرجع "${serverStatus}". قد تكون هناك قيود تمنع هذا التعديل.`,
+          );
+        } else {
+          toast("تم", "تم تعديل الحالة بنجاح", "success");
+        }
+
+        closeModal();
+
+        // تحديث الجدول فوراً بالحالة الحقيقية
+        const finalStatus = serverStatus || newStatus;
+
+        const btn = document.querySelector(
+          `button[data-action="override"][data-id="${requestId}"]`,
+        );
+        if (btn) {
+          const tr = btn.closest("tr");
+          const badge = tr.querySelector(".pill");
+          if (badge) {
+            badge.textContent = arStatus(finalStatus);
+            // إضافة تأثير بصري للتأكيد
+            tr.style.backgroundColor = "#dcfce7";
+            setTimeout(() => (tr.style.backgroundColor = ""), 2000);
+          }
+        }
+
+        // إعادة تحميل البيانات من السيرفر للتأكد 100%
+        await loadReports();
       } catch (e) {
         console.error(e);
         // تجاهل أي خطأ يتعلق بـ JSON لأن العملية تكون قد تمت بالفعل
         if (e.message && e.message.includes("JSON")) {
-             toast("تم", "تم التعديل بنجاح", "success");
-             closeModal();
+          toast("تم", "تم التعديل بنجاح", "success");
+          closeModal();
         } else {
-             alert("خطأ في الاتصال: " + e.message);
+          alert("خطأ في الاتصال: " + e.message);
         }
       } finally {
         setLoading(false);
@@ -2769,7 +2904,7 @@ function showOverrideModal(requestId) {
   function formatFileDate(d = new Date()) {
     const pad = (n) => String(n).padStart(2, "0");
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(
-      d.getDate()
+      d.getDate(),
     )}_${pad(d.getHours())}-${pad(d.getMinutes())}`;
   }
 
@@ -2864,7 +2999,6 @@ function showOverrideModal(requestId) {
       await onTabChanged(activeTab);
 
       await populateReportsFilters();
-      
     } finally {
       setLoading(false);
     }
@@ -2887,16 +3021,16 @@ function showOverrideModal(requestId) {
 
     $("#collegesRefreshBtn")?.addEventListener("click", loadColleges);
     $("#collegesAddBtn")?.addEventListener("click", () =>
-      showCollegeForm("add")
+      showCollegeForm("add"),
     );
     $("#depsRefreshBtn")?.addEventListener("click", loadDepartments);
     $("#depsAddBtn")?.addEventListener("click", () =>
-      showDepartmentForm("add")
+      showDepartmentForm("add"),
     );
 
     $("#typesRefreshBtn")?.addEventListener("click", loadLeaveTypes);
     $("#typesAddBtn")?.addEventListener("click", () =>
-      showLeaveTypeForm("add")
+      showLeaveTypeForm("add"),
     );
     $("#typesSearch")?.addEventListener("input", () => loadLeaveTypes());
 
@@ -2911,7 +3045,7 @@ function showOverrideModal(requestId) {
     $("#repExportBtn")?.addEventListener("click", () => exportReportsToExcel());
 
     $("#repLoadBtn")?.addEventListener("click", () =>
-      loadReports({ reset: true })
+      loadReports({ reset: true }),
     );
     $("#repPrevBtn")?.addEventListener("click", async () => {
       if (state.report.page <= 1) return;
@@ -2939,11 +3073,7 @@ function showOverrideModal(requestId) {
         await bootAfterToken();
       } else {
         setPendingBadge(0);
-        toast(
-          "تنبيه",
-          "يرجى تسجيل الدخول أولاً",
-          "warn"
-        );
+        toast("تنبيه", "يرجى تسجيل الدخول أولاً", "warn");
       }
     } catch (e) {
       toast("خطأ", e?.message || "فشل تشغيل الصفحة", "error");
