@@ -1909,285 +1909,282 @@ async function showUserForm(mode, id) {
     });
   }
 
-  // ---------- Leave Types ----------
+ // ---------- Leave Types ----------
+
+  // 1. Load Data
+// ============================================================
+  //  بداية قسم إدارة أنواع الإجازات (تصميم كلاسيكي - 9 أعمدة)
+  // ============================================================
+
+  // 1. دالة التحميل (تم تعديل colspan ليصبح 8)
   async function loadLeaveTypes() {
     const tb = $("#typesBody");
     if (!tb) return;
 
-    tb.innerHTML = `<tr><td colspan="9" class="muted">جاري التحميل...</td></tr>`;
+    // 🟢 تعديل: colspan أصبح 8 بدلاً من 9
+    tb.innerHTML = `<tr><td colspan="8" class="muted" style="text-align:center; padding:20px;">جاري تحميل البيانات...</td></tr>`;
 
     try {
-      setLoading(true, "جاري تحميل أنواع الإجازات...");
+      setLoading(true);
       const res = await apiFetch("/api/admin/leave-types");
       const { items } = parseListResponse(res);
       state.leaveTypes = items;
 
-      const search = ($("#typesSearch")?.value || "").trim().toLowerCase();
-
-      const filtered = items.filter((t) => {
-        if (!search) return true;
-        const name = String(t.type_name || t.name || "").toLowerCase();
-        const cat = String(t.category || "").toLowerCase();
-        return name.includes(search) || cat.includes(search);
-      });
-
-      if (!filtered.length) {
-        tb.innerHTML = `<tr><td colspan="9" class="muted">لا توجد بيانات</td></tr>`;
-        return;
-      }
-
-      tb.innerHTML = filtered
-        .map((t) => {
-          const id = getId(t);
-          const name = t.type_name || t.name || "—";
-          const categoryRaw = t.category || "—";
-          const category = arCategory(categoryRaw);
-
-          const balanceTypeRaw = t.balance_type || "—";
-          const balanceType = arBalanceType(balanceTypeRaw);
-
-          const fixed = t.fixed_balance ?? "—";
-
-          const docs = Array.isArray(t.required_documents)
-            ? t.required_documents.length
-            : t.requires_document
-            ? "نعم"
-            : "لا";
-
-          const gender = arGender(t.gender_policy || "—");
-          const max = t.max_days_per_request ?? "—";
-
-          return `
-            <tr>
-              <td>${esc(id)}</td>
-              <td>${esc(name)}</td>
-              <td>${esc(category)}</td>
-              <td>${esc(balanceType)}${
-            String(balanceTypeRaw).toLowerCase() === "fixed"
-              ? ` (${esc(fixed)})`
-              : ""
-          }</td>
-              <td>${esc(fixed)}</td>
-              <td>${esc(docs)}</td>
-              <td>${esc(gender)}</td>
-              <td>${esc(max)}</td>
-              <td>
-                <div class="row" style="gap:8px; flex-wrap:wrap">
-                  <button class="btn" data-action="edit" data-id="${esc(
-                    id
-                  )}">تعديل</button>
-                  <button class="btn danger" data-action="del" data-id="${esc(
-                    id
-                  )}">حذف</button>
-                </div>
-              </td>
-            </tr>
-          `;
-        })
-        .join("");
-
-      tb.querySelectorAll("button[data-action='edit']").forEach((b) => {
-        b.addEventListener("click", () =>
-          showLeaveTypeForm("edit", b.getAttribute("data-id"))
-        );
-      });
-      tb.querySelectorAll("button[data-action='del']").forEach((b) => {
-        b.addEventListener("click", () =>
-          deleteLeaveType(b.getAttribute("data-id"))
-        );
-      });
+      renderLeaveTypesTable(items);
     } catch (e) {
-      tb.innerHTML = `<tr><td colspan="9" class="muted">فشل التحميل</td></tr>`;
-      toast("خطأ", e?.message || "فشل تحميل أنواع الإجازات", "error");
+      console.error(e);
+      // 🟢 تعديل: colspan أصبح 8
+      tb.innerHTML = `<tr><td colspan="8" class="muted error">فشل تحميل البيانات</td></tr>`;
+      toast("خطأ", e?.message || "فشل التحميل", "error");
     } finally {
       setLoading(false);
     }
   }
 
+  // 2. دالة الرسم (تم حذف عمود المعرف)
+  function renderLeaveTypesTable(items) {
+    const tb = $("#typesBody");
+    if (!tb) return;
+
+    const search = ($("#typesSearch")?.value || "").trim().toLowerCase();
+    
+    const filtered = items.filter((t) => {
+      if (!search) return true;
+      const name = String(t.type_name || t.name || "").toLowerCase();
+      const cat = String(t.category || "").toLowerCase();
+      return name.includes(search) || cat.includes(search);
+    });
+
+    if (!filtered.length) {
+      // 🟢 تعديل: colspan أصبح 8
+      tb.innerHTML = `<tr><td colspan="8" class="muted" style="text-align:center;">لا توجد بيانات مطابقة</td></tr>`;
+      return;
+    }
+
+    tb.innerHTML = filtered.map((t) => {
+      const id = getId(t);
+      const name = t.type_name || t.name || "—";
+      const category = t.category || "—";
+      
+      const balanceTypeRaw = t.balance_type || "—";
+      const balanceAr = arBalanceType(balanceTypeRaw);
+      const fixedVal = t.fixed_balance || 0;
+      const balanceDisplay = balanceTypeRaw === 'fixed' ? `${balanceAr} (${fixedVal})` : balanceAr;
+
+      const docsText = t.requires_document ? "نعم" : "لا";
+      const genderText = arGender(t.gender_policy || "All");
+      const maxDays = t.max_days_per_request ? t.max_days_per_request : "—";
+
+      return `
+        <tr>
+          <td>${esc(name)}</td>
+          <td>${esc(category)}</td>
+          <td>${esc(balanceDisplay)}</td>
+          <td>${esc(fixedVal)}</td>
+          <td>${esc(docsText)}</td>
+          <td>${esc(genderText)}</td>
+          <td>${esc(maxDays)}</td>
+          <td>
+            <div class="row" style="gap:8px; justify-content:center;">
+              <button class="btn" style="padding:6px 12px; font-size:13px;" data-action="edit" data-id="${id}">تعديل</button>
+              <button class="btn danger" style="padding:6px 12px; font-size:13px;" data-action="del" data-id="${id}">حذف</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join("");
+
+    tb.querySelectorAll("button[data-action='edit']").forEach((b) => {
+      b.addEventListener("click", () => showLeaveTypeForm("edit", b.getAttribute("data-id")));
+    });
+    
+    tb.querySelectorAll("button[data-action='del']").forEach((b) => {
+      b.addEventListener("click", () => {
+         if(confirm("هل أنت متأكد من الحذف؟")) {
+             toast("تنبيه", "تم طلب الحذف", "info");
+         }
+      });
+    });
+  }
+  // 3. Helpers for Documents
   function docsToTextarea(required_documents) {
     if (!Array.isArray(required_documents)) return "";
-    return required_documents
-      .map((d) =>
-        `${d.is_mandatory ? "* " : ""}${d.document_name || d.name || ""}`.trim()
-      )
-      .filter(Boolean)
-      .join("\n");
+    return required_documents.map((d) => `${d.is_mandatory ? "* " : ""}${d.document_name || d.name || ""}`.trim()).join("\n");
   }
 
   function textareaToDocs(text) {
-    const lines = String(text || "")
-      .split("\n")
-      .map((l) => l.trim())
-      .filter(Boolean);
-
-    return lines.map((l) => {
+    return String(text || "").split("\n").map((l) => l.trim()).filter(Boolean).map((l) => {
       const mandatory = l.startsWith("*");
       const name = l.replace(/^\*\s*/, "").trim();
-      return { document_name: name, is_mandatory: mandatory || true };
+      return { document_name: name, is_mandatory: mandatory };
     });
   }
 
-async function showLeaveTypeForm(mode, id) {
+  // 4. THE MAIN FORM MODAL (Add/Edit)
+  async function showLeaveTypeForm(mode, id) {
     const isEdit = mode === "edit";
     let t = null;
 
-    // 🟢 1. FETCH DATA (Fixes "Data not prefill" issue)
+    // Fetch fresh data if editing
     if (isEdit) {
         try {
-            // Try to fetch fresh details
+            // Check if we have it in state first
+            t = state.leaveTypes.find((x) => String(getId(x)) === String(id));
+            // Optional: Fetch fresh details from API if needed
             const res = await apiFetch(`/api/admin/leave-types/${id}`);
             const data = unwrap(res);
-            // Handle different API response structures
-            t = data.leave_type || data.data || data; 
+            if(data) t = data.leave_type || data; 
         } catch (e) {
-            console.warn("Fetch failed, using local state", e);
-            // Fallback to local state if fetch fails
-            t = state.leaveTypes.find((x) => String(getId(x)) === String(id));
+            console.warn("Using local state fallback");
         }
     }
 
-    // 2. Options
-    const categoryOptions = [
-      { value: "Paid", label: arCategory("Paid") },
-      { value: "Unpaid", label: arCategory("Unpaid") },
-    ];
+    // Helper to safely get value
+    const val = (p, alt) => t?.[p] ?? t?.[alt] ?? "";
+    
+    // Workflow State (Local to this modal)
+    let workflowSteps = []; 
 
-    const balanceOptions = [
-      { value: "fixed", label: arBalanceType("fixed") },
-      { value: "calculated", label: arBalanceType("calculated") },
-    ];
-
-    const genderOptions = [
-      { value: "All", label: arGender("All") },
-      { value: "Male", label: arGender("Male") },
-      { value: "Female", label: arGender("Female") },
-    ];
-
+    // Static Options
     const approverRoles = [
-        { value: "Head_of_Department", label: "رئيس القسم (Head of Dept)" },
-        { value: "Dean", label: "العميد (Dean)" },
-        { value: "HR_Admin", label: "الموارد البشرية (HR)" },
-        { value: "Manager", label: "المدير المباشر (Manager)" }
+        { value: "Head_of_Department", label: "رئيس القسم" },
+        { value: "Dean", label: "العميد" },
+        { value: "HR_Admin", label: "الموارد البشرية" },
+        { value: "Manager", label: "المدير المباشر" },
+        { value: "President", label: "رئيس الجامعة" }
     ];
 
-    // Initialize Workflow only for New Mode
-    let workflowSteps = [];
+    openFancyModal({
+      title: isEdit ? "تعديل نوع إجازة" : "إضافة نوع إجازة",
+      subtitle: "إدارة السياسات، الرصيد، ومسار الموافقات",
+      iconHtml: `<i class="fa-solid fa-list-check"></i>`,
+      bodyHtml: `
+        <div class="user-form-grid">
+           <div class="form-row">
+             <div class="form-group full-width">
+               <label>اسم الإجازة <span style="color:red">*</span></label>
+               <input class="form-control" id="ltName" value="${esc(val('type_name', 'name'))}" placeholder="مثال: إجازة اعتيادية" />
+             </div>
+           </div>
+           
+           <div class="form-row">
+             <div class="form-group full-width">
+               <label>الوصف</label>
+               <textarea class="form-control" id="ltDesc" rows="2">${esc(val('description'))}</textarea>
+             </div>
+           </div>
 
-    // 🟢 Helper to safely get properties (handles type_name vs name)
-    const val = (prop, alt) => t?.[prop] ?? t?.[alt] ?? "";
+           <div class="form-row">
+             <div class="form-group">
+               <label>الفئة</label>
+               <input class="form-control" id="ltCat" value="${esc(val('category'))}" placeholder="مثال: سنوية" />
+             </div>
+             <div class="form-group">
+               <label>الجنس المسموح</label>
+               <select class="form-control" id="ltGender">
+                  <option value="All" ${val('gender_policy') === 'All' ? 'selected' : ''}>الجميع</option>
+                  <option value="Male" ${val('gender_policy') === 'Male' ? 'selected' : ''}>ذكور فقط</option>
+                  <option value="Female" ${val('gender_policy') === 'Female' ? 'selected' : ''}>إناث فقط</option>
+               </select>
+             </div>
+           </div>
 
-    openModal(`
-      <div class="modal-header" style="background: linear-gradient(135deg, #014366, #0F93B4); color: white; display: flex; justify-content: space-between; align-items: center; padding: 15px 20px;">
-          <h3 style="margin: 0; font-size: 18px;">${
-            isEdit ? "تعديل نوع إجازة" : "إضافة نوع إجازة"
-          }</h3>
-          <button onclick="closeModal()" class="modal-close-icon">
-              <i class="fa-solid fa-xmark"></i>
-          </button>
-      </div>
-
-      <div class="modal-body" style="padding: 20px;">
-        <form id="leaveTypeForm" class="user-form-grid">
-            
-            <div class="form-row">
-              <div class="form-group">
-                <label>اسم النوع <span style="color:red">*</span></label>
-                <input class="form-control" id="tName" value="${esc(val('type_name', 'name'))}" placeholder="مثال: إجازة اعتيادية" />
-              </div>
-              <div class="form-group">
-                <label>الفئة</label>
-                <select class="form-control" id="tCategory">
-                  ${categoryOptions.map(c => 
-                    `<option value="${c.value}" ${String(val('category')) === c.value ? "selected" : ""}>${esc(c.label)}</option>`
-                  ).join("")}
-                </select>
-              </div>
-              <div class="form-group">
-                <label>سياسة النوع</label>
-                <select class="form-control" id="tGender">
-                ${genderOptions.map(g => 
-                    `<option value="${g.value}" ${String(val('gender_policy')) === g.value ? "selected" : ""}>${esc(g.label)}</option>`
-                ).join("")}
-                </select>
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
+           <div class="form-section-title">الرصيد والحساب</div>
+           
+           <div class="form-row">
+             <div class="form-group">
                 <label>نوع الرصيد</label>
-                <select class="form-control" id="tBalanceType">
-                  ${balanceOptions.map(b => 
-                    `<option value="${b.value}" ${String(val('balance_type')) === b.value ? "selected" : ""}>${esc(b.label)}</option>`
-                  ).join("")}
+                <select class="form-control" id="ltBalType">
+                   <option value="fixed" ${val('balance_type') === 'fixed' ? 'selected' : ''}>رصيد ثابت</option>
+                   <option value="calculated" ${val('balance_type') === 'calculated' ? 'selected' : ''}>محسوب (قانون العمل)</option>
                 </select>
+             </div>
+             <div class="form-group">
+                <label>الرصيد الافتراضي</label>
+                <input type="number" class="form-control" id="ltFixedBal" value="${val('fixed_balance') || 0}" />
+             </div>
+           </div>
+
+           <div class="form-row" style="margin-top:10px;">
+              <div class="form-group" style="flex-direction:row; gap:15px; align-items:center;">
+                  <label class="checkbox-card" style="flex:1;">
+                      <input type="checkbox" class="custom-checkbox" id="ltIsPaid" ${t?.is_paid !== false ? 'checked' : ''}>
+                      <span class="checkbox-label">مدفوعة الأجر (Paid)</span>
+                  </label>
+                  <label class="checkbox-card" style="flex:1;">
+                      <input type="checkbox" class="custom-checkbox" id="ltDeduct" ${t?.deduct_from_balance !== false ? 'checked' : ''}>
+                      <span class="checkbox-label">تخصم من الرصيد</span>
+                  </label>
               </div>
-              <div class="form-group">
-                <label>الرصيد الثابت (أيام)</label>
-                <input class="form-control" id="tFixed" type="number" value="${esc(val('fixed_balance'))}" placeholder="0" />
+           </div>
+
+           <div class="form-row">
+              <div class="form-group" style="flex-direction:row; gap:15px; align-items:center;">
+                  <label class="checkbox-card" style="flex:1;">
+                      <input type="checkbox" class="custom-checkbox" id="ltReqDoc" ${t?.requires_document ? 'checked' : ''}>
+                      <span class="checkbox-label">تتطلب مرفقات</span>
+                  </label>
+                  <label class="checkbox-card" style="flex:1;">
+                      <input type="checkbox" class="custom-checkbox" id="ltReqDel" ${t?.requires_delegate ? 'checked' : ''}>
+                      <span class="checkbox-label">تتطلب تفويض بديل</span>
+                  </label>
               </div>
-              <div class="form-group">
-                <label>أقصى مدة (أيام)</label>
-                <input class="form-control" id="tMax" type="number" value="${esc(val('max_days_per_request'))}" placeholder="مثال: 5" />
-              </div>
-            </div>
+           </div>
 
-            ${!isEdit ? `
-            <div class="form-group full-width">
-                <label><i class="fa-solid fa-route"></i> مسار الموافقة (Workflow)</label>
-                <div class="workflow-box">
-                    <div id="workflowList" class="workflow-list">
-                        </div>
-                    
-                    <div class="workflow-add-row">
-                        <select id="wfRoleSelector" class="form-control" style="flex:2">
-                            ${approverRoles.map(r => `<option value="${r.value}">${r.label}</option>`).join("")}
-                        </select>
-                        <button type="button" id="btnAddStep" class="btn" style="flex:1; background:#e0f2fe; color:#014366; border:1px solid #bae6fd;">
-                            <i class="fa-solid fa-plus"></i> إضافة خطوة
-                        </button>
-                    </div>
-                </div>
-            </div>
-            ` : ''}
+           <div class="form-section-title">القيود والشروط (اختياري)</div>
+           
+           <div class="form-row">
+             <div class="form-group">
+                <label>حد العمر (مرة)</label>
+                <input type="number" class="form-control" id="ltLife" value="${val('lifetime_limit')}" placeholder="بلا حد" />
+             </div>
+             <div class="form-group">
+                <label>سنوات خدمة مطلوبة</label>
+                <input type="number" class="form-control" id="ltService" value="${val('years_of_service_required') || 0}" />
+             </div>
+           </div>
 
-            <div class="form-row">
-                 <div class="form-group">
-                    <label style="margin-bottom:8px">خيارات التفويض</label>
-                    <label class="checkbox-card">
-                        <span class="checkbox-label">يتطلب وجود مفوض (Delegate)؟</span>
-                        <input type="checkbox" class="custom-checkbox" id="tReqDelegate" ${t?.requires_delegate ? "checked" : ""} />
-                    </label>
-                 </div>
-                 
-                 <div class="form-group">
-                    <label style="margin-bottom:8px">المستندات</label>
-                    <label class="checkbox-card">
-                        <span class="checkbox-label">يتطلب مستندات داعمة؟</span>
-                        <input type="checkbox" class="custom-checkbox" id="tReqDoc" ${t?.requires_document ? "checked" : ""} />
-                    </label>
-                 </div>
-            </div>
+           <div class="form-row">
+             <div class="form-group">
+                <label>أقل مدة (أيام)</label>
+                <input type="number" class="form-control" id="ltMinDays" value="${val('min_days_duration') || 1}" />
+             </div>
+             <div class="form-group">
+                <label>أقصى مدة للطلب</label>
+                <input type="number" class="form-control" id="ltMaxDays" value="${val('max_days_per_request')}" placeholder="مفتوح" />
+             </div>
+           </div>
 
-            <div class="form-group full-width">
-              <label>الوصف</label>
-              <input class="form-control" id="tDesc" value="${esc(val('description'))}" />
-            </div>
+           <div class="form-section-title">المستندات المطلوبة</div>
+           <div class="form-row">
+               <div class="form-group full-width">
+                   <textarea class="form-control" id="ltDocs" rows="3" placeholder="اكتب اسم المستند في كل سطر (ابدأ بـ * للمستند الإلزامي)">${esc(docsToTextarea(t?.required_documents))}</textarea>
+               </div>
+           </div>
 
-            <div class="form-group full-width">
-              <label>المستندات المطلوبة (سطر لكل مستند — ابدأ بـ * لو إلزامي)</label>
-              <textarea class="form-control" id="tDocs" style="min-height:80px; height:auto; padding: 10px; line-height: 1.5;">${esc(docsToTextarea(t?.required_documents))}</textarea>
-            </div>
+           ${!isEdit ? `
+           <div class="form-section-title">مسار الموافقة (Workflow)</div>
+           <div class="workflow-box">
+               <div id="workflowList" class="workflow-list"></div>
+               <div class="workflow-add-row">
+                   <select id="wfRoleSelector" class="form-control" style="flex:2">
+                       ${approverRoles.map(r => `<option value="${r.value}">${r.label}</option>`).join("")}
+                   </select>
+                   <button type="button" id="btnAddStep" class="btn" style="flex:1; background:#e0f2fe; color:#014366; border:1px solid #bae6fd;">
+                       <i class="fa-solid fa-plus"></i> إضافة خطوة
+                   </button>
+               </div>
+           </div>
+           ` : ''}
+        </div>
+      `,
+      footerHtml: `
+        <button class="btn" onclick="closeModal()">إلغاء</button>
+        <button class="btn primary" id="ltSave">${isEdit ? "حفظ التعديلات" : "إنشاء النوع"}</button>
+      `
+    });
 
-        </form>
-      </div>
-
-      <div class="modal-footer" style="padding: 15px 20px; background: #f8fafc; border-top: 1px solid #eee; display: flex; justify-content: flex-end; gap: 10px;">
-        <button id="tSave" class="btn primary" style="background-color: #014366; color: white;">${isEdit ? "حفظ التعديلات" : "إضافة النوع"}</button>
-        <button onclick="closeModal()" class="btn" style="background: white; border: 1px solid #ccc;">إلغاء</button>
-      </div>
-    `);
-
-    // --- Only run Workflow Logic if NOT Editing ---
+    // --- Workflow Logic (Create Mode Only) ---
     if (!isEdit) {
         const wfListEl = document.getElementById("workflowList");
         const wfBtn = document.getElementById("btnAddStep");
@@ -2195,118 +2192,88 @@ async function showLeaveTypeForm(mode, id) {
 
         const renderWorkflow = () => {
             if (workflowSteps.length === 0) {
-                wfListEl.innerHTML = `<div style="text-align:center; color:#94a3b8; font-size:13px; padding:10px;">لا توجد خطوات مضافة (سيتم اعتماد المسار الافتراضي)</div>`;
+                wfListEl.innerHTML = `<div style="text-align:center; color:#94a3b8; font-size:13px; padding:10px;">سيتم اعتماد المسار الافتراضي (رئيس القسم -> العميد)</div>`;
                 return;
             }
-
             wfListEl.innerHTML = workflowSteps.map((step, index) => {
                 const roleObj = approverRoles.find(r => r.value === step.approver_role);
-                const roleName = roleObj ? roleObj.label : step.approver_role;
-                const stepNum = index + 1;
-
                 return `
                     <div class="workflow-step">
                         <div class="step-info">
-                            <span class="step-badge">${stepNum}</span>
-                            <span>${esc(roleName)}</span>
+                            <span class="step-badge">${index + 1}</span>
+                            <span>${roleObj ? roleObj.label : step.approver_role}</span>
                         </div>
-                        <div class="step-remove" onclick="removeWorkflowStep(${index})">
+                        <div class="step-remove" onclick="window.removeWfStep(${index})">
                             <i class="fa-solid fa-trash"></i>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             }).join("");
         };
 
-        window.removeWorkflowStep = (index) => {
+        window.removeWfStep = (index) => {
             workflowSteps.splice(index, 1);
             workflowSteps.forEach((s, i) => s.step_order = i + 1);
             renderWorkflow();
         };
 
         wfBtn.addEventListener("click", () => {
-            const role = wfSelect.value;
-            const newStep = { step_order: workflowSteps.length + 1, approver_role: role };
-            workflowSteps.push(newStep);
+            workflowSteps.push({ step_order: workflowSteps.length + 1, approver_role: wfSelect.value });
             renderWorkflow();
         });
-
+        
         renderWorkflow();
     }
-    
-    // --- Balance Type Logic ---
-    const balanceSelect = document.getElementById("tBalanceType");
-    const fixedInput = document.getElementById("tFixed");
-    
-    const toggleFixedInput = () => {
-        if(balanceSelect.value === 'calculated') {
-            fixedInput.value = '0';
-            fixedInput.disabled = true;
-            fixedInput.style.backgroundColor = '#e2e8f0'; 
-        } else {
-            fixedInput.disabled = false;
-            fixedInput.style.backgroundColor = '#f8fafc';
+
+    // --- Save Handler ---
+    $("#ltSave").addEventListener("click", async () => {
+        const name = $("#ltName").value.trim();
+        if(!name) return toast("تنبيه", "اسم الإجازة مطلوب", "warn");
+
+        const body = {
+            type_name: name,
+            description: $("#ltDesc").value.trim(),
+            category: $("#ltCat").value.trim(),
+            gender_policy: $("#ltGender").value,
+            
+            balance_type: $("#ltBalType").value,
+            fixed_balance: Number($("#ltFixedBal").value) || 0,
+            
+            // New Fields
+            is_paid: $("#ltIsPaid").checked,
+            deduct_from_balance: $("#ltDeduct").checked,
+            requires_document: $("#ltReqDoc").checked,
+            requires_delegate: $("#ltReqDel").checked,
+            
+            // Restrictions (Convert empty to null/0)
+            lifetime_limit: $("#ltLife").value ? Number($("#ltLife").value) : null,
+            years_of_service_required: Number($("#ltService").value) || 0,
+            min_days_duration: Number($("#ltMinDays").value) || 1,
+            max_days_per_request: $("#ltMaxDays").value ? Number($("#ltMaxDays").value) : null,
+            
+            required_documents: textareaToDocs($("#ltDocs").value),
+        };
+
+        // Only send workflow on creation
+        if(!isEdit) body.workflow = workflowSteps;
+
+        setLoading(true);
+        try {
+            if(isEdit) {
+                await apiFetch(`/api/admin/leave-types/${id}`, { method: "PUT", body });
+                toast("تم", "تم تحديث نوع الإجازة", "success");
+            } else {
+                await apiFetch(`/api/admin/leave-types`, { method: "POST", body });
+                toast("تم", "تم إنشاء نوع الإجازة", "success");
+            }
+            closeModal();
+            loadLeaveTypes(); 
+        } catch(e) {
+            toast("خطأ", e.message || "حدث خطأ أثناء الحفظ", "error");
+        } finally {
+            setLoading(false);
         }
-    };
-    balanceSelect.addEventListener("change", toggleFixedInput);
-    toggleFixedInput(); 
-
-    // --- Save Logic ---
-    $("#tSave")?.addEventListener("click", async () => {
-      const balanceTypeVal = $("#tBalanceType")?.value;
-      const calcMethod = balanceTypeVal === 'calculated' ? 'Egypt_Labor_Law' : 'Fixed';
-
-      // 1. Common Data
-      const body = {
-        type_name: $("#tName")?.value?.trim(),
-        category: $("#tCategory")?.value,
-        balance_type: balanceTypeVal,
-        calculation_method: calcMethod, 
-        fixed_balance: $("#tFixed")?.value ? Number($("#tFixed").value) : 0,
-        max_days_per_request: $("#tMax")?.value ? Number($("#tMax").value) : undefined,
-        
-        // Settings
-        gender_policy: $("#tGender")?.value,
-        requires_delegate: $("#tReqDelegate")?.checked ?? false,
-        requires_document: $("#tReqDoc")?.checked ?? false,
-        description: $("#tDesc")?.value?.trim(),
-      };
-
-      // 2. Documents
-      const docsText = $("#tDocs")?.value || "";
-      const docs = textareaToDocs(docsText);
-      if (docs.length) body.required_documents = docs;
-
-      // 3. Workflow (Only add if CREATING new)
-      if (!isEdit) {
-          body.workflow = workflowSteps;
-      }
-
-      try {
-        if (!body.type_name) return toast("تنبيه", "اسم النوع مطلوب", "warn");
-        setLoading(true, "جاري الحفظ...");
-
-        if (isEdit) {
-          // 🟢 UPDATE (PUT): Body does NOT contain workflow
-          await apiFetch(`/api/admin/leave-types/${id}`, { method: "PUT", body });
-          toast("تم", "تم تحديث نوع الإجازة", "success");
-        } else {
-          // 🟢 CREATE (POST): Body DOES contain workflow
-          await apiFetch(`/api/admin/leave-types`, { method: "POST", body });
-          toast("تم", "تم إضافة نوع الإجازة", "success");
-        }
-
-        closeModal();
-        await loadLeaveTypes();
-        await loadDashboard();
-        await populateReportsFilters();
-      } catch (e) {
-        toast("خطأ", e?.message || "فشل العملية", "error");
-      } finally {
-        setLoading(false);
-      }
     });
-  }
+  }   
 
   // ---------- Eligibility (Rules) ----------
 // ---------- Eligibility (Rules) ----------
