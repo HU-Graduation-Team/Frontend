@@ -1741,3 +1741,277 @@ td {
     justify-content: center;
   }
 }
+
+/* 1. Ensure the header aligns items correctly (Title Right, X Left) */
+.modal-header {
+    display: flex;
+    justify-content: space-between; /* Pushes items to edges */
+    align-items: center;
+    padding: 15px 20px;
+    background: linear-gradient(135deg, #014366, #0F93B4);
+    color: white;
+    border-radius: 8px 8px 0 0;
+}
+
+/* 2. Style the Close Button */
+.modal-close-icon {
+    background: rgba(255, 255, 255, 0.1); /* Subtle transparent white */
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%; /* Circular */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 16px;
+
+    /* 🟢 FORCE LEFT POSITIONING IN RTL */
+    margin-right: auto; /* Pushes it away from the Title (Right) to the Left */
+    margin-left: 0;
+}
+
+/* 3. Hover Effect */
+.modal-close-icon:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: rotate(90deg); /* Nice spin effect */
+    border-color: white;
+}
+
+/* 4. Ensure Title is Bold */
+.modal-header h3, 
+.modal-header h2 {
+    margin: 0;
+    font-weight: 800;
+    font-size: 18px;
+    letter-spacing: 0.5px;
+}
+
+/* 1. Make the Modal Box WIDER */
+/* This fixes the narrow look and allows 2 columns to fit comfortably */
+.modal .box {
+    width: min(850px, 95vw) !important; /* Increased width */
+    max-width: 100% !important;
+}
+
+/* 2. Grid Layout container */
+.user-form-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px; /* Spacing between rows */
+}
+
+/* 3. Force Side-by-Side Rows */
+.form-row {
+    display: flex;
+    gap: 20px; /* Space between the left and right input */
+    align-items: flex-start;
+}
+
+/* 4. Input Groups (50% Width) */
+.form-group {
+    flex: 1; /* This forces them to be equal width */
+    width: 100%; /* Ensure it fills the flex space */
+    display: flex;
+    flex-direction: column;
+}
+
+/* 5. Full Width for specific fields (like Password) */
+.form-group.full-width {
+    flex: 100%;
+}
+
+/* 6. Pretty Labels */
+.form-group label {
+    font-weight: 700;
+    font-size: 13px;
+    margin-bottom: 6px;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* 7. Better Input Styling */
+.form-control {
+    padding: 10px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 14px;
+    background-color: #f8fafc; /* Slight gray background looks modern */
+    transition: all 0.2s;
+    height: 50px; /* Uniform height */
+}
+
+.form-control:focus {
+    background-color: #fff;
+    border-color: #0F93B4;
+    box-shadow: 0 0 0 3px rgba(15, 147, 180, 0.1);
+    outline: none;
+}
+
+/* 8. Add Section Dividers (Optional but nice) */
+/* You can add <h4 class="form-section">...</h4> in HTML between rows */
+.form-section {
+    font-size: 14px;
+    color: #0F93B4;
+    border-bottom: 1px dashed #cbd5e1;
+    padding-bottom: 5px;
+    margin-top: 10px;
+    margin-bottom: 5px;
+}
+
+/* 📱 Mobile Responsive: Stack them only on small phones */
+@media (max-width: 700px) {
+    .form-row {
+        flex-direction: column;
+        gap: 12px;
+    }
+    .modal .box {
+        width: 95vw !important;
+        margin-top: 10vh;
+    }
+}
+
+/* =========================================
+   🔀 WORKFLOW BUILDER STYLES
+   ========================================= */
+.workflow-box {
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background-color: #f8fafc;
+    padding: 15px;
+}
+
+.workflow-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.workflow-step {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: white;
+    border: 1px solid #e2e8f0;
+    padding: 10px 12px;
+    border-radius: 6px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.step-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    color: #1e293b;
+    font-size: 14px;
+}
+
+.step-badge {
+    background: #014366;
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+}
+
+.step-remove {
+    color: #ef4444;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+.step-remove:hover {
+    background: #fee2e2;
+}
+
+.workflow-add-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+/* =========================================
+   ✨ MODERN CHECKBOX CARDS
+   ========================================= */
+
+/* The Card Container */
+.checkbox-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* Space betwen text and box */
+    padding: 0 15px;
+    height: 54px; /* Slightly taller */
+    border: 1px solid #cbd5e1;
+    border-radius: 10px; /* Softer corners */
+    background-color: #fff;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    position: relative;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+}
+
+/* Hover Effect */
+.checkbox-card:hover {
+    border-color: #0F93B4;
+    background-color: #f0f9ff;
+    transform: translateY(-1px);
+}
+
+/* When Checked (We use JS or :has selector if supported, but simple CSS logic for input) */
+.checkbox-card input:checked + .card-content {
+    color: #014366;
+    font-weight: 800;
+}
+
+/* Customizing the Checkbox itself to look like a Toggle */
+.custom-checkbox {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 24px;
+    height: 24px;
+    border: 2px solid #cbd5e1;
+    border-radius: 6px;
+    background-color: #fff;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s;
+}
+
+.custom-checkbox:checked {
+    background-color: #0F93B4; /* Brand Color */
+    border-color: #0F93B4;
+}
+
+/* The checkmark symbol */
+.custom-checkbox:checked::after {
+    content: '✔';
+    font-size: 14px;
+    color: white;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-weight: bold;
+}
+
+/* Label Text */
+.checkbox-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #334155;
+    user-select: none;
+    flex-grow: 1;
+    margin-left: 10px; /* Space between text and box */
+}

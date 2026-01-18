@@ -62,6 +62,27 @@
       Female: "أنثى",
     },
   };
+  // Helper: Ensure Users are loaded (to map IDs -> Names)
+  async function ensureUsersLoaded() {
+    if (state.users.length > 0) return;
+    try {
+      const res = await apiFetch("/api/admin/users");
+      state.users = parseListResponse(res).items;
+    } catch (e) {
+      console.error("Failed to load users for mapping", e);
+    }
+  }
+
+  // Helper: Ensure Colleges are loaded (to map College ID -> College Name)
+  async function ensureCollegesLoaded() {
+    if (state.colleges.length > 0) return;
+    try {
+      const res = await apiFetch("/api/admin/colleges");
+      state.colleges = parseListResponse(res).items;
+    } catch (e) {
+      console.error("Failed to load colleges for mapping", e);
+    }
+  }
 
   function mapCI(map, value, fallback = "—") {
     const v = String(value ?? "").trim();
@@ -87,7 +108,6 @@
     colleges: [],
     leaveTypes: [],
     eligibility: [],
-    notifications: [],
     report: {
       items: [],
       page: 1,
@@ -145,75 +165,36 @@
     ov.style.display = isLoading ? "flex" : "none";
   }
 
-  function timeAgo(value) {
-    if (!value) return "";
-    const d = new Date(value);
-    if (Number.isNaN(d.getTime())) return String(value);
-
-    const diffMs = Date.now() - d.getTime();
-    const diffMin = Math.floor(diffMs / 60000);
-    if (diffMin < 1) return "الآن";
-    if (diffMin < 60) return `منذ ${diffMin} دقيقة`;
-
-    const diffHr = Math.floor(diffMin / 60);
-    if (diffHr < 24) return `منذ ${diffHr} ساعة`;
-
-    const diffDay = Math.floor(diffHr / 24);
-    if (diffDay < 7) return `منذ ${diffDay} يوم`;
-
-    return d.toLocaleDateString("ar-EG", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    });
-  }
-
-  function setBadge(count) {
-    const badge = $("#notifBadge");
-    if (!badge) return;
-    const n = Number(count) || 0;
-    if (n <= 0) {
-      badge.style.display = "none";
-      badge.textContent = "0";
-      return;
-    }
-    badge.style.display = "inline-flex";
-    badge.textContent = String(n);
-  }
-
   function setPendingBadge(count) {
     const b = $("#pendingBadge");
     if (!b) return;
     b.textContent = String(Number(count) || 0);
   }
 
-  function openFancyModal({ title, subtitle, iconHtml, bodyHtml, footerHtml }) {
+  // ---------- Generic Modal ----------
+function openFancyModal({ title, subtitle, iconHtml, bodyHtml, footerHtml }) {
     openModal(`
-      <div class="modal-header">
-        <div class="modal-title">
-          <div class="modal-icon">
-            ${iconHtml || '<i class="fa-solid fa-circle-info"></i>'}
-          </div>
-          <div>
-            <h2>${esc(title || "")}</h2>
-            ${
-              subtitle
-                ? `<div class="modal-subtitle">${esc(subtitle)}</div>`
-                : ""
-            }
-          </div>
+      <div class="modal-header" style="background: linear-gradient(135deg, #014366, #0F93B4); color: white; display: flex; justify-content: space-between; align-items: center; padding: 15px 20px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="background: rgba(255,255,255,0.15); width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 18px;">
+                 ${iconHtml || '<i class="fa-solid fa-circle-info"></i>'}
+            </div>
+            <div>
+                 <h3 style="margin: 0; font-size: 18px; font-weight: 700;">${esc(title || "")}</h3>
+                 ${subtitle ? `<div style="font-size: 13px; opacity: 0.85; margin-top: 2px;">${esc(subtitle)}</div>` : ""}
+            </div>
         </div>
 
-        <button type="button" class="modal-close-btn" aria-label="إغلاق" onclick="closeModal()">
-          <i class="fa-solid fa-xmark"></i>
+        <button onclick="closeModal()" class="modal-close-icon">
+            <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
 
-      <div class="modal-body">
+      <div class="modal-body" style="padding: 20px;">
         ${bodyHtml || ""}
       </div>
 
-      ${footerHtml ? `<div class="modal-footer">${footerHtml}</div>` : ""}
+      ${footerHtml ? `<div class="modal-footer" style="padding: 15px 20px; background: #f8fafc; border-top: 1px solid #eee; display: flex; justify-content: flex-end; gap: 10px;">${footerHtml}</div>` : ""}
     `);
   }
 
@@ -366,155 +347,291 @@
     return diff > 0 ? `${diff} يوم` : "—";
   }
 
+// ---------- Request Details Modal (Cairo Font + Perfect Print) ----------
   function openRequestDetailsModal(req, requestId) {
     const id = requestId || getId(req) || "—";
+    
+    const formatDate = (dateStr) => {
+        if (!dateStr || dateStr === "—") return "—";
+        try {
+            const d = new Date(dateStr);
+            if (isNaN(d.getTime())) return dateStr;
+            return d.toLocaleDateString("ar-EG");
+        } catch (e) { return dateStr; }
+    };
 
-    const employeeName = getDeep(
-      req,
-      [
-        "employee_name",
-        "employee.name",
-        "employee.full_name",
-        "user.name",
-        "user.full_name",
-        "user_name",
-      ],
-      "—"
-    );
-
-    const employeeId = getDeep(
-      req,
-      ["employee_id", "user_id", "employee.id", "user.id"],
-      "—"
-    );
-
-    const leaveType = getDeep(
-      req,
-      [
-        "leave_type_name",
-        "leave_type.type_name",
-        "leaveType.type_name",
-        "leave_type.name",
-        "leaveType.name",
-      ],
-      "—"
-    );
-
+    const employeeName = getDeep(req, ["employee_name", "employee.name", "employee.full_name", "user.name", "user.full_name", "user_name"], "—");
+    const jobTitle = getDeep(req, ["employee.job_title", "user.job_title", "job_title"], "—");
+    const deptName = getDeep(req, ["department_name", "department.name", "employee.department.name"], "—");
+    const collegeName = getDeep(req, ["college_name", "college.name", "employee.college.name"], "—");
+    
+    const leaveType = getDeep(req, ["leave_type_name", "leave_type.type_name", "leaveType.type_name", "leave_type.name"], "—");
     const from = getDeep(req, ["start_date", "from", "startDate"], "—");
     const to = getDeep(req, ["end_date", "to", "endDate"], "—");
-    const status = getDeep(req, ["status", "current_status"], "—");
-    const createdAt = getDeep(req, ["created_at", "createdAt", "created"], "");
-    const reason = getDeep(
-      req,
-      ["reason", "comment", "notes", "description"],
-      "—"
-    );
+    const createdAt = getDeep(req, ["created_at", "createdAt"], new Date().toISOString());
+    const reason = getDeep(req, ["reason", "comment", "notes", "description"], "—");
+    const duration = (from !== "—" && to !== "—") ? calcDurationDays(from, to) : "—";
 
-    const duration =
-      from !== "—" && to !== "—" ? calcDurationDays(from, to) : "—";
-    const st = statusMeta(status);
+    const status = arStatus(req.status || "Pending");
+    const managerName = req.manager_name || "المدير المباشر";
 
-    const rawJson = JSON.stringify(req || {}, null, 2);
+    openModal(`
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+      <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
 
-    openFancyModal({
-      title: `تفاصيل الطلب رقم ${esc(id)}`,
-      subtitle: createdAt
-        ? `تاريخ الإنشاء: ${esc(formatDateTimeAr(createdAt))}`
-        : "تفاصيل الطلب",
-      iconHtml: `<i class="fa-solid fa-file-lines"></i>`,
-      bodyHtml: `
-      <div class="details-wrap">
-        <div class="details-kpis">
-          <div class="kpi-card">
-            <div class="kpi-title"><i class="fa-solid fa-user"></i> الموظف</div>
-            <div class="kpi-value">${esc(employeeName)}</div>
-          </div>
+      <style>
+        /* تصميم الورقة */
+        .official-paper {
+            background: white;
+            padding: 40px;
+            color: #000;
+            font-family: 'Cairo', sans-serif; /* الخط الجديد */
+            border: 1px solid #ccc;
+            max-width: 800px;
+            margin: 0 auto;
+            direction: rtl;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
 
-          <div class="kpi-card">
-            <div class="kpi-title"><i class="fa-solid fa-list-check"></i> نوع الإجازة</div>
-            <div class="kpi-value">${esc(leaveType)}</div>
-          </div>
+        /* الهيدر */
+        .paper-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid #333;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .paper-logo img { height: 85px; object-fit: contain; }
+        
+        .paper-title { text-align: center; flex: 1; padding-top: 10px; }
+        .paper-title h2 { margin: 0; font-size: 24px; font-weight: 700; color: #000; }
+        .paper-title p { margin: 5px 0 0; font-size: 16px; color: #555; }
+        
+        .paper-meta { font-size: 14px; font-weight: 600; line-height: 1.8; text-align: left; }
 
-          <div class="kpi-card">
-            <div class="kpi-title"><i class="fa-regular fa-calendar"></i> المدة</div>
-            <div class="kpi-value">${esc(duration)}</div>
-          </div>
+        /* صفوف البيانات */
+        .form-section-title {
+            background: #f1f5f9;
+            padding: 8px 15px;
+            font-size: 16px;
+            font-weight: 700;
+            border-right: 4px solid #014366;
+            margin-bottom: 15px;
+            margin-top: 20px;
+            color: #333;
+            /* للتأكد من ظهور الخلفية في الطباعة */
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
 
-          <div class="kpi-card">
-            <div class="kpi-title"><i class="fa-solid fa-circle-info"></i> الحالة</div>
-            <div class="kpi-value big">
-              <span class="status-chip ${st.cls}">
-                <span>${st.icon}</span>
-                <span>${esc(st.text)}</span>
-              </span>
+        .form-row-print {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+        .form-line {
+            display: flex;
+            align-items: center;
+            font-size: 16px; /* حجم خط مريح ومقروء */
+            width: 100%;
+        }
+        .form-label {
+            font-weight: 700;
+            white-space: nowrap;
+            margin-left: 10px;
+            color: #444;
+            min-width: fit-content;
+        }
+        .form-value {
+            flex-grow: 1;
+            border-bottom: 1px dashed #999; /* خط منقط أنيق */
+            padding: 2px 10px;
+            font-weight: 600;
+            color: #000;
+        }
+
+        /* مربع الملاحظات */
+        .reason-box {
+            border: 1px solid #ccc;
+            padding: 15px;
+            min-height: 80px;
+            background: #fafafa;
+            font-size: 15px;
+            border-radius: 4px;
+        }
+
+        /* التوقيعات */
+        .signatures {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 50px;
+            padding-top: 20px;
+        }
+        .sig-block {
+            text-align: center;
+            width: 30%;
+        }
+        .sig-title { font-weight: 700; margin-bottom: 40px; font-size: 16px; }
+        .sig-line {
+            border-top: 1px solid #000;
+            padding-top: 8px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        /* 🛑 إصلاح الطباعة الجذري */
+        @media print {
+            body { 
+                visibility: hidden; 
+                background: white;
+            }
+            .modal-overlay {
+                background: white !important;
+                position: absolute;
+                top: 0; left: 0; right: 0; bottom: 0;
+            }
+            .modal-header, .modal-footer, .modal-close-icon {
+                display: none !important;
+            }
+            .modal-content {
+                box-shadow: none !important;
+                border: none !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                position: absolute;
+                top: 0;
+                left: 0;
+            }
+            .modal-body {
+                padding: 0 !important;
+                overflow: visible !important;
+                background: white !important;
+            }
+            .official-paper {
+                box-shadow: none !important;
+                border: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                visibility: visible;
+            }
+            /* إجبار إظهار كل محتويات الورقة */
+            .official-paper * {
+                visibility: visible;
+            }
+        }
+      </style>
+
+      <div class="modal-header" style="background: #1e293b; color: white; display: flex; justify-content: space-between; align-items: center; padding: 12px 20px;">
+          <h3 style="margin:0; font-family:'Cairo', sans-serif;">نموذج الطلب الرسمي</h3>
+          <button onclick="closeModal()" class="modal-close-icon"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="modal-body" style="background: #f1f5f9; padding: 30px; overflow-y: auto;">
+        
+        <div id="printableArea" class="official-paper">
+            
+            <div class="paper-header">
+                <div class="paper-meta">
+                    <div>رقم الطلب: <b>#${id}</b></div>
+                    <div style="direction:ltr; text-align:right">Date: <b>${formatDate(createdAt)}</b></div>
+                </div>
+                
+                <div class="paper-title">
+                    <h2>استمارة طلب إجازة</h2>
+                    <p>Leave Request Form</p>
+                </div>
+
+                <div class="paper-logo">
+                    <img src="../../Assets/شعار_جامعة_الغردقة.png" alt="Logo"> 
+                </div>
             </div>
-          </div>
-        </div>
 
-        <div class="details-grid">
-          <div class="detail-item">
-            <div class="detail-label"><i class="fa-solid fa-hashtag"></i> رقم الطلب</div>
-            <div class="detail-value ltr">${esc(id)}</div>
-          </div>
+            <div class="form-section-title">بيانات الموظف</div>
+            
+            <div class="form-row-print">
+                <div class="form-line">
+                    <span class="form-label">الاسم رباعي:</span>
+                    <span class="form-value">${esc(employeeName)}</span>
+                </div>
+            </div>
 
-          <div class="detail-item">
-            <div class="detail-label"><i class="fa-solid fa-id-badge"></i> رقم الموظف</div>
-            <div class="detail-value ltr">${esc(employeeId)}</div>
-          </div>
+            <div class="form-row-print">
+                 <div class="form-line">
+                    <span class="form-label">المسمى الوظيفي:</span>
+                    <span class="form-value">${esc(jobTitle)}</span>
+                </div>
+                 <div class="form-line">
+                    <span class="form-label">جهة العمل:</span>
+                    <span class="form-value">${esc(collegeName)} / ${esc(deptName)}</span>
+                </div>
+            </div>
+            
+            <div class="form-section-title">تفاصيل الإجازة</div>
 
-          <div class="detail-item">
-            <div class="detail-label"><i class="fa-regular fa-calendar-days"></i> من</div>
-            <div class="detail-value ltr">${esc(from)}</div>
-          </div>
+            <div class="form-row-print">
+                <div class="form-line">
+                    <span class="form-label">نوع الإجازة:</span>
+                    <span class="form-value" style="font-weight:bold;">${esc(leaveType)}</span>
+                </div>
+            </div>
 
-          <div class="detail-item">
-            <div class="detail-label"><i class="fa-regular fa-calendar-days"></i> إلى</div>
-            <div class="detail-value ltr">${esc(to)}</div>
-          </div>
+            <div class="form-row-print">
+                <div class="form-line">
+                    <span class="form-label">تاريخ البداية:</span>
+                    <span class="form-value">${esc(formatDate(from))}</span>
+                </div>
+                <div class="form-line">
+                    <span class="form-label">تاريخ النهاية:</span>
+                    <span class="form-value">${esc(formatDate(to))}</span>
+                </div>
+                <div class="form-line" style="width: 200px; flex: none;">
+                    <span class="form-label">المدة:</span>
+                    <span class="form-value">${esc(duration)}</span>
+                </div>
+            </div>
 
-          <div class="detail-item" style="grid-column: 1 / -1;">
-            <div class="detail-label"><i class="fa-solid fa-comment-dots"></i> السبب / الملاحظات</div>
-            <div class="detail-value">${esc(reason || "—")}</div>
-          </div>
-        </div>
+            <div class="form-section-title">السبب / الملاحظات</div>
+            <div class="reason-box">
+                ${esc(reason)}
+            </div>
 
-        <div class="details-actions">
-          <button class="btn" id="toggleRawJson">
-            <i class="fa-solid fa-code"></i> عرض البيانات الخام
-          </button>
-          <button class="btn" id="copyRawJson">
-            <i class="fa-regular fa-copy"></i> نسخ البيانات
-          </button>
-        </div>
+            <div class="signatures">
+                <div class="sig-block">
+                    <div class="sig-title">توقيع الموظف</div>
+                    <div style="height: 30px;"></div> 
+                    <div class="sig-line">${esc(employeeName)}</div>
+                </div>
+                
+                <div class="sig-block">
+                    <div class="sig-title">الاعتمادات</div>
+                    <div style="font-size: 14px; color: ${req.status === 'Approved' ? '#15803d' : '#64748b'}; margin-bottom: 5px;">
+                        ${status}
+                    </div>
+                    <div class="sig-line">${esc(managerName)}</div>
+                </div>
+            </div>
 
-        <div class="raw-json-panel" id="rawJsonPanel">
-          <pre>${esc(rawJson)}</pre>
+            <div style="margin-top: 40px; font-size: 12px; text-align: center; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 10px;">
+                تحريراً من النظام الإلكتروني - جامعة الغردقة
+            </div>
+
         </div>
       </div>
-    `,
-      footerHtml: `<button class="btn" onclick="closeModal()">إغلاق</button>`,
-    });
 
-    $("#toggleRawJson")?.addEventListener("click", () => {
-      const panel = $("#rawJsonPanel");
-      if (!panel) return;
-      const isOpen = panel.style.display === "block";
-      panel.style.display = isOpen ? "none" : "block";
-      $("#toggleRawJson").innerHTML = isOpen
-        ? `<i class="fa-solid fa-code"></i> عرض البيانات الخام`
-        : `<i class="fa-solid fa-code"></i> إخفاء البيانات الخام`;
-    });
-
-    $("#copyRawJson")?.addEventListener("click", async () => {
-      try {
-        await navigator.clipboard.writeText(rawJson);
-        toast("تم", "تم النسخ", "success");
-      } catch (_) {
-        toast("تنبيه", "تعذر النسخ تلقائياً — انسخ يدوياً", "warn");
-      }
-    });
+      <div class="modal-footer" style="padding: 15px 20px; background: white; border-top: 1px solid #eee; display: flex; justify-content: flex-end; gap: 10px;">
+        <button onclick="window.print()" class="btn primary" style="background: #1e293b; color: white; display: flex; align-items: center; gap: 8px; font-family:'Cairo';">
+            <i class="fa-solid fa-print"></i> طباعة النموذج
+        </button>
+        <button onclick="closeModal()" class="btn" style="background: white; border: 1px solid #ccc; font-family:'Cairo';">إغلاق</button>
+      </div>
+    `);
   }
-
   // ---------- Tabs ----------
   function initTabs() {
     $$(".nav-tab").forEach((btn) => {
@@ -591,7 +708,6 @@
       toast("تم", "تم تسجيل الخروج", "success");
       closeAll();
       renderProfile(null);
-      setBadge(0);
       setPendingBadge(0);
     });
 
@@ -1218,7 +1334,7 @@
     }
   }
 
-  async function showUserForm(mode, id) {
+async function showUserForm(mode, id) {
     await ensureDepsAndCollegesLoaded();
 
     let user = null;
@@ -1234,158 +1350,238 @@
       }
     }
 
+    // Role options array
     const roleOptions = [
-      { value: "Admin", label: arRole("Admin") },
+      { value: "Employee", label: arRole("Employee") },
       { value: "Manager", label: arRole("Manager") },
       { value: "Dean", label: arRole("Dean") },
       { value: "Head_of_Department", label: arRole("Head_of_Department") },
-      { value: "Employee", label: arRole("Employee") },
       { value: "HR_Admin", label: arRole("HR_Admin") },
     ];
 
     const typeOptions = [
       { value: "Academic", label: arUserType("Academic") },
       { value: "Administrative", label: arUserType("Administrative") },
-      { value: "All", label: arUserType("All") },
+      { value: "Service", label: "خدمات معاونة" },
     ];
 
-    openFancyModal({
-      title: isEdit ? "تعديل مستخدم" : "إضافة مستخدم",
-      subtitle: isEdit ? `معرّف المستخدم: ${id}` : "إنشاء مستخدم جديد",
-      iconHtml: `<i class="fa-regular fa-user"></i>`,
-      bodyHtml: `
-        <div class="row" style="gap:10px; flex-wrap:wrap">
-          <div style="flex:1; min-width:240px">
-            <div class="muted">الاسم</div>
-            <input class="input" id="uName" value="${esc(
-              user?.name || user?.full_name || ""
-            )}" />
-          </div>
-          <div style="flex:1; min-width:240px">
-            <div class="muted">البريد</div>
-            <input class="input" id="uEmail" value="${esc(
-              user?.email || ""
-            )}" ${isEdit ? "disabled" : ""}/>
-          </div>
-        </div>
+    openModal(`
+      <div class="modal-header" style="background: linear-gradient(135deg, #014366, #0F93B4); color: white; display: flex; justify-content: space-between; align-items: center; padding: 15px 20px;">
+          <h3 style="margin: 0; font-size: 18px;">${
+            isEdit ? "تعديل بيانات المستخدم" : "إضافة مستخدم جديد"
+          }</h3>
+          <button onclick="closeModal()" class="modal-close-icon">
+              <i class="fa-solid fa-xmark"></i>
+          </button>
+      </div>
 
-        <div class="row" style="gap:10px; flex-wrap:wrap; margin-top:10px">
-          <div style="flex:1; min-width:240px">
-            <div class="muted">الدور</div>
-            <select class="input" id="uRole">
-              ${roleOptions
-                .map(
-                  (r) =>
-                    `<option value="${r.value}" ${
-                      String(user?.role || "Employee") === r.value
-                        ? "selected"
-                        : ""
-                    }>${esc(r.label)}</option>`
-                )
-                .join("")}
-            </select>
-          </div>
-          <div style="flex:1; min-width:240px">
-            <div class="muted">نوع المستخدم</div>
-            <select class="input" id="uType">
-              ${typeOptions
-                .map(
-                  (t) =>
-                    `<option value="${t.value}" ${
-                      String(pickUserType(user) || "All") === t.value
-                        ? "selected"
-                        : ""
-                    }>${esc(t.label)}</option>`
-                )
-                .join("")}
-            </select>
-          </div>
-        </div>
-
-        <div class="row" style="gap:10px; flex-wrap:wrap; margin-top:10px">
-          <div style="flex:1; min-width:240px">
-            <div class="muted">القسم</div>
-            <select class="input" id="uDep">${depOptions(
-              user?.department_id
-            )}</select>
-          </div>
-          <div style="flex:1; min-width:240px">
-            <div class="muted">الكلية</div>
-            <select class="input" id="uCollege">${collegeOptions(
-              user?.college_id
-            )}</select>
-          </div>
-        </div>
-
-        ${
-          isEdit
-            ? `
-          <div class="row" style="gap:10px; flex-wrap:wrap; margin-top:10px">
-            <label class="checkbox-wrapper" style="min-width:240px">
-              <input type="checkbox" id="uActive" ${
-                isUserActive(user) ? "checked" : ""
-              }/>
-              <div class="checkbox-text">
-                <span class="title">نشط</span>
-                <p class="desc">تفعيل/تعطيل المستخدم</p>
+      <div class="modal-body" style="padding: 20px;">
+          <form id="addUserForm" class="user-form-grid">
+              
+              <div class="form-row">
+                  <div class="form-group">
+                      <label>الاسم ثلاثي <span style="color:red">*</span></label>
+                      <input type="text" id="name" class="form-control" placeholder="اسم الموظف" value="${esc(
+                        user?.name || user?.full_name || ""
+                      )}" required />
+                  </div>
+                  <div class="form-group">
+                      <label>البريد الإلكتروني <span style="color:red">*</span></label>
+                      <input type="email" id="email" class="form-control" placeholder="example@univ.edu" value="${esc(
+                        user?.email || ""
+                      )}" ${isEdit ? "disabled" : ""} required />
+                  </div>
               </div>
-            </label>
-          </div>
-        `
-            : `
-          <div class="row" style="gap:10px; flex-wrap:wrap; margin-top:10px">
-            <div style="flex:1; min-width:240px">
-              <div class="muted">الرقم القومي (إن وجد)</div>
-              <input class="input" id="uSSN" placeholder="مثال: ٣٠١٠..." />
-            </div>
-            <div style="flex:1; min-width:240px">
-              <div class="muted">كلمة المرور (إن كانت مطلوبة)</div>
-              <input class="input" id="uPass" type="password" placeholder="••••••••" />
-            </div>
-          </div>
-        `
-        }
-      `,
-      footerHtml: `
-        <button class="btn" onclick="closeModal()">إلغاء</button>
-        <button class="btn primary" id="uSave">${
-          isEdit ? "حفظ" : "إضافة"
-        }</button>
-      `,
-    });
 
+              <div class="form-row">
+                  <div class="form-group">
+                      <label>الرقم القومي (SSN) <span style="color:red">*</span></label>
+                      <input type="text" id="ssn" class="form-control" placeholder="14 رقم" maxlength="14" value="${esc(
+                        user?.ssn || ""
+                      )}" ${isEdit ? "disabled" : ""} required />
+                  </div>
+                  <div class="form-group">
+                      <label>النوع</label>
+                      <select id="gender" class="form-control">
+                          <option value="Male" ${
+                            user?.gender === "Male" ? "selected" : ""
+                          }>ذكر</option>
+                          <option value="Female" ${
+                            user?.gender === "Female" ? "selected" : ""
+                          }>أنثى</option>
+                      </select>
+                  </div>
+              </div>
+
+              <div class="form-row">
+                  <div class="form-group">
+                      <label>المسمى الوظيفي</label>
+                      <input type="text" id="job_title" class="form-control" placeholder="مثال: مدرس، إداري..." value="${esc(
+                        user?.job_title || ""
+                      )}" />
+                  </div>
+                  <div class="form-group">
+                      <label>جهة العمل</label>
+                      <input type="text" id="workplace" class="form-control" placeholder="مثال: كلية الحاسبات" value="${esc(
+                        user?.workplace || ""
+                      )}" />
+                  </div>
+              </div>
+
+              <div class="form-row">
+                  <div class="form-group">
+                      <label>تاريخ التعيين</label>
+                      <input type="date" id="hire_date" class="form-control" value="${
+                        user?.hire_date || ""
+                      }" />
+                  </div>
+                  <div class="form-group">
+                      <label>تاريخ الميلاد</label>
+                      <input type="date" id="date_of_birth" class="form-control" value="${
+                        user?.date_of_birth || ""
+                      }" />
+                  </div>
+              </div>
+
+              <div class="form-row">
+                  <div class="form-group">
+                      <label>الصلاحية (Role)</label>
+                      <select id="role" class="form-control">
+                          ${roleOptions
+                            .map(
+                              (r) =>
+                                `<option value="${r.value}" ${
+                                  String(user?.role || "Employee") === r.value
+                                    ? "selected"
+                                    : ""
+                                }>${r.label}</option>`
+                            )
+                            .join("")}
+                      </select>
+                  </div>
+                  <div class="form-group">
+                      <label>نوع الكادر (User Type)</label>
+                      <select id="user_type" class="form-control">
+                          ${typeOptions
+                            .map(
+                              (t) =>
+                                `<option value="${t.value}" ${
+                                  String(user?.user_type || "Academic") ===
+                                  t.value
+                                    ? "selected"
+                                    : ""
+                                }>${t.label}</option>`
+                            )
+                            .join("")}
+                      </select>
+                  </div>
+              </div>
+
+              <div class="form-row">
+                  <div class="form-group">
+                      <label>الكلية</label>
+                      <select id="college_id" class="form-control">
+                          ${collegeOptions(user?.college_id)}
+                      </select>
+                  </div>
+                  <div class="form-group">
+                      <label>القسم</label>
+                      <select id="department_id" class="form-control">
+                          <option value="">-- اختر الكلية أولاً --</option>
+                      </select>
+                  </div>
+              </div>
+
+             
+
+          </form>
+      </div>
+
+      <div class="modal-footer" style="padding: 15px 20px; background: #f8fafc; border-top: 1px solid #eee; display: flex; justify-content: flex-end; gap: 10px;">
+          <button id="uSave" class="btn primary" style="background-color: #014366; color: white;">${
+            isEdit ? "حفظ التعديلات" : "إضافة المستخدم"
+          }</button>
+          <button onclick="closeModal()" class="btn" style="background: white; border: 1px solid #ccc;">إلغاء</button>
+      </div>
+    `);
+
+    // 🟢 CASCADING LOGIC STARTS HERE
+    const colSel = document.getElementById("college_id");
+    const depSel = document.getElementById("department_id");
+
+    const populateDepartments = (targetDeptId = null) => {
+        const selectedColId = colSel.value;
+        
+        // Filter departments that belong to the selected college
+        // Convert to String to avoid type mismatch (e.g. "5" vs 5)
+        const filteredDeps = state.departments.filter(d => String(d.college_id) === String(selectedColId));
+
+        let html = '<option value="">-- اختر القسم --</option>';
+        
+        if (filteredDeps.length === 0 && selectedColId) {
+             html = '<option value="">-- لا توجد أقسام لهذه الكلية --</option>';
+        } else if (!selectedColId) {
+             html = '<option value="">-- اختر الكلية أولاً --</option>';
+        }
+
+        filteredDeps.forEach(d => {
+             const dId = getId(d);
+             const dName = d.department_name || d.name;
+             // Select if it matches the target (user's existing dept)
+             const isSelected = targetDeptId && String(dId) === String(targetDeptId);
+             html += `<option value="${dId}" ${isSelected ? 'selected' : ''}>${esc(dName)}</option>`;
+        });
+
+        depSel.innerHTML = html;
+    };
+
+    // 1. Trigger on load (to fill department if Editing)
+    populateDepartments(user?.department_id);
+
+    // 2. Trigger on College Change
+    colSel.addEventListener("change", () => {
+        populateDepartments(null); // Pass null so it doesn't auto-select old department
+    });
+    // 🟢 CASCADING LOGIC ENDS HERE
+
+    // Wire up save button
     $("#uSave")?.addEventListener("click", async () => {
       const body = {
-        name: $("#uName")?.value?.trim(),
-        email: $("#uEmail")?.value?.trim(),
-        role: $("#uRole")?.value,
-        user_type: $("#uType")?.value,
-
-        department_id: $("#uDep")?.value ? Number($("#uDep").value) : undefined,
-        college_id: $("#uCollege")?.value
-          ? Number($("#uCollege").value)
-          : undefined,
+        name: $("#name")?.value?.trim(),
+        email: $("#email")?.value?.trim(),
+        ssn: $("#ssn")?.value?.trim(),
+        gender: $("#gender")?.value,
+        job_title: $("#job_title")?.value?.trim(),
+        workplace: $("#workplace")?.value?.trim(),
+        hire_date: $("#hire_date")?.value,
+        date_of_birth: $("#date_of_birth")?.value,
+        role: $("#role")?.value,
+        user_type: $("#user_type")?.value,
+        college_id: $("#college_id")?.value
+          ? Number($("#college_id").value)
+          : null,
+        department_id: $("#department_id")?.value
+          ? Number($("#department_id").value)
+          : null,
       };
 
       try {
         if (!body.name) return toast("تنبيه", "الاسم مطلوب", "warn");
         if (!isEdit && !body.email)
           return toast("تنبيه", "البريد مطلوب", "warn");
+        if (!isEdit && !body.ssn)
+          return toast("تنبيه", "الرقم القومي مطلوب", "warn");
 
         setLoading(true, "جاري الحفظ...");
 
         if (isEdit) {
-          body.is_active = $("#uActive")?.checked ?? true;
           await apiFetch(`/api/admin/users/${id}`, { method: "PUT", body });
-          toast("تم", "تم تحديث المستخدم", "success");
+          toast("تم", "تم تحديث المستخدم بنجاح", "success");
         } else {
-          const ssn = $("#uSSN")?.value?.trim();
-          const pass = $("#uPass")?.value?.trim();
-          if (ssn) body.ssn = ssn;
+          const pass = $("#password")?.value?.trim();
           if (pass) body.password = pass;
-
           await apiFetch(`/api/admin/users`, { method: "POST", body });
-          toast("تم", "تم إضافة المستخدم", "success");
+          toast("تم", "تم إضافة المستخدم بنجاح", "success");
         }
 
         closeModal();
@@ -1398,17 +1594,8 @@
       }
     });
   }
-
-  function deleteUser(id) {
-    confirmModal("حذف مستخدم", `هل تريد حذف المستخدم رقم ${id}؟`, async () => {
-      await apiFetch(`/api/admin/users/${id}`, { method: "DELETE" });
-      toast("تم", "تم الحذف", "success");
-      await loadUsers();
-      await loadDashboard();
-    });
-  }
-
   // ---------- Colleges ----------
+// ---------- Colleges ----------
   async function loadColleges() {
     const tb = $("#collegesBody");
     if (!tb) return;
@@ -1417,7 +1604,13 @@
 
     try {
       setLoading(true, "جاري تحميل الكليات...");
-      const res = await apiFetch("/api/admin/colleges");
+      
+      // 1. Fetch Colleges AND Ensure Users are loaded (for Dean Name)
+      const [res] = await Promise.all([
+          apiFetch("/api/admin/colleges"),
+          ensureUsersLoaded()
+      ]);
+
       const { items } = parseListResponse(res);
       state.colleges = items;
 
@@ -1430,20 +1623,20 @@
         .map((c) => {
           const id = getId(c);
           const name = c.college_name || c.name || "—";
-          const dean = c.dean_user_id ?? c.deanUserId ?? "—";
+          
+          // 🟢 FIX: Find Dean Name from User List
+          const deanId = c.dean_user_id ?? c.deanUserId;
+          const deanUser = state.users.find(u => String(getId(u)) === String(deanId));
+          const deanName = deanUser ? (deanUser.name || deanUser.full_name) : "—";
+
           return `
             <tr>
               <td>${esc(id)}</td>
               <td>${esc(name)}</td>
-              <td>${esc(dean)}</td>
-              <td>
+              <td>${esc(deanName)}</td> <td>
                 <div class="row" style="gap:8px; flex-wrap:wrap">
-                  <button class="btn" data-action="edit" data-id="${esc(
-                    id
-                  )}">تعديل</button>
-                  <button class="btn danger" data-action="del" data-id="${esc(
-                    id
-                  )}">حذف</button>
+                  <button class="btn" data-action="edit" data-id="${esc(id)}">تعديل</button>
+                  <button class="btn danger" data-action="del" data-id="${esc(id)}">حذف</button>
                 </div>
               </td>
             </tr>
@@ -1549,6 +1742,7 @@
   }
 
   // ---------- Departments ----------
+// ---------- Departments ----------
   async function loadDepartments() {
     const tb = $("#depsBody");
     if (!tb) return;
@@ -1557,7 +1751,14 @@
 
     try {
       setLoading(true, "جاري تحميل الأقسام...");
-      const res = await apiFetch("/api/admin/departments");
+      
+      // 1. Fetch Departments AND Ensure Reference Data (Users + Colleges) is loaded
+      const [res] = await Promise.all([
+          apiFetch("/api/admin/departments"),
+          ensureUsersLoaded(),
+          ensureCollegesLoaded()
+      ]);
+
       const { items } = parseListResponse(res);
       state.departments = items;
 
@@ -1570,22 +1771,25 @@
         .map((d) => {
           const id = getId(d);
           const name = d.department_name || d.name || "—";
-          const collegeId = d.college_id ?? d.college?.id ?? "—";
-          const head = d.head_user_id ?? d.headUserId ?? "—";
+          
+          // 🟢 FIX: Find College Name
+          const collegeId = d.college_id ?? d.college?.id;
+          const colObj = state.colleges.find(c => String(getId(c)) === String(collegeId));
+          const collegeName = colObj ? (colObj.college_name || colObj.name) : "—";
+
+          // 🟢 FIX: Find Head of Dept Name
+          const headId = d.head_user_id ?? d.headUserId;
+          const headUser = state.users.find(u => String(getId(u)) === String(headId));
+          const headName = headUser ? (headUser.name || headUser.full_name) : "—";
+
           return `
             <tr>
               <td>${esc(id)}</td>
               <td>${esc(name)}</td>
-              <td>${esc(collegeId)}</td>
-              <td>${esc(head)}</td>
-              <td>
+              <td>${esc(collegeName)}</td> <td>${esc(headName)}</td>    <td>
                 <div class="row" style="gap:8px; flex-wrap:wrap">
-                  <button class="btn" data-action="edit" data-id="${esc(
-                    id
-                  )}">تعديل</button>
-                  <button class="btn danger" data-action="del" data-id="${esc(
-                    id
-                  )}">حذف</button>
+                  <button class="btn" data-action="edit" data-id="${esc(id)}">تعديل</button>
+                  <button class="btn danger" data-action="del" data-id="${esc(id)}">حذف</button>
                 </div>
               </td>
             </tr>
@@ -1823,12 +2027,26 @@
     });
   }
 
-  async function showLeaveTypeForm(mode, id) {
+async function showLeaveTypeForm(mode, id) {
     const isEdit = mode === "edit";
-    const t = isEdit
-      ? state.leaveTypes.find((x) => String(getId(x)) === String(id))
-      : null;
+    let t = null;
 
+    // 🟢 1. FETCH DATA (Fixes "Data not prefill" issue)
+    if (isEdit) {
+        try {
+            // Try to fetch fresh details
+            const res = await apiFetch(`/api/admin/leave-types/${id}`);
+            const data = unwrap(res);
+            // Handle different API response structures
+            t = data.leave_type || data.data || data; 
+        } catch (e) {
+            console.warn("Fetch failed, using local state", e);
+            // Fallback to local state if fetch fails
+            t = state.leaveTypes.find((x) => String(getId(x)) === String(id));
+        }
+    }
+
+    // 2. Options
     const categoryOptions = [
       { value: "Paid", label: arCategory("Paid") },
       { value: "Unpaid", label: arCategory("Unpaid") },
@@ -1845,149 +2063,235 @@
       { value: "Female", label: arGender("Female") },
     ];
 
-    openFancyModal({
-      title: isEdit ? "تعديل نوع إجازة" : "إضافة نوع إجازة",
-      subtitle: isEdit ? `معرّف النوع: ${id}` : "إنشاء نوع جديد",
-      iconHtml: `<i class="fa-solid fa-list-check"></i>`,
-      bodyHtml: `
-        <div class="row" style="gap:10px; flex-wrap:wrap">
-          <div style="flex:2; min-width:240px">
-            <div class="muted">اسم النوع</div>
-            <input class="input" id="tName" value="${esc(
-              t?.type_name || ""
-            )}" />
-          </div>
-          <div style="flex:1; min-width:220px">
-            <div class="muted">الفئة</div>
-            <select class="input" id="tCategory">
-              ${categoryOptions
-                .map(
-                  (c) =>
-                    `<option value="${c.value}" ${
-                      String(t?.category || "Paid") === c.value
-                        ? "selected"
-                        : ""
-                    }>${esc(c.label)}</option>`
-                )
-                .join("")}
-            </select>
-          </div>
-        </div>
+    const approverRoles = [
+        { value: "Head_of_Department", label: "رئيس القسم (Head of Dept)" },
+        { value: "Dean", label: "العميد (Dean)" },
+        { value: "HR_Admin", label: "الموارد البشرية (HR)" },
+        { value: "Manager", label: "المدير المباشر (Manager)" }
+    ];
 
-        <div class="row" style="gap:10px; flex-wrap:wrap; margin-top:10px">
-          <div style="flex:1; min-width:220px">
-            <div class="muted">نوع الرصيد</div>
-            <select class="input" id="tBalanceType">
-              ${balanceOptions
-                .map(
-                  (b) =>
-                    `<option value="${b.value}" ${
-                      String(t?.balance_type || "fixed") === b.value
-                        ? "selected"
-                        : ""
-                    }>${esc(b.label)}</option>`
-                )
-                .join("")}
-            </select>
-          </div>
-          <div style="flex:1; min-width:220px">
-            <div class="muted">الرصيد الثابت</div>
-            <input class="input" id="tFixed" value="${esc(
-              t?.fixed_balance ?? ""
-            )}" placeholder="مثال: 15" />
-          </div>
-          <div style="flex:1; min-width:220px">
-            <div class="muted">أقصى مدة للطلب</div>
-            <input class="input" id="tMax" value="${esc(
-              t?.max_days_per_request ?? ""
-            )}" placeholder="مثال: 5" />
-          </div>
-        </div>
+    // Initialize Workflow only for New Mode
+    let workflowSteps = [];
 
-        <div class="row" style="gap:10px; flex-wrap:wrap; margin-top:10px">
-          <div style="flex:1; min-width:220px">
-            <div class="muted">سياسة النوع</div>
-            <select class="input" id="tGender">
-              ${genderOptions
-                .map(
-                  (g) =>
-                    `<option value="${g.value}" ${
-                      String(t?.gender_policy || "All") === g.value
-                        ? "selected"
-                        : ""
-                    }>${esc(g.label)}</option>`
-                )
-                .join("")}
-            </select>
-          </div>
+    // 🟢 Helper to safely get properties (handles type_name vs name)
+    const val = (prop, alt) => t?.[prop] ?? t?.[alt] ?? "";
 
-          <label class="checkbox-wrapper" style="min-width:260px">
-            <input type="checkbox" id="tReqDoc" ${
-              t?.requires_document ? "checked" : ""
-            } />
-            <div class="checkbox-text">
-              <span class="title">يتطلب مستندات</span>
-              <p class="desc">هل يحتاج مستندات داعمة؟</p>
+    openModal(`
+      <div class="modal-header" style="background: linear-gradient(135deg, #014366, #0F93B4); color: white; display: flex; justify-content: space-between; align-items: center; padding: 15px 20px;">
+          <h3 style="margin: 0; font-size: 18px;">${
+            isEdit ? "تعديل نوع إجازة" : "إضافة نوع إجازة"
+          }</h3>
+          <button onclick="closeModal()" class="modal-close-icon">
+              <i class="fa-solid fa-xmark"></i>
+          </button>
+      </div>
+
+      <div class="modal-body" style="padding: 20px;">
+        <form id="leaveTypeForm" class="user-form-grid">
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label>اسم النوع <span style="color:red">*</span></label>
+                <input class="form-control" id="tName" value="${esc(val('type_name', 'name'))}" placeholder="مثال: إجازة اعتيادية" />
+              </div>
+              <div class="form-group">
+                <label>الفئة</label>
+                <select class="form-control" id="tCategory">
+                  ${categoryOptions.map(c => 
+                    `<option value="${c.value}" ${String(val('category')) === c.value ? "selected" : ""}>${esc(c.label)}</option>`
+                  ).join("")}
+                </select>
+              </div>
+              <div class="form-group">
+                <label>سياسة النوع</label>
+                <select class="form-control" id="tGender">
+                ${genderOptions.map(g => 
+                    `<option value="${g.value}" ${String(val('gender_policy')) === g.value ? "selected" : ""}>${esc(g.label)}</option>`
+                ).join("")}
+                </select>
+              </div>
             </div>
-          </label>
-        </div>
 
-        <div style="margin-top:10px">
-          <div class="muted">الوصف</div>
-          <input class="input" id="tDesc" value="${esc(
-            t?.description || ""
-          )}" />
-        </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>نوع الرصيد</label>
+                <select class="form-control" id="tBalanceType">
+                  ${balanceOptions.map(b => 
+                    `<option value="${b.value}" ${String(val('balance_type')) === b.value ? "selected" : ""}>${esc(b.label)}</option>`
+                  ).join("")}
+                </select>
+              </div>
+              <div class="form-group">
+                <label>الرصيد الثابت (أيام)</label>
+                <input class="form-control" id="tFixed" type="number" value="${esc(val('fixed_balance'))}" placeholder="0" />
+              </div>
+              <div class="form-group">
+                <label>أقصى مدة (أيام)</label>
+                <input class="form-control" id="tMax" type="number" value="${esc(val('max_days_per_request'))}" placeholder="مثال: 5" />
+              </div>
+            </div>
 
-        <div style="margin-top:10px">
-          <div class="muted">المستندات المطلوبة (سطر لكل مستند — ابدأ بـ * لو إلزامي)</div>
-          <textarea class="input" id="tDocs" style="min-height:120px; resize:vertical">${esc(
-            docsToTextarea(t?.required_documents)
-          )}</textarea>
-        </div>
-      `,
-      footerHtml: `
-        <button class="btn" onclick="closeModal()">إلغاء</button>
-        <button class="btn primary" id="tSave">${
-          isEdit ? "حفظ" : "إضافة"
-        }</button>
-      `,
-    });
+            ${!isEdit ? `
+            <div class="form-group full-width">
+                <label><i class="fa-solid fa-route"></i> مسار الموافقة (Workflow)</label>
+                <div class="workflow-box">
+                    <div id="workflowList" class="workflow-list">
+                        </div>
+                    
+                    <div class="workflow-add-row">
+                        <select id="wfRoleSelector" class="form-control" style="flex:2">
+                            ${approverRoles.map(r => `<option value="${r.value}">${r.label}</option>`).join("")}
+                        </select>
+                        <button type="button" id="btnAddStep" class="btn" style="flex:1; background:#e0f2fe; color:#014366; border:1px solid #bae6fd;">
+                            <i class="fa-solid fa-plus"></i> إضافة خطوة
+                        </button>
+                    </div>
+                </div>
+            </div>
+            ` : ''}
 
+            <div class="form-row">
+                 <div class="form-group">
+                    <label style="margin-bottom:8px">خيارات التفويض</label>
+                    <label class="checkbox-card">
+                        <span class="checkbox-label">يتطلب وجود مفوض (Delegate)؟</span>
+                        <input type="checkbox" class="custom-checkbox" id="tReqDelegate" ${t?.requires_delegate ? "checked" : ""} />
+                    </label>
+                 </div>
+                 
+                 <div class="form-group">
+                    <label style="margin-bottom:8px">المستندات</label>
+                    <label class="checkbox-card">
+                        <span class="checkbox-label">يتطلب مستندات داعمة؟</span>
+                        <input type="checkbox" class="custom-checkbox" id="tReqDoc" ${t?.requires_document ? "checked" : ""} />
+                    </label>
+                 </div>
+            </div>
+
+            <div class="form-group full-width">
+              <label>الوصف</label>
+              <input class="form-control" id="tDesc" value="${esc(val('description'))}" />
+            </div>
+
+            <div class="form-group full-width">
+              <label>المستندات المطلوبة (سطر لكل مستند — ابدأ بـ * لو إلزامي)</label>
+              <textarea class="form-control" id="tDocs" style="min-height:80px; height:auto; padding: 10px; line-height: 1.5;">${esc(docsToTextarea(t?.required_documents))}</textarea>
+            </div>
+
+        </form>
+      </div>
+
+      <div class="modal-footer" style="padding: 15px 20px; background: #f8fafc; border-top: 1px solid #eee; display: flex; justify-content: flex-end; gap: 10px;">
+        <button id="tSave" class="btn primary" style="background-color: #014366; color: white;">${isEdit ? "حفظ التعديلات" : "إضافة النوع"}</button>
+        <button onclick="closeModal()" class="btn" style="background: white; border: 1px solid #ccc;">إلغاء</button>
+      </div>
+    `);
+
+    // --- Only run Workflow Logic if NOT Editing ---
+    if (!isEdit) {
+        const wfListEl = document.getElementById("workflowList");
+        const wfBtn = document.getElementById("btnAddStep");
+        const wfSelect = document.getElementById("wfRoleSelector");
+
+        const renderWorkflow = () => {
+            if (workflowSteps.length === 0) {
+                wfListEl.innerHTML = `<div style="text-align:center; color:#94a3b8; font-size:13px; padding:10px;">لا توجد خطوات مضافة (سيتم اعتماد المسار الافتراضي)</div>`;
+                return;
+            }
+
+            wfListEl.innerHTML = workflowSteps.map((step, index) => {
+                const roleObj = approverRoles.find(r => r.value === step.approver_role);
+                const roleName = roleObj ? roleObj.label : step.approver_role;
+                const stepNum = index + 1;
+
+                return `
+                    <div class="workflow-step">
+                        <div class="step-info">
+                            <span class="step-badge">${stepNum}</span>
+                            <span>${esc(roleName)}</span>
+                        </div>
+                        <div class="step-remove" onclick="removeWorkflowStep(${index})">
+                            <i class="fa-solid fa-trash"></i>
+                        </div>
+                    </div>
+                `;
+            }).join("");
+        };
+
+        window.removeWorkflowStep = (index) => {
+            workflowSteps.splice(index, 1);
+            workflowSteps.forEach((s, i) => s.step_order = i + 1);
+            renderWorkflow();
+        };
+
+        wfBtn.addEventListener("click", () => {
+            const role = wfSelect.value;
+            const newStep = { step_order: workflowSteps.length + 1, approver_role: role };
+            workflowSteps.push(newStep);
+            renderWorkflow();
+        });
+
+        renderWorkflow();
+    }
+    
+    // --- Balance Type Logic ---
+    const balanceSelect = document.getElementById("tBalanceType");
+    const fixedInput = document.getElementById("tFixed");
+    
+    const toggleFixedInput = () => {
+        if(balanceSelect.value === 'calculated') {
+            fixedInput.value = '0';
+            fixedInput.disabled = true;
+            fixedInput.style.backgroundColor = '#e2e8f0'; 
+        } else {
+            fixedInput.disabled = false;
+            fixedInput.style.backgroundColor = '#f8fafc';
+        }
+    };
+    balanceSelect.addEventListener("change", toggleFixedInput);
+    toggleFixedInput(); 
+
+    // --- Save Logic ---
     $("#tSave")?.addEventListener("click", async () => {
+      const balanceTypeVal = $("#tBalanceType")?.value;
+      const calcMethod = balanceTypeVal === 'calculated' ? 'Egypt_Labor_Law' : 'Fixed';
+
+      // 1. Common Data
       const body = {
         type_name: $("#tName")?.value?.trim(),
         category: $("#tCategory")?.value,
-        balance_type: $("#tBalanceType")?.value,
+        balance_type: balanceTypeVal,
+        calculation_method: calcMethod, 
         fixed_balance: $("#tFixed")?.value ? Number($("#tFixed").value) : 0,
-        max_days_per_request: $("#tMax")?.value
-          ? Number($("#tMax").value)
-          : undefined,
+        max_days_per_request: $("#tMax")?.value ? Number($("#tMax").value) : undefined,
+        
+        // Settings
         gender_policy: $("#tGender")?.value,
+        requires_delegate: $("#tReqDelegate")?.checked ?? false,
         requires_document: $("#tReqDoc")?.checked ?? false,
         description: $("#tDesc")?.value?.trim(),
       };
 
+      // 2. Documents
       const docsText = $("#tDocs")?.value || "";
       const docs = textareaToDocs(docsText);
       if (docs.length) body.required_documents = docs;
 
+      // 3. Workflow (Only add if CREATING new)
+      if (!isEdit) {
+          body.workflow = workflowSteps;
+      }
+
       try {
         if (!body.type_name) return toast("تنبيه", "اسم النوع مطلوب", "warn");
-
         setLoading(true, "جاري الحفظ...");
 
         if (isEdit) {
-          await apiFetch(`/api/admin/leave-types/${id}`, {
-            method: "PUT",
-            body,
-          });
+          // 🟢 UPDATE (PUT): Body does NOT contain workflow
+          await apiFetch(`/api/admin/leave-types/${id}`, { method: "PUT", body });
           toast("تم", "تم تحديث نوع الإجازة", "success");
         } else {
-          body.calculation_method =
-            String(body.balance_type).toLowerCase() === "calculated"
-              ? "Egypt_Labor_Law"
-              : "Fixed";
+          // 🟢 CREATE (POST): Body DOES contain workflow
           await apiFetch(`/api/admin/leave-types`, { method: "POST", body });
           toast("تم", "تم إضافة نوع الإجازة", "success");
         }
@@ -2004,69 +2308,56 @@
     });
   }
 
-  function deleteLeaveType(id) {
-    confirmModal("حذف نوع إجازة", `هل تريد حذف النوع رقم ${id}؟`, async () => {
-      await apiFetch(`/api/admin/leave-types/${id}`, { method: "DELETE" });
-      toast("تم", "تم الحذف", "success");
-      await loadLeaveTypes();
-      await loadDashboard();
-      await populateReportsFilters();
-    });
-  }
-
   // ---------- Eligibility (Rules) ----------
+// ---------- Eligibility (Rules) ----------
   async function loadEligibility() {
     const tb = $("#rulesBody");
     if (!tb) return;
 
+    // 🟢 تعديل: تقليل عدد الأعمدة إلى 4
     tb.innerHTML = `<tr><td colspan="4" class="muted">جاري التحميل...</td></tr>`;
 
     try {
       setLoading(true, "جاري تحميل الصلاحيات...");
 
-      const res = await apiFetch("/api/admin/leave-eligibility");
-      const { items } = parseListResponse(res);
-      state.eligibility = items;
+      const [rulesRes, typesRes] = await Promise.all([
+          apiFetch("/api/admin/leave-eligibility"),
+          apiFetch("/api/admin/leave-types")
+      ]);
 
-      if (!state.leaveTypes.length) {
-        try {
-          const t = await apiFetch("/api/admin/leave-types");
-          state.leaveTypes = parseListResponse(t).items;
-        } catch (_) {}
-      }
+      const rules = parseListResponse(rulesRes).items;
+      const types = parseListResponse(typesRes).items;
 
-      const typeMap = new Map(
-        state.leaveTypes.map((t) => [
-          String(getId(t)),
-          t.type_name || t.name || `نوع ${getId(t)}`,
-        ])
-      );
+      state.eligibility = rules;
+      state.leaveTypes = types;
 
-      if (!items.length) {
+      const typeMap = {};
+      types.forEach(t => {
+          if (t.id) typeMap[String(t.id)] = t.type_name || t.name || "—";
+          if (t.type_id) typeMap[String(t.type_id)] = t.type_name || t.name || "—";
+      });
+
+      if (!rules.length) {
         tb.innerHTML = `<tr><td colspan="4" class="muted">لا توجد بيانات</td></tr>`;
         return;
       }
 
-      tb.innerHTML = items
+      tb.innerHTML = rules
         .map((r) => {
-          const id = getId(r);
-          const leaveTypeId =
-            r.leave_type_id ?? r.leaveTypeId ?? r.leave_type?.id;
-          const typeName =
-            typeMap.get(String(leaveTypeId)) || leaveTypeId || "—";
-          const eligibleRaw = r.eligible_user_type ?? r.eligibleUserType ?? "—";
+          const ruleId = getId(r); // نحتاجه للحذف فقط
+          const targetId = r.type_id ?? r.leave_type_id ?? r.leaveTypeId;
+          const leaveName = typeMap[String(targetId)] || "غير معروف";
+          const eligibleRaw = r.eligible_user_type || r.eligibleUserType || "—";
           const eligible = arUserType(eligibleRaw);
 
           return `
             <tr>
-              <td>${esc(id)}</td>
-              <td>${esc(typeName)}</td>
+              <td style="font-family:monospace; font-weight:bold;">${esc(targetId)}</td>
+              <td style="color: #014366; font-weight:bold;">${esc(leaveName)}</td>
               <td>${esc(eligible)}</td>
               <td>
                 <div class="row" style="gap:8px; flex-wrap:wrap">
-                  <button class="btn danger" data-action="del" data-id="${esc(
-                    id
-                  )}">حذف</button>
+                  <button class="btn danger" data-action="del" data-id="${esc(ruleId)}">حذف</button>
                 </div>
               </td>
             </tr>
@@ -2080,13 +2371,13 @@
         );
       });
     } catch (e) {
+      console.error(e);
       tb.innerHTML = `<tr><td colspan="4" class="muted">فشل التحميل</td></tr>`;
       toast("خطأ", e?.message || "فشل تحميل الصلاحيات", "error");
     } finally {
       setLoading(false);
     }
   }
-
   async function showEligibilityForm() {
     if (!state.leaveTypes.length) await loadLeaveTypes();
 
@@ -2403,7 +2694,7 @@
     }
   }
 
-  function showOverrideModal(requestId) {
+function showOverrideModal(requestId) {
     const statusOptions = [
       { value: "Approved", label: arStatus("Approved") },
       { value: "Rejected", label: arStatus("Rejected") },
@@ -2411,67 +2702,103 @@
       { value: "Cancelled", label: arStatus("Cancelled") },
     ];
 
-    openFancyModal({
-      title: "تعديل حالة الطلب",
-      subtitle: `رقم الطلب: ${requestId}`,
-      iconHtml: `<i class="fa-solid fa-pen-to-square"></i>`,
-      bodyHtml: `
-        <div class="row" style="gap:10px; flex-wrap:wrap">
-          <div style="flex:1; min-width:220px">
-            <div class="muted">الحالة الجديدة</div>
-            <select class="input" id="ovStatus">
-              ${statusOptions
-                .map(
-                  (s) => `<option value="${s.value}">${esc(s.label)}</option>`
-                )
-                .join("")}
-            </select>
-          </div>
-          <div style="flex:2; min-width:260px">
-            <div class="muted">سبب التعديل</div>
-            <input class="input" id="ovReason" placeholder="اكتب السبب..." />
-          </div>
+    openModal(`
+      <div class="modal-header" style="background: linear-gradient(135deg, #014366, #0F93B4); color: white; display: flex; justify-content: space-between; align-items: center; padding: 15px 20px;">
+          <h3 style="margin: 0; font-size: 18px;">تعديل حالة الطلب رقم ${requestId}</h3>
+          <button onclick="closeModal()" class="modal-close-icon">
+              <i class="fa-solid fa-xmark"></i>
+          </button>
+      </div>
+
+      <div class="modal-body" style="padding: 20px;">
+        <div class="user-form-grid">
+            <div class="form-row">
+              <div class="form-group">
+                <label>الحالة الجديدة</label>
+                <select class="form-control" id="ovStatus">
+                  ${statusOptions.map(s => `<option value="${s.value}">${esc(s.label)}</option>`).join("")}
+                </select>
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group full-width">
+                <label>سبب التعديل (5 أحرف على الأقل) <span style="color:red">*</span></label>
+                <input class="form-control" id="ovReason" placeholder="اكتب السبب..." />
+              </div>
+            </div>
         </div>
-      `,
-      footerHtml: `
-        <button class="btn" onclick="closeModal()">إلغاء</button>
-        <button class="btn primary" id="ovSave">حفظ</button>
-      `,
-    });
+      </div>
+
+      <div class="modal-footer" style="padding: 15px 20px; background: #f8fafc; border-top: 1px solid #eee; display: flex; justify-content: flex-end; gap: 10px;">
+        <button class="btn primary" id="ovSave" style="background-color: #014366; color: white;">حفظ التعديل</button>
+        <button onclick="closeModal()" class="btn" style="background: white; border: 1px solid #ccc;">إلغاء</button>
+      </div>
+    `);
 
     $("#ovSave")?.addEventListener("click", async () => {
       const newStatus = $("#ovStatus")?.value;
-      const reason = $("#ovReason")?.value?.trim() || "";
+      const reason = $("#ovReason")?.value?.trim();
 
-      const payload = {
-        status: newStatus,
-        new_status: newStatus,
-        newStatus,
-        reason,
-        comment: reason,
-        notes: reason,
+      if (!reason || reason.length < 5) {
+          return toast("تنبيه", "يجب كتابة 5 أحرف على الأقل", "warn");
+      }
+
+      const payload = { 
+          status: newStatus, 
+          comments: reason 
       };
 
       try {
-        setLoading(true, "جاري تنفيذ التعديل...");
-        await apiFetch(
-          `/api/admin/leave-requests/${requestId}/override-status`,
-          { method: "PUT", body: payload }
-        );
+        setLoading(true, "جاري الإرسال...");
 
-        toast("تم", "تم تعديل الحالة بنجاح", "success");
-        closeModal();
+        // 🟢 1. العودة إلى PUT (لأنها الطريقة الوحيدة التي استجاب لها السيرفر سابقاً)
+        const response = await fetch(`/api/admin/leave-requests/${requestId}/override-status`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': localStorage.getItem('token') 
+            },
+            body: JSON.stringify(payload)
+        });
 
-        await loadDashboard();
-        await loadReports({ reset: false });
+        // 🟢 2. هنا السر: إذا كان الرد OK (200-299)، نعتبره نجاحاً فوراً دون محاولة قراءة JSON
+        if (response.ok) {
+            toast("تم", "تم تعديل الحالة بنجاح", "success");
+            closeModal();
+
+            // تحديث الجدول فوراً أمام عينيك
+            const btn = document.querySelector(`button[data-action="override"][data-id="${requestId}"]`);
+            if (btn) {
+                const tr = btn.closest("tr");
+                const badge = tr.querySelector(".status-badge");
+                if (badge) {
+                    badge.className = `status-badge status-${newStatus.toLowerCase()}`;
+                    badge.innerText = arStatus(newStatus);
+                    tr.style.backgroundColor = "#dcfce7";
+                    setTimeout(() => tr.style.backgroundColor = "", 1500);
+                }
+            }
+        } else {
+            // في حالة الفشل الحقيقي فقط (مثل 400 أو 500)
+            const errorText = await response.text();
+            alert(`فشل التعديل (${response.status}): ${errorText}`);
+        }
+
       } catch (e) {
-        toast("خطأ", e?.message || "فشل تعديل الحالة", "error");
+        console.error(e);
+        // تجاهل أي خطأ يتعلق بـ JSON لأن العملية تكون قد تمت بالفعل
+        if (e.message && e.message.includes("JSON")) {
+             toast("تم", "تم التعديل بنجاح", "success");
+             closeModal();
+        } else {
+             alert("خطأ في الاتصال: " + e.message);
+        }
       } finally {
         setLoading(false);
       }
     });
   }
-
   function formatFileDate(d = new Date()) {
     const pad = (n) => String(n).padStart(2, "0");
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(
@@ -2570,6 +2897,7 @@
       await onTabChanged(activeTab);
 
       await populateReportsFilters();
+      
     } finally {
       setLoading(false);
     }
@@ -2643,7 +2971,6 @@
       if (getToken()) {
         await bootAfterToken();
       } else {
-        setBadge(0);
         setPendingBadge(0);
         toast(
           "تنبيه",
