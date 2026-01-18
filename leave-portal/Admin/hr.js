@@ -30,6 +30,7 @@
       Admin: "مسؤول النظام",
       Manager: "مدير",
       Dean: "عميد",
+      President: "رئيس الجامعة",
       Head_of_Department: "رئيس قسم",
       Employee: "موظف",
       HR_Admin: "مسؤول الموارد البشرية",
@@ -1397,7 +1398,7 @@
       { value: "Employee", label: arRole("Employee") },
       { value: "Manager", label: arRole("Manager") },
       { value: "Dean", label: arRole("Dean") },
-      { value: "Head_of_Department", label: arRole("Head_of_Department") },
+      { value: "President", label: arRole("President") },
       { value: "HR_Admin", label: arRole("HR_Admin") },
     ];
 
@@ -1638,6 +1639,16 @@
       }
     });
   }
+
+  function deleteUser(id) {
+    confirmModal("حذف مستخدم", `هل تريد حذف المستخدم رقم ${id}؟`, async () => {
+      await apiFetch(`/api/admin/users/${id}`, { method: "DELETE" });
+      toast("تم", "تم حذف المستخدم بنجاح", "success");
+      await loadUsers();
+      await loadDashboard();
+    });
+  }
+
   // ---------- Colleges ----------
   // ---------- Colleges ----------
   async function loadColleges() {
