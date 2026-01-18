@@ -2748,7 +2748,6 @@
     const statusOptions = [
       { value: "Approved", label: arStatus("Approved") },
       { value: "Rejected", label: arStatus("Rejected") },
-      { value: "Pending", label: arStatus("Pending") },
       { value: "Cancelled", label: arStatus("Cancelled") },
     ];
 
