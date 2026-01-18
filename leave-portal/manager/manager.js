@@ -127,7 +127,7 @@ async function loadProfile() {
         logoutBtn.onclick = (e) => {
           e.preventDefault();
           clearToken();
-          window.location.href = "../index.html";
+          window.location.href = "../../index.html";
         };
       }
     }

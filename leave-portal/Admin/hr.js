@@ -749,9 +749,8 @@
       clearToken();
       state.me = null;
       toast("تم", "تم تسجيل الخروج", "success");
-      closeAll();
-      renderProfile(null);
-      setPendingBadge(0);
+      // Redirect to the main login/index page
+      window.location.replace("../../index.html");
     });
 
     $("#changePassBtn")?.addEventListener("click", (e) => {
