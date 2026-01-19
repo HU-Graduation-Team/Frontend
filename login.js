@@ -1,7 +1,7 @@
 const API_BASE = "https://leave-system-1af0.onrender.com";
 const completeOnboardingPage =
   "leave-portal/onboarding/complete-onboarding.html";
-const adminPage = "leave-portal/admin/hr.html";
+const adminPage = "leave-portal/Admin/hr.html";
 const managerPage = "leave-portal/manager/manager.html";
 const employeePage = "leave-portal/employee/employee.html";
 
