@@ -77,7 +77,7 @@ function renderEligibleTypes() {
   }
   list.innerHTML = eligibleTypes
     .map((t) => {
-      // Logic for Badges
+      // منطق الشارات الملونة (Badges)
       const isPaid = t.is_paid 
         ? '<span class="tag" style="color: #10b981; background: #dcfce7;">💰 مدفوعة</span>' 
         : '<span class="tag" style="color: #ef4444; background: #fee2e2;">🚫 غير مدفوعة</span>';
@@ -122,14 +122,14 @@ function onTypeChange() {
   const delegateWrap = qs("#delegateWrapper");
   const docsContainer = qs("#dynamicDocsContainer");
 
-  // 1. Reset UI
+  // 1. تنظيف الواجهة
   docsContainer.innerHTML = "";
   if (delegateWrap) delegateWrap.style.display = "none";
   if (hint) hint.textContent = "";
 
   if (!t) return;
 
-  // 2. Update Hint with Policy Details
+  // 2. تحديث التلميحات (Hints)
   const limitTxt = t.max_days_per_request ? `أقصى مدة: ${t.max_days_per_request} يوم` : 'المدة: مفتوحة';
   const paidTxt = t.is_paid ? 'مدفوعة الأجر' : 'غير مدفوعة';
   const deductTxt = t.deduct_from_balance ? 'تخصم من الرصيد' : 'لا تخصم من الرصيد';
@@ -142,7 +142,7 @@ function onTypeChange() {
     `;
   }
 
-  // 3. Handle Delegate
+  // 3. التعامل مع المفوض (Delegate)
   const rawDelegateVal = t.requires_delegate ?? t.requiresDelegate;
   const needsDelegate = Boolean(rawDelegateVal) === true;
 
@@ -151,36 +151,62 @@ function onTypeChange() {
     loadDelegates();
   }
 
-  // 4. Handle Dynamic Documents
+  // 4. التعامل مع المستندات والإقرارات 📄
   const requirements = t.requiredDocuments || t.document_requirements || [];
 
   if (requirements.length > 0) {
     requirements.forEach((doc) => {
+      const docName = (doc.document_name || doc.name);
+      
       const div = document.createElement("div");
       div.className = "form-group";
+      div.style.background = "#fff";
+      div.style.padding = "10px";
+      div.style.border = "1px solid #e2e8f0";
+      div.style.borderRadius = "8px";
 
+      // العنوان
       const label = document.createElement("label");
-      label.textContent = (doc.document_name || doc.name) + (doc.is_mandatory ? " *" : " (اختياري)");
+      label.innerHTML = `📄 ${docName} ${doc.is_mandatory ? '<span style="color:red">*</span>' : ''}`;
       label.style.display = "block";
       label.style.marginBottom = "8px";
-      label.style.fontWeight = "600";
-      if (doc.is_mandatory) label.style.color = "#dc2626";
+      label.style.fontWeight = "bold";
 
+      // 📥 منطق: فحص الاسم لإظهار زر التحميل
+      let downloadLinkHtml = "";
+      
+      if (docName.includes("عدم السفر")) {
+          downloadLinkHtml = `
+            <a href="../../Assets/forms/اقرار بعدم السفر للخارج.jpeg" download="اقرار_عدم_السفر.jpeg" class="btn" style="display:inline-flex; align-items:center; gap:5px; background:#e0f2fe; color:#0284c7; padding:5px 10px; border:1px solid #bae6fd; margin-bottom:10px; text-decoration:none; font-size:13px;">
+                <i class="fa-solid fa-download"></i> تحميل نموذج الإقرار
+            </a>
+            <div class="muted small" style="margin-bottom:5px;">يرجى تحميل الإقرار وطباعته وتوقيعه ثم إعادة رفعه هنا.</div>
+          `;
+      } 
+      else if (docName.includes("عدم العمل")) {
+          downloadLinkHtml = `
+            <a href="../../Assets/forms/اقرار وتعهد بعد العمل لجهه خارجيه.jpeg" download="اقرار_عدم_العمل.jpeg" class="btn" style="display:inline-flex; align-items:center; gap:5px; background:#e0f2fe; color:#0284c7; padding:5px 10px; border:1px solid #bae6fd; margin-bottom:10px; text-decoration:none; font-size:13px;">
+                <i class="fa-solid fa-download"></i> تحميل نموذج الإقرار
+            </a>
+            <div class="muted small" style="margin-bottom:5px;">يرجى تحميل الإقرار وطباعته وتوقيعه ثم إعادة رفعه هنا.</div>
+          `;
+      }
+
+      // حقل الإدخال
       const input = document.createElement("input");
       input.type = "file";
       input.accept = ".pdf,.png,.jpg,.jpeg";
       input.className = "dynamic-doc-input";
       input.style.width = "100%";
-      input.style.padding = "10px";
-      input.style.border = "1px solid #e2e8f0";
-      input.style.borderRadius = "8px";
-
+      
       const reqId = doc.document_requirement_id || doc.id;
       input.setAttribute("data-req-id", reqId);
       input.setAttribute("data-mandatory", doc.is_mandatory);
 
       div.appendChild(label);
+      if(downloadLinkHtml) div.innerHTML += downloadLinkHtml; // إضافة الرابط إذا وجد
       div.appendChild(input);
+      
       docsContainer.appendChild(div);
     });
   }
@@ -188,15 +214,12 @@ function onTypeChange() {
 function renderDashboard(data) {
   const balances = data?.leaveBalances || [];
   const recent = data?.recentRequests || [];
-  const today = new Date(); // لتحديد تاريخ اليوم
+  const today = new Date(); 
+  today.setHours(0, 0, 0, 0);
 
-  // 1. عرض الأرصدة (كما هي)
+  // 1. الأرصدة
   const pills = qs("#balancesPills");
-  pills.innerHTML =
-    balances
-      .slice(0, 6)
-      .map(
-        (b) => `
+  pills.innerHTML = balances.slice(0, 6).map(b => `
     <div class="balance-pill">
       <div class="type">${escapeHtml(b.type_name)}</div>
       <div class="info">
@@ -205,25 +228,17 @@ function renderDashboard(data) {
         <span>المتبقي: <b>${b.remaining}</b></span>
       </div>
     </div>
-  `
-      )
-      .join("") || `<div class="muted">لا يوجد أرصدة متاحة.</div>`;
+  `).join("") || `<div class="muted">لا يوجد أرصدة متاحة.</div>`;
 
-  // 2. عرض جدول "آخر الطلبات" (مع زر العودة الجديد)
+  // 2. آخر الطلبات (تم تحديثه ليدعم زر العودة)
   const body = qs("#recentBody");
-
-  // ضبط تاريخ اليوم (بدون ساعات) للمقارنة الصحيحة
-  const todayDateOnly = new Date();
-  todayDateOnly.setHours(0, 0, 0, 0);
-
-  body.innerHTML = recent.length
-    ? recent.map((r) => {
+  body.innerHTML = recent.length ? recent.map((r) => {
           const startDate = new Date(r.start_date);
           startDate.setHours(0,0,0,0);
           
           const isApproved = r.status === "Approved";
           const notReturned = !r.returned_at;
-          const canReturn = isApproved && notReturned && (todayDateOnly >= startDate);
+          const canReturn = isApproved && notReturned && (today >= startDate);
 
           let actionOrStatus = statusBadge(r.status); 
 
@@ -255,33 +270,18 @@ function renderDashboard(data) {
               <td>${actionOrStatus}</td>
             </tr>
           `;
-        }).join("")
-    : `<tr><td colspan="4" class="muted">لا يوجد طلبات حديثة.</td></tr>`;
-  // 3. تحديث الإحصائيات (كما هي)
-  const norm = (s) => String(s || "").toLowerCase();
-  const approved = recent.filter((r) =>
-    norm(r.status).includes("approved")
-  ).length;
-  const pending = recent.filter((r) =>
-    norm(r.status).includes("pending")
-  ).length;
-  const rejected = recent.filter((r) =>
-    norm(r.status).includes("rejected")
-  ).length;
+  }).join("") : `<tr><td colspan="4" class="muted">لا يوجد طلبات حديثة.</td></tr>`;
+
+  // 3. الإحصائيات (كما هي)
   const total = recent.length;
-
-  const setStat = (id, valId, value) => {
-    const el = qs(id);
-    const bar = qs(valId);
-    if (el) el.textContent = value.toLocaleString("ar-EG");
-    if (bar)
-      bar.style.width = Math.min(100, total ? (value / total) * 100 : 0) + "%";
+  const setStat = (id, valId, count) => {
+    qs(id).textContent = count.toLocaleString("ar-EG");
+    qs(valId).style.width = Math.min(100, total ? (count / total) * 100 : 0) + "%";
   };
-
   setStat("#statTotal", "#statTotalBar", total);
-  setStat("#statApproved", "#statApprovedBar", approved);
-  setStat("#statPending", "#statPendingBar", pending);
-  setStat("#statRejected", "#statRejectedBar", rejected);
+  setStat("#statApproved", "#statApprovedBar", recent.filter(r => r.status === "Approved").length);
+  setStat("#statPending", "#statPendingBar", recent.filter(r => r.status === "Pending").length);
+  setStat("#statRejected", "#statRejectedBar", recent.filter(r => r.status === "Rejected").length);
 
   renderBarChart(recent);
 }
@@ -336,7 +336,7 @@ function renderRequestsTable() {
   const body = qs("#requestsBody");
   const q = (qs("#search").value || "").trim().toLowerCase();
   
-  // Use current date (reset time to 00:00:00 for accurate comparison)
+  // تاريخ اليوم (بدون ساعات)
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -357,21 +357,19 @@ function renderRequestsTable() {
           const isApproved = r.status === "Approved";
           const notReturned = r.returned_at === null;
           
-          // Logic: Show "Return" button if Approved AND (Today >= Start Date) AND Not Returned yet
-          // This allows "Early Return" (Cutting leave) and "Normal Return"
+          // ✅ المنطق: إظهار الزر فقط إذا وافقوا، ولم يعد بعد، واليوم >= بداية الإجازة
           const canReturn = isApproved && notReturned && (today >= startDate);
 
           let actionHtml = `<button class="btn" data-view="${r.request_id}">تفاصيل</button>`;
 
           if (canReturn) {
-            // Determine if it is early cut or normal return
-            const isEarly = today < endDate;
+            const isEarly = today < endDate; // هل هو قطع مبكر؟
             const btnText = isEarly ? "✂️ قطع الإجازة" : "↩️ تسجيل عودة";
-            const btnColor = isEarly ? "#d97706" : "#014366"; // Amber for cut, Blue for normal
+            const btnColor = isEarly ? "#d97706" : "#014366";
 
             actionHtml = `
                 <div style="display:flex; gap:5px;">
-                    <button class="btn" style="background-color: ${btnColor}; color: white; padding:6px 12px;" 
+                    <button class="btn" style="background-color: ${btnColor}; color: white; padding:6px 12px; font-size:13px;" 
                             onclick="submitReturnDeclaration(${r.request_id})">
                         ${btnText}
                     </button>
@@ -1285,6 +1283,67 @@ function submitReturnDeclaration(requestId) {
               .getElementById("view-dashboard")
               .classList.contains("active")
           ) {
+            loadDashboard();
+          }
+        } catch (e) {
+          toast("خطأ", e.message, "error");
+          confirmBtn.textContent = "تأكيد العودة";
+          confirmBtn.disabled = false;
+        }
+      });
+    }
+  }, 50);
+}
+
+// --- دالة جديدة: إقرار العودة للعمل ---
+function submitReturnDeclaration(requestId) {
+  openModal(`
+    <div class="modal-header" style="background: linear-gradient(135deg, #014366 0%, #0F93B4 100%);">
+      <div class="modal-title">
+        <span class="modal-icon">↩️</span>
+        <div>
+          <h2>إقرار عودة للعمل</h2>
+          <span class="modal-subtitle">تأكيد استئناف العمل</span>
+        </div>
+      </div>
+      <button class="modal-close-btn" onclick="closeModal()">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="modal-body" style="padding: 24px; text-align: center;">
+      <div style="background: #f0f9ff; border: 1px solid #bae6fd; padding: 20px; border-radius: 12px; margin-bottom: 24px;">
+        <p style="font-size: 16px; line-height: 1.6; color: #014366; font-weight: 600; margin: 0;">
+          "أقر بأنني استأنفت أعمالي المصلحية في الكلية/الجامعة عقب انتهاء الإجازة المرخص لي بها، وذلك اعتباراً من تاريخ اليوم."
+        </p>
+      </div>
+
+      <div class="actions" style="justify-content: center; gap: 16px; display:flex;">
+        <button id="confirmReturnBtn" class="btn primary" style="background-color: #014366; font-size: 16px; padding: 12px 32px;">
+          تأكيد العودة
+        </button>
+        <button class="btn" onclick="closeModal()" style="font-size: 16px;">إلغاء</button>
+      </div>
+    </div>
+  `);
+
+  setTimeout(() => {
+    const confirmBtn = document.getElementById("confirmReturnBtn");
+    if (confirmBtn) {
+      confirmBtn.addEventListener("click", async () => {
+        try {
+          confirmBtn.textContent = "جاري التسجيل...";
+          confirmBtn.disabled = true;
+
+          // استدعاء الـ API
+          await apiFetch(`/api/me/requests/${requestId}/return`, { method: "POST" });
+
+          toast("تم بنجاح", "تم تسجيل إقرار العودة للعمل.", "success");
+          closeModal();
+          
+          // تحديث الجداول
+          await loadRequests(); 
+          if(document.getElementById("view-dashboard").classList.contains("active")) {
             loadDashboard();
           }
         } catch (e) {
