@@ -1767,7 +1767,7 @@
         if (isEdit) {
           await apiFetch(`/api/admin/colleges/${id}`, {
             method: "PUT",
-            body: { college_name, dean_user_id, deanUserId: dean_user_id },
+            body: { college_name, dean_user_id },
           });
           toast("تم", "تم تحديث الكلية", "success");
         } else {
@@ -1937,7 +1937,7 @@
         if (isEdit) {
           await apiFetch(`/api/admin/departments/${id}`, {
             method: "PUT",
-            body: { head_user_id, headUserId: head_user_id, college_id },
+            body: { head_user_id, college_id },
           });
           toast("تم", "تم تحديث القسم", "success");
         } else {
