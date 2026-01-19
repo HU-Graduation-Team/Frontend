@@ -1930,7 +1930,7 @@
         : undefined;
       const head_user_id = $("#dHead")?.value
         ? Number($("#dHead").value)
-        : undefined;
+        : null;
       const department_name = $("#dName")?.value?.trim();
 
       try {
