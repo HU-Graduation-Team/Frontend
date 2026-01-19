@@ -1,6 +1,6 @@
 const API_BASE = "https://leave-system-1af0.onrender.com";
 const loginPage = "../../index.html";
-const adminPage = "../admin/hr.html";
+const adminPage = "../Admin/hr.html";
 const managerPage = "../manager/manager.html";
 const employeePage = "../employee/employee.html";
 
@@ -76,20 +76,22 @@ form.addEventListener("submit", async (e) => {
 
     // التحقق من وجود التوكن الجديد والدور لإعادة التوجيه مباشرة
     if (result && result.token && result.user && result.user.role) {
-        localStorage.setItem("ulm_jwt_token", result.token);
-        
-        const role = result.user.role;
-        if (role === "HR_Admin" || role === "Admin") {
-            window.location.replace(adminPage);
-        } else if (["Manager", "Dean", "President", "Head_of_Department"].includes(role)) {
-            window.location.replace(managerPage);
-        } else {
-            window.location.replace(employeePage);
-        }
+      localStorage.setItem("ulm_jwt_token", result.token);
+
+      const role = result.user.role;
+      if (role === "HR_Admin" || role === "Admin") {
+        window.location.replace(adminPage);
+      } else if (
+        ["Manager", "Dean", "President", "Head_of_Department"].includes(role)
+      ) {
+        window.location.replace(managerPage);
+      } else {
+        window.location.replace(employeePage);
+      }
     } else {
-        // إذا لم يرجع السيرفر التوكن الجديد، نعود لصفحة الدخول
-        localStorage.removeItem("ulm_jwt_token");
-        window.location.replace(loginPage);
+      // إذا لم يرجع السيرفر التوكن الجديد، نعود لصفحة الدخول
+      localStorage.removeItem("ulm_jwt_token");
+      window.location.replace(loginPage);
     }
   } catch (error) {
     console.error(error);
