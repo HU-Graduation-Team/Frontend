@@ -2095,6 +2095,7 @@
   }
 
   // 4. THE MAIN FORM MODAL (Add/Edit)
+// 4. THE MAIN FORM MODAL (Add/Edit) - Updated with Legal Forms Checkboxes
   async function showLeaveTypeForm(mode, id) {
     const isEdit = mode === "edit";
     let t = null;
@@ -2102,9 +2103,7 @@
     // Fetch fresh data if editing
     if (isEdit) {
       try {
-        // Check if we have it in state first
         t = state.leaveTypes.find((x) => String(getId(x)) === String(id));
-        // Optional: Fetch fresh details from API if needed
         const res = await apiFetch(`/api/admin/leave-types/${id}`);
         const data = unwrap(res);
         if (data) t = data.leave_type || data;
@@ -2116,7 +2115,7 @@
     // Helper to safely get value
     const val = (p, alt) => t?.[p] ?? t?.[alt] ?? "";
 
-    // Workflow State (Local to this modal)
+    // Workflow State
     let workflowSteps = [];
 
     // Static Options
@@ -2127,6 +2126,14 @@
       { value: "Manager", label: "المدير المباشر" },
       { value: "President", label: "رئيس الجامعة" },
     ];
+
+    // 🟢 NEW LOGIC: Check for specific legal documents
+    const docs = t?.required_documents || [];
+    const hasTravelDoc = docs.some(d => d.document_name.includes("عدم السفر"));
+    const hasWorkDoc = docs.some(d => d.document_name.includes("عدم العمل"));
+    
+    // Filter out special docs so they don't appear in the text area
+    const customDocs = docs.filter(d => !d.document_name.includes("عدم السفر") && !d.document_name.includes("عدم العمل"));
 
     openFancyModal({
       title: isEdit ? "تعديل نوع إجازة" : "إضافة نوع إجازة",
@@ -2192,17 +2199,40 @@
               </div>
            </div>
 
+           <div class="form-section-title">المستندات والإقرارات المطلوبة</div>
+
+           <div class="form-row" style="background:#fff7ed; padding:15px; border-radius:8px; border:1px solid #ffedd5; margin-bottom:15px;">
+              <div class="form-group full-width">
+                  <label style="color:#c2410c; margin-bottom:10px; font-weight:bold;">إقرارات قانونية (يجب تحميلها وتوقيعها):</label>
+                  <div style="display:flex; gap:15px; flex-wrap:wrap;">
+                      <label class="checkbox-card" style="flex:1; height:auto; padding:10px; min-width:200px;">
+                          <input type="checkbox" class="custom-checkbox" id="reqTravelBan" ${hasTravelDoc ? 'checked' : ''}> 
+                          <span class="checkbox-label" style="font-size:13px">إقرار عدم السفر للخارج</span>
+                      </label>
+                      <label class="checkbox-card" style="flex:1; height:auto; padding:10px; min-width:200px;">
+                          <input type="checkbox" class="custom-checkbox" id="reqNoWork" ${hasWorkDoc ? 'checked' : ''}> 
+                          <span class="checkbox-label" style="font-size:13px">إقرار عدم العمل لجهة خارجية</span>
+                      </label>
+                  </div>
+              </div>
+           </div>
+
            <div class="form-row">
               <div class="form-group" style="flex-direction:row; gap:15px; align-items:center;">
                   <label class="checkbox-card" style="flex:1;">
                       <input type="checkbox" class="custom-checkbox" id="ltReqDoc" ${t?.requires_document ? "checked" : ""}>
-                      <span class="checkbox-label">تتطلب مرفقات</span>
+                      <span class="checkbox-label">تتطلب مرفقات أخرى</span>
                   </label>
                   <label class="checkbox-card" style="flex:1;">
                       <input type="checkbox" class="custom-checkbox" id="ltReqDel" ${t?.requires_delegate ? "checked" : ""}>
                       <span class="checkbox-label">تتطلب تفويض بديل</span>
                   </label>
               </div>
+           </div>
+
+           <div class="form-group full-width">
+               <label>مستندات إضافية (سطر لكل مستند)</label>
+               <textarea class="form-control" id="ltDocs" rows="3" placeholder="اكتب اسم المستند في كل سطر (ابدأ بـ * للمستند الإلزامي)">${esc(docsToTextarea(customDocs))}</textarea>
            </div>
 
            <div class="form-section-title">القيود والشروط (اختياري)</div>
@@ -2227,13 +2257,6 @@
                 <label>أقصى مدة للطلب</label>
                 <input type="number" class="form-control" id="ltMaxDays" value="${val("max_days_per_request")}" placeholder="مفتوح" />
              </div>
-           </div>
-
-           <div class="form-section-title">المستندات المطلوبة</div>
-           <div class="form-row">
-               <div class="form-group full-width">
-                   <textarea class="form-control" id="ltDocs" rows="3" placeholder="اكتب اسم المستند في كل سطر (ابدأ بـ * للمستند الإلزامي)">${esc(docsToTextarea(t?.required_documents))}</textarea>
-               </div>
            </div>
 
            ${
@@ -2314,6 +2337,16 @@
       const name = $("#ltName").value.trim();
       if (!name) return toast("تنبيه", "اسم الإجازة مطلوب", "warn");
 
+      // 1. تجميع المستندات (يدوية + إقرارات)
+      let finalDocs = textareaToDocs($("#ltDocs").value);
+
+      if($("#reqTravelBan")?.checked) {
+          finalDocs.push({ document_name: "إقرار وتعهد بعدم السفر للخارج", is_mandatory: true });
+      }
+      if($("#reqNoWork")?.checked) {
+          finalDocs.push({ document_name: "إقرار وتعهد بعدم العمل لجهه خارجيه", is_mandatory: true });
+      }
+
       const body = {
         type_name: name,
         description: $("#ltDesc").value.trim(),
@@ -2323,13 +2356,11 @@
         balance_type: $("#ltBalType").value,
         fixed_balance: Number($("#ltFixedBal").value) || 0,
 
-        // New Fields
         is_paid: $("#ltIsPaid").checked,
         deduct_from_balance: $("#ltDeduct").checked,
-        requires_document: $("#ltReqDoc").checked,
+        requires_document: $("#ltReqDoc").checked || finalDocs.length > 0, // تفعيل تلقائي لو فيه مستندات
         requires_delegate: $("#ltReqDel").checked,
 
-        // Restrictions (Convert empty to null/0)
         lifetime_limit: $("#ltLife").value ? Number($("#ltLife").value) : null,
         years_of_service_required: Number($("#ltService").value) || 0,
         min_days_duration: Number($("#ltMinDays").value) || 1,
@@ -2337,10 +2368,9 @@
           ? Number($("#ltMaxDays").value)
           : null,
 
-        required_documents: textareaToDocs($("#ltDocs").value),
+        required_documents: finalDocs,
       };
 
-      // Only send workflow on creation
       if (!isEdit) body.workflow = workflowSteps;
 
       setLoading(true);
