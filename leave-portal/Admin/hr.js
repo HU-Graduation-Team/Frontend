@@ -1894,7 +1894,7 @@
             <div class="muted">اسم القسم</div>
             <input class="input" id="dName" value="${esc(
               dep?.department_name || dep?.name || "",
-            )}" ${isEdit ? "disabled" : ""}/>
+            )}" />
           </div>
 
           <div style="flex:1; min-width:260px">
@@ -1937,7 +1937,7 @@
         if (isEdit) {
           await apiFetch(`/api/admin/departments/${id}`, {
             method: "PUT",
-            body: { head_user_id, college_id },
+            body: { department_name, head_user_id, college_id },
           });
           toast("تم", "تم تحديث القسم", "success");
         } else {
