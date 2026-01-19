@@ -2434,7 +2434,9 @@
 
       tb.innerHTML = rules
         .map((r) => {
-          const ruleId = getId(r); // نحتاجه للحذف فقط
+          // Try all likely ID candidates for the rule
+          const ruleId = r.rule_id ?? r.id ?? r._id ?? r.eligibility_id ?? r.leave_eligibility_id;
+          
           const targetId = r.type_id ?? r.leave_type_id ?? r.leaveTypeId;
           const leaveName = typeMap[String(targetId)] || "غير معروف";
           const eligibleRaw = r.eligible_user_type || r.eligibleUserType || "—";
@@ -2447,7 +2449,7 @@
               <td>${esc(eligible)}</td>
               <td>
                 <div class="row" style="gap:8px; flex-wrap:wrap">
-                  <button class="btn danger" data-action="del" data-id="${esc(ruleId)}">حذف</button>
+                  <button class="btn danger" data-action="del" data-id="${esc(ruleId)}" ${!ruleId ? "disabled" : ""}>حذف</button>
                 </div>
               </td>
             </tr>
