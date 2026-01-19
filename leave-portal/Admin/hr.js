@@ -2067,11 +2067,17 @@
     });
 
     tb.querySelectorAll("button[data-action='del']").forEach((b) => {
-      b.addEventListener("click", () => {
-        if (confirm("هل أنت متأكد من الحذف؟")) {
-          toast("تنبيه", "تم طلب الحذف", "info");
-        }
-      });
+      b.addEventListener("click", () =>
+        deleteLeaveType(b.getAttribute("data-id")),
+      );
+    });
+  }
+
+  function deleteLeaveType(id) {
+    confirmModal("حذف نوع إجازة", `هل تريد حذف نوع الإجازة رقم ${id}؟`, async () => {
+      await apiFetch(`/api/admin/leave-types/${id}`, { method: "DELETE" });
+      toast("تم", "تم حذف نوع الإجازة", "success");
+      await loadLeaveTypes();
     });
   }
   // 3. Helpers for Documents
