@@ -136,11 +136,13 @@
   function getId(obj) {
     return (
       obj?.id ??
+      obj?.type_id ??
       obj?.request_id ??
       obj?.user_id ??
       obj?.department_id ??
       obj?.college_id ??
       obj?.leave_type_id ??
+      obj?.leaveTypeId ??
       obj?.rule_id ??
       obj?._id
     );
@@ -2507,8 +2509,13 @@
     });
 
     $("#eSave")?.addEventListener("click", async () => {
-      const leave_type_id = Number($("#eType")?.value);
+      const val = $("#eType")?.value;
+      const leave_type_id = Number(val);
       const eligible_user_type = $("#eUserType")?.value;
+
+      if (!val || isNaN(leave_type_id) || leave_type_id <= 0) {
+        return toast("تنبيه", "يرجى اختيار نوع إجازة صالح", "warn");
+      }
 
       try {
         setLoading(true, "جاري الإضافة...");
