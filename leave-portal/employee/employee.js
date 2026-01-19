@@ -242,14 +242,19 @@ function renderDashboard(data) {
 
           let actionOrStatus = statusBadge(r.status); 
 
+          const isEarly = today < new Date(r.end_date);
+          const actionFn = isEarly ? `submitCutLeave(${r.request_id})` : `submitReturnDeclaration(${r.request_id})`;
+          const btnText = isEarly ? "✂️ قطع الإجازة" : "تسجيل عودة";
+          const btnColor = isEarly ? "#d97706" : "#014366";
+
           if (canReturn) {
             actionOrStatus = `
                 <div style="display:flex; align-items:center; gap:5px;">
                     ${statusBadge(r.status)}
                     <button class="btn" 
-                            style="background-color: #014366; color: white; border:none; padding: 4px 8px; font-size: 11px;" 
-                            onclick="submitReturnDeclaration(${r.request_id})">
-                        تسجيل عودة
+                            style="background-color: ${btnColor}; color: white; border:none; padding: 4px 8px; font-size: 11px;" 
+                            onclick="${actionFn}">
+                        ${btnText}
                     </button>
                 </div>
             `;
@@ -366,11 +371,13 @@ function renderRequestsTable() {
             const isEarly = today < endDate; // هل هو قطع مبكر؟
             const btnText = isEarly ? "✂️ قطع الإجازة" : "↩️ تسجيل عودة";
             const btnColor = isEarly ? "#d97706" : "#014366";
+            // Use different function for cut vs regular return
+            const actionFn = isEarly ? `submitCutLeave(${r.request_id})` : `submitReturnDeclaration(${r.request_id})`;
 
             actionHtml = `
                 <div style="display:flex; gap:5px;">
                     <button class="btn" style="background-color: ${btnColor}; color: white; padding:6px 12px; font-size:13px;" 
-                            onclick="submitReturnDeclaration(${r.request_id})">
+                            onclick="${actionFn}">
                         ${btnText}
                     </button>
                     <button class="btn" data-view="${r.request_id}" style="padding:6px;">📄</button>
@@ -463,11 +470,11 @@ async function showRequestDetails(requestId) {
           <div style="display: flex; gap: 20px;">
             <div class="doc-row" style="flex: 1;">
                 <span class="doc-label">الوظيفة:</span>
-                <span class="doc-value">${escapeHtml(d?.user?.job_title || d?.user?.role || "-")}</span>
+                <span class="doc-value">${escapeHtml(d?.user?.job_title || currentUser?.job_title || d?.user?.role || "-")}</span>
             </div>
             <div class="doc-row" style="flex: 1;">
                 <span class="doc-label">الجهة/القسم:</span>
-                <span class="doc-value">${escapeHtml(d?.user?.department?.department_name || d?.user?.department || "-")}</span>
+                <span class="doc-value">${escapeHtml(d?.user?.workplace || currentUser?.workplace || d?.user?.department?.department_name || d?.user?.department || "-")}</span>
             </div>
           </div>
         </div>
@@ -1357,3 +1364,65 @@ function submitReturnDeclaration(requestId) {
 }
 // auto-load
 loadAll();
+
+// --- دالة قطع الإجازة ---
+function submitCutLeave(requestId) {
+  openModal(`
+    <div class="modal-header" style="background: linear-gradient(135deg, #d97706 0%, #b45309 100%);">
+      <div class="modal-title">
+        <span class="modal-icon">✂️</span>
+        <div>
+          <h2>قطع الإجازة</h2>
+          <span class="modal-subtitle">إنهاء الإجازة والعودة للعمل مبكراً</span>
+        </div>
+      </div>
+      <button class="modal-close-btn" onclick="closeModal()">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="modal-body" style="padding: 24px; text-align: center;">
+      <div style="background: #fffbeb; border: 1px solid #fcd34d; padding: 20px; border-radius: 12px; margin-bottom: 24px;">
+        <p style="font-size: 16px; line-height: 1.6; color: #92400e; font-weight: 600; margin: 0;">
+          "أقر بأنني أرغب في قطع إجازتي والعودة للعمل اعتباراً من اليوم. سيتم إعادة احتساب الرصيد بناءً على الأيام الفعلية."
+        </p>
+      </div>
+
+      <div class="actions" style="justify-content: center; gap: 16px; display:flex;">
+        <button id="confirmCutBtn" class="btn primary" style="background-color: #d97706; font-size: 16px; padding: 12px 32px;">
+          تأكيد القطع
+        </button>
+        <button class="btn" onclick="closeModal()" style="font-size: 16px;">إلغاء</button>
+      </div>
+    </div>
+  `);
+
+  setTimeout(() => {
+    const confirmBtn = document.getElementById("confirmCutBtn");
+    if (confirmBtn) {
+      confirmBtn.addEventListener("click", async () => {
+        try {
+          confirmBtn.textContent = "جاري المعالجة...";
+          confirmBtn.disabled = true;
+
+          // استدعاء الـ API
+          const res = await apiFetch(`/api/me/leave-requests/${requestId}/cut`, { method: "PATCH" });
+
+          const refundMsg = res.data?.refunded_days 
+            ? `تم استرداد ${res.data.refunded_days} يوم للرصيد.` 
+            : "";
+
+          toast("تم بنجاح", `تم قطع الإجازة. ${refundMsg}`, "success");
+          closeModal();
+          
+          // تحديث الجداول
+          await loadAll(); 
+        } catch (e) {
+          toast("خطأ", e.message, "error");
+          confirmBtn.textContent = "تأكيد القطع";
+          confirmBtn.disabled = false;
+        }
+      });
+    }
+  }, 50);
+}

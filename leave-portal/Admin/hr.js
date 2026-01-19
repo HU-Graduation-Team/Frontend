@@ -1532,7 +1532,7 @@
                   <div class="form-group">
                       <label>القسم</label>
                       <select id="department_id" class="form-control">
-                          <option value="">-- اختر الكلية أولاً --</option>
+                          <option value="">— (اختر الكلية أولاً)</option>
                       </select>
                   </div>
               </div>
@@ -1563,12 +1563,12 @@
         (d) => String(d.college_id) === String(selectedColId),
       );
 
-      let html = '<option value="">-- اختر القسم --</option>';
+      let html = '<option value="">— (بدون قسم)</option>';
 
       if (filteredDeps.length === 0 && selectedColId) {
-        html = '<option value="">-- لا توجد أقسام لهذه الكلية --</option>';
+        html = '<option value="">— (لا توجد أقسام لهذه الكلية)</option>';
       } else if (!selectedColId) {
-        html = '<option value="">-- اختر الكلية أولاً --</option>';
+        html = '<option value="">— (اختر الكلية أولاً)</option>';
       }
 
       filteredDeps.forEach((d) => {
@@ -1604,13 +1604,13 @@
         date_of_birth: $("#date_of_birth")?.value,
         role: $("#role")?.value,
         user_type: $("#user_type")?.value,
-        college_id: $("#college_id")?.value
-          ? Number($("#college_id").value)
-          : null,
-        department_id: $("#department_id")?.value
-          ? Number($("#department_id").value)
-          : null,
       };
+
+      const cVal = $("#college_id")?.value;
+      if (cVal) body.college_id = Number(cVal);
+
+      const dVal = $("#department_id")?.value;
+      if (dVal) body.department_id = Number(dVal);
 
       try {
         if (!body.name) return toast("تنبيه", "الاسم مطلوب", "warn");
