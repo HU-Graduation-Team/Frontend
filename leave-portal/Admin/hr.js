@@ -1434,7 +1434,7 @@
                       <label>البريد الإلكتروني <span style="color:red">*</span></label>
                       <input type="email" id="email" class="form-control" placeholder="example@univ.edu" value="${esc(
                         user?.email || "",
-                      )}" ${isEdit ? "disabled" : ""} required />
+                      )}" required />
                   </div>
               </div>
 
@@ -1443,7 +1443,7 @@
                       <label>الرقم القومي (SSN) <span style="color:red">*</span></label>
                       <input type="text" id="ssn" class="form-control" placeholder="14 رقم" maxlength="14" value="${esc(
                         user?.ssn || "",
-                      )}" ${isEdit ? "disabled" : ""} required />
+                      )}" required />
                   </div>
                   <div class="form-group">
                       <label>النوع</label>
