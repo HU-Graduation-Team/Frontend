@@ -2130,7 +2130,6 @@
     const approverRoles = [
       { value: "Head_of_Department", label: "رئيس القسم" },
       { value: "Dean", label: "العميد" },
-      { value: "HR_Admin", label: "الموارد البشرية" },
       { value: "Manager", label: "المدير المباشر" },
       { value: "President", label: "رئيس الجامعة" },
     ];
